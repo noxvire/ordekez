@@ -226,6 +226,10 @@
   #invDet td+td{text-align:right;font-weight:700}
   #invDet .hint,.hint{font-size:13px;opacity:.7;line-height:1.6}
   .btn.small{min-width:0;padding:10px 16px;font-size:14px}
+  #cards.locked .card{opacity:.45;pointer-events:none;filter:grayscale(.6);transform:scale(.97)}
+  #cards .card{transition:opacity .25s,filter .25s,transform .15s}
+  #lvlLock{width:220px;text-align:center;font-size:12px;letter-spacing:.1em;opacity:.8}
+  #lvlLock i{display:block;height:3px;margin-top:5px;background:#9fe3ff;width:0}
 </style>
 </head>
 <body>
@@ -289,6 +293,7 @@
 <div id="lvl" class="panel hidden">
   <h2>SEVİYE ATLADIN!</h2>
   <p>Bir güç seç <small>(1 · 2 · 3 ya da tıkla)</small></p>
+  <div id="lvlLock"><span>Kartlar açılıyor…</span><i></i></div>
   <div id="cards"></div>
 </div>
 
@@ -2195,7 +2200,7 @@ function updateCase(dt) {
   if (!caseRun.done && caseRun.t > 5.3) finishCase();
 }
 function skipCase() {
-  if (!caseRun || caseRun.done || caseRun.t < .4) return;
+  if (!caseRun || caseRun.done || caseRun.t < 1) return;
   const reel = $('reel'); reel.style.transition = 'none'; reel.style.transform = `translateX(${caseRun.target}px)`; finishCase();
 }
 function finishCase() {
@@ -2447,10 +2452,17 @@ function openLevelUp() {
     return `<button class="card" style="--c:${RAR[c.r].c}" data-i="${i}"><span class="r">${RAR[c.r].ad}</span><span class="ic">${c.u.ic}</span><b>${c.u.ad}</b><span class="d">${c.u.t(c.u.v[c.r])}</span><span class="k">${i + 1}</span></button>`;
   }).join('');
   $('cards').querySelectorAll('.card').forEach(b => b.onclick = () => chooseCard(+b.dataset.i));
+  // yanlışlıkla seçmeyi önle: kartlar kısa bir süre kilitli
+  lvlOpenAt = performance.now();
+  const cw = $('cards'); cw.classList.add('locked'); $('lvlLock').classList.remove('hidden');
+  const lb = $('lvlLock').querySelector('i'); lb.style.transition = 'none'; lb.style.width = '0%'; void lb.offsetWidth;
+  lb.style.transition = `width ${LVL_LOCK}ms linear`; lb.style.width = '100%';
+  clearTimeout(lvlLockT); lvlLockT = setTimeout(() => { cw.classList.remove('locked'); $('lvlLock').classList.add('hidden'); }, LVL_LOCK);
   $('lvl').classList.remove('hidden');
 }
+const LVL_LOCK = 1100; let lvlOpenAt = 0, lvlLockT = 0;
 function chooseCard(i) {
-  const c = cardChoices[i]; if (!c || state !== 'levelup') return;
+  const c = cardChoices[i]; if (!c || state !== 'levelup' || performance.now() - lvlOpenAt < LVL_LOCK) return;
   if (c.skill) { P.skills[c.skill] = skillLv(c.skill) + 1; syncSkills(); msg(SKILLS[c.skill].ad.toUpperCase(), `Seviye ${P.skills[c.skill]}`); }
   else { c.u.f(c.u.v[c.r]); S.taken[c.u.id] = (S.taken[c.u.id] || 0) + 1; }
   G2.pendingLv--; $('lvl').classList.add('hidden'); SND.pick(); hbKey = ''; checkAch();
