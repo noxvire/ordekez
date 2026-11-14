@@ -3254,17 +3254,35 @@ function pickWeaponId() {
   const pool = (CLASSES[P.cls] || CLASSES.asker).pool;
   return pick(pool);
 }
+// tılsımlar: bu koşu boyunca kalıcı küçük güçlendirmeler (nadirliğe göre güçlenir)
+const CHARMS = {
+  guc:      { ic: '💥', ad: 'Güç Tılsımı',      v: [.06, .09, .13, .2],  f: v => S.dmg += v,    t: v => `Hasar +%${Math.round(v * 100)}` },
+  tetik:    { ic: '⚡', ad: 'Tetik Tılsımı',    v: [.05, .08, .11, .16], f: v => S.rate += v,   t: v => `Atış hızı +%${Math.round(v * 100)}` },
+  ruzgar:   { ic: '🏃', ad: 'Rüzgar Tılsımı',   v: [.04, .06, .09, .13], f: v => S.speed += v,  t: v => `Hız +%${Math.round(v * 100)}` },
+  sans:     { ic: '🎯', ad: 'Şans Tılsımı',     v: [.03, .05, .07, .1],  f: v => S.crit = Math.min(.45, S.crit + v), t: v => `Kritik +%${Math.round(v * 100)}` },
+  miknatis: { ic: '🧲', ad: 'Mıknatıs Tılsımı', v: [.25, .4, .6, .9],    f: v => S.magnet += v, t: v => `XP çekim alanı +%${Math.round(v * 100)}` },
+  yasam:    { ic: '💚', ad: 'Yaşam Tılsımı',    v: [.3, .5, .8, 1.2],    f: v => S.regen += v,  t: v => `Saniyede +${v} can` },
+};
+const CHARM_IDS = Object.keys(CHARMS);
+function wRoll(table) { let x = Math.random() * table.reduce((a, t) => a + t[1], 0); for (const [k, w] of table) { x -= w; if (x <= 0) return k; } return table[0][0]; }
 function rollReward(special) {
-  const r = rollRar(S.luck + (special ? 3 : 0)), x = Math.random();
-  if (special || r === 3) return { kind: 'w', id: pickWeaponId(), rar: Math.max(r, special ? 2 : 0) };
-  if (r === 2) return x < .75 ? { kind: 'w', id: pickWeaponId(), rar: 2 } : { kind: 'coin', rar: 2 };
-  if (r === 1) return x < .6 ? { kind: 'w', id: pickWeaponId(), rar: 1 } : x < .8 ? { kind: 'shield', rar: 1 } : { kind: 'xp', rar: 1 };
-  return x < .6 ? { kind: 'w', id: pickWeaponId(), rar: 0 } : { kind: 'band', rar: 0 };
+  const r = rollRar(S.luck + (special ? 3 : 0)), rar = special ? Math.max(r, 2) : r;
+  const T = special || r === 3 ? [['w', 45], ['kitap', 20], ['tilsim', 20], ['totem', P && P.revive ? 0 : 15]]
+    : r === 2 ? [['w', 40], ['kitap', 14], ['tilsim', 20], ['kalp', 10], ['coin', 10], ['bileme', 6]]
+    : r === 1 ? [['w', 35], ['tilsim', 18], ['shield', 9], ['xp', 9], ['bileme', 11], ['bomba', 9], ['kalp', 9]]
+    : [['w', 40], ['band', 17], ['gold', 15], ['zar', 10], ['tilsim', 18]];
+  const k = wRoll(T);
+  if (k === 'w') return { kind: 'w', id: pickWeaponId(), rar };
+  if (k === 'tilsim') return { kind: 'tilsim', sub: pick(CHARM_IDS), rar };
+  return { kind: k, rar };
 }
-const ITEM_VIS = { band: ['🩹', 'Bandaj'], shield: ['🛡️', 'Kalkan +40'], xp: ['✨', 'XP Paketi'], coin: ['🌕', 'Ay Parası'] };
+const ITEM_VIS = { band: ['🩹', 'Bandaj'], shield: ['🛡️', 'Kalkan +40'], xp: ['✨', 'XP Paketi'], coin: ['🌕', 'Ay Parası'],
+  gold: ['💰', 'Altın Kesesi'], zar: ['🎲', 'Kart Yenileme'], kalp: ['❤️', 'Kalp Kristali'], kitap: ['📖', 'Yetenek Kitabı'],
+  bileme: ['🔧', 'Bileme Taşı'], bomba: ['💣', 'Erdi Bombası'], totem: ['🗿', 'Diriliş Totemi'] };
+const visOf = it => it.kind === 'tilsim' ? [CHARMS[it.sub].ic, CHARMS[it.sub].ad] : ITEM_VIS[it.kind];
 function itemHtml(it, win) {
   const c = RAR[it.rar].c;
-  const inner = it.kind === 'w' ? `<img src="${GUN_ICON[it.id] || ''}" alt=""><b>${WEAPONS[it.id].ad}</b>` : `<span class="e">${ITEM_VIS[it.kind][0]}</span><b>${ITEM_VIS[it.kind][1]}</b>`;
+  const inner = it.kind === 'w' ? `<img src="${GUN_ICON[it.id] || ''}" alt=""><b>${WEAPONS[it.id].ad}</b>` : `<span class="e">${visOf(it)[0]}</span><b>${visOf(it)[1]}</b>`;
   return `<div class="it${win ? ' winner' : ''}" style="--c:${c}">${inner}<i></i></div>`;
 }
 let caseRun = null;
@@ -3321,6 +3339,23 @@ function giveReward(r) {
   else if (r.kind === 'shield') { P.shield = Math.min(100, P.shield + 40); loot('EŞYA', '🛡️ Kalkan', '+40 kalkan', c); }
   else if (r.kind === 'xp') { loot('EŞYA', '✨ XP Paketi', 'Büyük deneyim', c); gainXp(P.need * .6); }
   else if (r.kind === 'coin') { const a = 25 + G2.wave * 3; META.coins += a; META.life += a; saveMeta(); loot('EŞYA', `🌕 ${a} Ay Parası`, 'Kalıcı geliştirmelerde harca', c); }
+  else if (r.kind === 'gold') { const a = Math.round((20 + G2.wave * 4) * (1 + r.rar * .5)); G2.gold += a; SND.buy(); loot('EŞYA', `💰 ${a} Altın`, 'Tüccarda harca', c); }
+  else if (r.kind === 'zar') { P.rerolls++; loot('EŞYA', '🎲 Kart Yenileme', `Seviye kartlarını yenileme hakkı +1 (${P.rerolls})`, c); }
+  else if (r.kind === 'tilsim') { const C = CHARMS[r.sub], v = C.v[r.rar]; C.f(v); (P.charms = P.charms || []).push(r.sub); loot('TILSIM', `${C.ic} ${C.ad}`, C.t(v) + ' · bu koşu boyunca', c); }
+  else if (r.kind === 'kalp') { const v = [10, 15, 25, 40][r.rar]; P.maxHp += v; P.hp = Math.min(P.maxHp, P.hp + v); loot('EŞYA', '❤️ Kalp Kristali', `Maksimum can +${v}`, c); }
+  else if (r.kind === 'kitap') {
+    const up = Object.keys(P.skills).filter(k => P.skills[k] < SKILL_MAX), fresh = Object.keys(SKILLS).filter(k => !P.skills[k]);
+    const id = up.length && (Math.random() < .7 || !fresh.length) ? pick(up) : fresh.length ? pick(fresh) : null;
+    if (id) { P.skills[id] = (P.skills[id] || 0) + 1; syncSkills(); loot('YETENEK KİTABI', `📖 ${SKILLS[id].ad}`, `Seviye ${P.skills[id]}`, c); }
+    else { gainXp(P.need * .8); loot('YETENEK KİTABI', '📖 Bilgelik', 'Bütün yetenekler maks — büyük XP', c); }
+  }
+  else if (r.kind === 'bileme') { const w = curW(); w.lv++; loot('EŞYA', '🔧 Bileme Taşı', `${WEAPONS[w.id].ad} seviye ${w.lv + 1} (+%8 hasar)`, c); }
+  else if (r.kind === 'bomba') {
+    const p = P.pos.clone(); p.y -= EYE - .5; blastFx(p, 14, [3, 1.6, .5]); shake(.7); SND.boom();
+    const dmg = 80 + G2.wave * 12; for (const e of enemies) if (!e.dead && !e.ally && Math.hypot(e.x - P.pos.x, e.z - P.pos.z) < 16) damageEnemy(e, e.boss ? dmg * .3 : dmg, false, false, (e.x - P.pos.x) * .5, (e.z - P.pos.z) * .5, new THREE.Vector3(e.x, e.by + e.h * .6, e.z));
+    loot('EŞYA', '💣 Erdi Bombası', 'Etraftaki bütün Erdiler havaya uçtu!', c);
+  }
+  else if (r.kind === 'totem') { P.revive = 1; loot('EFSANEVİ', '🗿 Diriliş Totemi', 'Bir kez ölürsen yarı canla dirilirsin', c); }
   hbKey = ''; checkAch();
 }
 function newWeapon(id, rar) { const w = { id, rar, lv: 0, copies: 0, ammo: 0 }; w.ammo = wStats(w).mag; return w; }
@@ -3372,6 +3407,12 @@ function hurtPlayer(d) {
   d *= (1 - S.armor);
   if (P.shield > 0) { const s = Math.min(P.shield, d); P.shield -= s; d -= s; }
   P.hp -= d; SND.hurt(); $('hurt').style.opacity = 1; hurtT = .25;
+  if (P.hp <= 0 && P.revive) {
+    P.revive = 0; P.hp = P.maxHp * .5; P.shieldCh = Math.max(P.shieldCh, 1);
+    const p = P.pos.clone(); p.y -= EYE - .5; blastFx(p, 10, [2.6, 2.2, 1]); shake(.8); SND.levelup ? SND.levelup() : SND.boom();
+    for (const e of enemies) if (!e.dead && !e.ally && !e.boss && Math.hypot(e.x - P.pos.x, e.z - P.pos.z) < 10) damageEnemy(e, 999, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .6, e.z), true);
+    msg('🗿 DİRİLDİN!', 'Diriliş Totemi seni kurtardı'); return;
+  }
   if (P.hp <= 0) { P.hp = 0; gameOver(); }
 }
 function useBandage() {
@@ -3650,7 +3691,7 @@ function updateHud() {
   $('skillsHud').innerHTML = Object.entries(P.skills).map(([id, l]) => `<span style="border-color:${SKILLS[id].c}" title="${SKILLS[id].ad}">${SKILLS[id].ic}<i>${l}</i>${id === 'kalkan' ? `<u>${P.shieldCh}</u>` : ''}</span>`).join('');
   drawHotbar();
   if (G2.bossAlive) { const B2 = G2.bossAlive; $('boss').querySelector('i').style.width = Math.max(0, B2.hp / B2.max * 100) + '%'; $('boss').querySelector('u').style.width = (B2.armorMax ? B2.armor / B2.armorMax * 100 : 0) + '%'; }
-  $('goldHud').innerHTML = `🪙 ${G2.gold}${P.rerolls ? ` &nbsp; 🎲 ${P.rerolls}` : ''}`;
+  $('goldHud').innerHTML = `🪙 ${G2.gold}${P.rerolls ? ` &nbsp; 🎲 ${P.rerolls}` : ''}${P.revive ? ' &nbsp; 🗿' : ''}${P.charms && P.charms.length ? ` &nbsp; <span title="Tılsımlar">${P.charms.map(k => CHARMS[k].ic).join('')}</span>` : ''}`;
   const sp = 6 + st.spread * 220 * (1 - zoom) + recoil * 8;
   const c = $('cross'); c.style.opacity = zoom > .6 ? 0 : 1;
   c.querySelector('.t').style.top = -(sp + 8) + 'px'; c.querySelector('.b').style.top = sp + 'px'; c.querySelector('.l').style.left = -(sp + 8) + 'px'; c.querySelector('.r').style.left = sp + 'px';
@@ -3930,7 +3971,7 @@ refreshMenu();
 requestAnimationFrame(frame);
 setTimeout(() => { $('fade').style.opacity = 0; }, 150);
 addEventListener('pagehide', () => { if (state === 'play') saveMeta(); });
-window.__ev = { gameOver: q => gameOver(q), hz: { rocket: e => rocketBarrage(e), meteor: e => meteorShower(e, 10), shock: e => shockwave(e) }, pickW: () => pickWeaponId(), get heads() { return heads; }, get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
+window.__ev = { hurt: d => hurtPlayer(d), roll: sp => rollReward(sp), give: r => giveReward(r), gameOver: q => gameOver(q), hz: { rocket: e => rocketBarrage(e), meteor: e => meteorShower(e, 10), shock: e => shockwave(e) }, pickW: () => pickWeaponId(), get heads() { return heads; }, get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
   heightAt, spawnEnemy, beginPlay, shoot, gainXp, chooseCard, get chests() { return chests; }, openChest, spawnChest, giveWeapon, camera, renderer, startReload,
   killAll: () => enemies.forEach(e => !e.dead && !e.boss && killEnemy(e)), spawnBoss, fx: { bolt: () => { const e = enemies.find(x => !x.dead); e && lightning(e, 50); }, ice: () => iceNova(4), meteor: () => callMeteor(4) }, playerDps, wStats, dropMagnet, get orbs() { return orbs; }, dmg: e => damageEnemy(e, 5, false, false, 0, 0, new THREE.Vector3(e.x, e.by + 1, e.z)), openShop, spawnMerchant, get merchant() { return merchant; }, startWave, rerollCards, skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
 </script>
