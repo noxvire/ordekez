@@ -269,11 +269,18 @@
   #countdown{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:140px;font-weight:900;color:#fff;text-shadow:0 0 40px rgba(255,140,40,.8),0 6px 18px #000;pointer-events:none;opacity:0}
   #countdown.pop{animation:cd .9s forwards;opacity:.92}
   @keyframes cd{0%{transform:translate(-50%,-50%) scale(1.7)}20%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-50%,-50%) scale(.9)}}
+  #flashFx{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:5}
+  #skipHint{position:fixed;left:50%;top:66%;transform:translateX(-50%);padding:10px 20px;border-radius:12px;background:rgba(10,12,16,.72);border:1px solid rgba(255,190,90,.5);font-size:18px;font-weight:700;color:#fff;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
+  #skipHint.on{opacity:1}
+  #skipHint small{margin-left:8px;opacity:.7;font-size:14px}
+  #clickResume{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:18px 30px;border-radius:14px;background:rgba(10,12,16,.85);border:2px solid #ff8a2a;font-size:20px;font-weight:800;color:#fff;cursor:pointer;z-index:30}
 </style>
 </head>
 <body>
 <div id="view"></div>
 <div id="scope"></div>
+<div id="flashFx"></div>
+<div id="clickResume" class="hidden">🖱️ Devam etmek için tıkla</div>
 <div id="bubble"></div>
 <div id="hurt"></div>
 <div id="lowhp"></div>
@@ -296,6 +303,7 @@
 <div id="prompt"></div>
 <div id="msg"></div>
 <div id="countdown"></div>
+<div id="skipHint"></div>
 <div id="loot"><small>SANDIK</small><b></b><span></span></div>
 
 <div id="menu">
@@ -326,7 +334,7 @@
 
 <div id="pause" class="panel hidden">
   <h2>DURAKLATILDI</h2>
-  <button class="btn" id="bResume">Devam</button>
+  <button class="btn" id="bResume">Devam (Esc)</button>
   <button class="btn" id="bPSet">Ayarlar</button>
   <button class="btn" id="bPMenu">Koşuyu Bitir</button>
   <p class="keys">Oyunda ara kayıt yok: koşuyu bitirirsen ya da sayfayı kapatırsan bu oyun biter.<br>Koşuyu buradan bitirirsen kazandığın Ay Parasını alırsın, sayfayı kapatırsan alamazsın.</p>
@@ -1611,7 +1619,7 @@ function updateParts(dt) {
 /* ---------- mermi izleri ---------- */
 const tracers = [];
 const trGeo = new THREE.BoxGeometry(1, 1, 1);
-for (let i = 0; i < 48; i++) {
+for (let i = 0; i < 160; i++) {
   const m = new THREE.Mesh(trGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
   m.visible = false; m.frustumCulled = false; scene.add(m); tracers.push({ m, life: 0, max: 0 });
 }
@@ -1703,6 +1711,123 @@ function updateProjectiles(dt) {
   updateSpits(dt);
 }
 
+/* ---------- gelişmiş efekt parçacıkları (alev, kıvılcım, duman, buz, girdap) ---------- */
+function softTex(kind) {
+  const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d');
+  if (kind === 'smoke') {
+    for (let i = 0; i < 9; i++) { const g = x.createRadialGradient(20 + Math.random() * 24, 20 + Math.random() * 24, 0, 32, 32, 18 + Math.random() * 12); g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); }
+  } else {
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.25, 'rgba(255,255,255,.75)'); g.addColorStop(.6, 'rgba(255,255,255,.18)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  }
+  return new THREE.CanvasTexture(c);
+}
+function makeFX(max, blending, tex, gain = 1) {
+  const pos = new Float32Array(max * 3).fill(-1e4), col = new Float32Array(max * 3), size = new Float32Array(max), alpha = new Float32Array(max);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setAttribute('size', new THREE.BufferAttribute(size, 1)); g.setAttribute('alpha', new THREE.BufferAttribute(alpha, 1));
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { map: { value: tex }, uScale: { value: 400 }, uGain: { value: gain } },
+    vertexShader: `attribute float size; attribute float alpha; varying vec3 vC; varying float vA; uniform float uScale;
+      void main(){ vC = color; vA = alpha; vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = size * uScale / max(.1, -mv.z); }`,
+    fragmentShader: `uniform sampler2D map; uniform float uGain; varying vec3 vC; varying float vA;
+      void main(){ vec4 t = texture2D(map, gl_PointCoord); float a = t.a * vA; if (a < .004) discard; vec3 c = vC * t.rgb * uGain; c = c / (1. + max(c.r, max(c.g, c.b)) * .25); gl_FragColor = vec4(c, a); }`,
+    vertexColors: true, transparent: true, depthWrite: false, blending
+  });
+  const pts = new THREE.Points(g, mat); pts.frustumCulled = false; pts.renderOrder = 3; scene.add(pts);
+  // parçacık verisi
+  const D = { vx: new Float32Array(max), vy: new Float32Array(max), vz: new Float32Array(max), life: new Float32Array(max), max: new Float32Array(max),
+    s0: new Float32Array(max), s1: new Float32Array(max), c0: new Float32Array(max * 3), c1: new Float32Array(max * 3), a0: new Float32Array(max),
+    drag: new Float32Array(max), grav: new Float32Array(max),
+    orb: new Uint8Array(max), ox: new Float32Array(max), oy: new Float32Array(max), oz: new Float32Array(max), oa: new Float32Array(max), or: new Float32Array(max), ow: new Float32Array(max), oin: new Float32Array(max) };
+  let i0 = 0;
+  function add(o) {
+    const i = i0++ % max;
+    pos[i * 3] = o.x; pos[i * 3 + 1] = o.y; pos[i * 3 + 2] = o.z;
+    D.vx[i] = o.vx || 0; D.vy[i] = o.vy || 0; D.vz[i] = o.vz || 0;
+    D.life[i] = D.max[i] = o.life || 1; D.s0[i] = o.s0 ?? .3; D.s1[i] = o.s1 ?? D.s0[i];
+    const c0 = o.c0 || [1, 1, 1], c1 = o.c1 || c0; D.c0.set(c0, i * 3); D.c1.set(c1, i * 3);
+    D.a0[i] = o.a ?? 1; D.drag[i] = o.drag || 0; D.grav[i] = o.grav || 0;
+    D.orb[i] = o.orbit ? 1 : 0;
+    if (o.orbit) { D.ox[i] = o.orbit.x; D.oy[i] = o.orbit.y; D.oz[i] = o.orbit.z; D.oa[i] = o.orbit.a; D.or[i] = o.orbit.r; D.ow[i] = o.orbit.w; D.oin[i] = o.orbit.inward || 0; }
+  }
+  function update(dt) {
+    for (let i = 0; i < max; i++) {
+      if (D.life[i] <= 0) { if (alpha[i]) { alpha[i] = 0; pos[i * 3 + 1] = -1e4; } continue; }
+      D.life[i] -= dt; const k = 1 - Math.max(0, D.life[i]) / D.max[i];
+      if (D.orb[i]) {
+        D.oa[i] += D.ow[i] * dt * (1 + k * 1.5); D.or[i] = Math.max(.05, D.or[i] * (1 - D.oin[i] * dt)); D.oy[i] += D.vy[i] * dt;
+        pos[i * 3] = D.ox[i] + Math.cos(D.oa[i]) * D.or[i]; pos[i * 3 + 1] = D.oy[i]; pos[i * 3 + 2] = D.oz[i] + Math.sin(D.oa[i]) * D.or[i];
+      } else {
+        const dr = Math.max(0, 1 - D.drag[i] * dt);
+        D.vx[i] *= dr; D.vy[i] = D.vy[i] * dr - D.grav[i] * dt; D.vz[i] *= dr;
+        pos[i * 3] += D.vx[i] * dt; pos[i * 3 + 1] += D.vy[i] * dt; pos[i * 3 + 2] += D.vz[i] * dt;
+      }
+      size[i] = D.s0[i] + (D.s1[i] - D.s0[i]) * k;
+      for (let c = 0; c < 3; c++) col[i * 3 + c] = D.c0[i * 3 + c] + (D.c1[i * 3 + c] - D.c0[i * 3 + c]) * k;
+      alpha[i] = D.a0[i] * Math.min(1, (1 - k) * 2.2) * Math.min(1, k * 12 + .15);
+    }
+    g.attributes.position.needsUpdate = g.attributes.color.needsUpdate = g.attributes.size.needsUpdate = g.attributes.alpha.needsUpdate = true;
+  }
+  function clear() { D.life.fill(0); }
+  return { add, update, clear, mat };
+}
+const FXA = makeFX(4000, THREE.AdditiveBlending, softTex('glow'), .45);      // alev, kıvılcım, ışık
+const FXN = makeFX(1200, THREE.NormalBlending, softTex('smoke'));      // duman, toz, buz sisi
+function fxScale() { const s = renderer.domElement.height / (2 * Math.tan(camera.fov * Math.PI / 360)); FXA.mat.uniforms.uScale.value = FXN.mat.uniforms.uScale.value = s; }
+// hazır efektler
+const FIRE_C0 = [3.2, 1.7, .55], FIRE_C1 = [1.1, .18, .02];
+function flame(x, y, z, s = 1) {
+  FXA.add({ x: x + rand(-.15, .15) * s, y, z: z + rand(-.15, .15) * s, vx: rand(-.3, .3), vy: rand(1.4, 2.8) * s, vz: rand(-.3, .3), life: rand(.45, .85), s0: rand(.7, 1.1) * s, s1: .08, c0: FIRE_C0, c1: FIRE_C1, a: .85, drag: 1.2 });
+}
+function ember(x, y, z, pow = 1) {
+  FXA.add({ x, y, z, vx: rand(-1, 1) * pow, vy: rand(1.5, 4) * pow, vz: rand(-1, 1) * pow, life: rand(.6, 1.4), s0: rand(.05, .1), s1: .02, c0: [3, 1.8, .6], c1: [1.6, .3, .05], grav: 1.2, drag: .5 });
+}
+function smoke(x, y, z, s = 1, dark = .18) {
+  FXN.add({ x: x + rand(-.3, .3), y, z: z + rand(-.3, .3), vx: rand(-.4, .4), vy: rand(.6, 1.4), vz: rand(-.4, .4), life: rand(1.6, 2.8), s0: .6 * s, s1: 2.4 * s, c0: [dark, dark, dark], c1: [dark * 1.4, dark * 1.4, dark * 1.4], a: .5, drag: .6 });
+}
+function sparks(x, y, z, n, col, pow = 4, size = .09) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, b = rand(-.2, 1); FXA.add({ x, y, z, vx: Math.cos(a) * pow * rand(.3, 1), vy: b * pow, vz: Math.sin(a) * pow * rand(.3, 1), life: rand(.3, .8), s0: size, s1: size * .3, c0: col, c1: col.map(v => v * .3), grav: 4, drag: 1 }); }
+}
+function glowFlash(x, y, z, s, col, life = .25) { FXA.add({ x, y, z, life, s0: s, s1: s * 1.6, c0: col, c1: col.map(v => v * .2), a: 1 }); }
+// ekran flaşı
+function screenFlash(col = 'rgba(200,230,255,.35)', ms = 120) { const f = $('flashFx'); f.style.transition = 'none'; f.style.background = col; f.style.opacity = 1; void f.offsetWidth; f.style.transition = `opacity ${ms}ms`; f.style.opacity = 0; }
+// zemin halkası (şok dalgası)
+let fxRings = [];
+function groundRing(x, z, maxR, col, life = .6, width = .12) {
+  const m = new THREE.Mesh(new THREE.RingGeometry(1 - width, 1, 64).rotateX(-Math.PI / 2), additive(col, .9));
+  m.position.set(x, heightAt(x, z) + .12, z); m.scale.setScalar(.2); scene.add(m); fxRings.push({ m, t: 0, life, maxR });
+}
+function updateFxRings(dt) {
+  for (const r of fxRings) { r.t += dt; const k = r.t / r.life; r.m.scale.setScalar(.2 + r.maxR * (1 - Math.pow(1 - Math.min(1, k), 3))); r.m.material.opacity = .9 * (1 - k); if (k >= 1) { scene.remove(r.m); r.done = true; } }
+  fxRings = fxRings.filter(r => !r.done);
+}
+// buz dikenleri
+const shardIM = new THREE.InstancedMesh(new THREE.ConeGeometry(.22, 1.6, 6).translate(0, .8, 0),
+  new THREE.MeshStandardMaterial({ color: 0xbfe8ff, roughness: .08, metalness: .1, transparent: true, opacity: .85, emissive: new THREE.Color(.15, .45, .7) }), 160);
+shardIM.count = 0; shardIM.frustumCulled = false; scene.add(shardIM);
+let shards = [];
+function iceShard(x, z, delay, h) { shards.push({ x, z, y: heightAt(x, z), t: -delay, h, rx: rand(-.4, .4), rz: rand(-.4, .4), ry: rand(0, 6.28) }); if (shards.length > 160) shards.shift(); }
+const _sm = new THREE.Matrix4(), _sq = new THREE.Quaternion(), _se = new THREE.Euler(), _ss = new THREE.Vector3(), _sp = new THREE.Vector3();
+function updateShards(dt) {
+  let n = 0;
+  for (const s of shards) {
+    s.t += dt; if (s.t < 0) continue;
+    const grow = Math.min(1, s.t / .12), sink = s.t > 1.1 ? Math.max(0, 1 - (s.t - 1.1) / .5) : 1;
+    if (s.t > 1.6) { s.done = true; continue; }
+    if (s.t < .12 + dt && !s.puffed) { s.puffed = true; FXN.add({ x: s.x, y: s.y + .3, z: s.z, vy: .5, life: 1.2, s0: .5, s1: 1.8, c0: [.75, .9, 1], c1: [.9, .95, 1], a: .45 }); sparks(s.x, s.y + .4, s.z, 4, [1.4, 2, 2.6], 2.5, .06); }
+    _se.set(s.rx, s.ry, s.rz); _sq.setFromEuler(_se); _ss.set(1, grow * sink * s.h, 1); _sp.set(s.x, s.y - .1, s.z);
+    _sm.compose(_sp, _sq, _ss); shardIM.setMatrixAt(n++, _sm);
+  }
+  shards = shards.filter(s => !s.done);
+  shardIM.count = n; shardIM.instanceMatrix.needsUpdate = true;
+}
+const fireLight = new THREE.PointLight(0xff7a2a, 0, 14, 1.6); scene.add(fireLight);
+function updateFX(dt) { fxScale(); FXA.update(dt); FXN.update(dt); updateFxRings(dt); updateShards(dt); }
+function clearFX() { FXA.clear(); FXN.clear(); fxRings.forEach(r => scene.remove(r.m)); fxRings = []; shards = []; shardIM.count = 0; fireLight.intensity = 0; }
+
 /* ---------- yetenekler ---------- */
 const fireRing = new THREE.Mesh(new THREE.RingGeometry(.86, 1, 72, 1).rotateX(-Math.PI / 2),
   new THREE.MeshBasicMaterial({ color: new THREE.Color(1.5, .38, .06), transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
@@ -1718,16 +1843,28 @@ function syncOrbitDucks() {
   while (orbitDucks.length < want) { const d = makeDuck(1.5); scene.add(d); orbitDucks.push(d); }
   while (orbitDucks.length > want) scene.remove(orbitDucks.pop());
 }
-function lightning(e, dmg) {
-  const top = new THREE.Vector3(e.x + rand(-6, 6), e.by + 45, e.z + rand(-6, 6)), bot = new THREE.Vector3(e.x, e.by + e.h * .5, e.z);
-  let prev = top;
-  for (let i = 1; i <= 7; i++) {
-    const t = i / 7, p = top.clone().lerp(bot, t);
-    if (i < 7) { p.x += rand(-1.6, 1.6) * (1 - t); p.z += rand(-1.6, 1.6) * (1 - t); }
-    tracer(prev, p, 0xbfe6ff, .12, .22); tracer(prev, p, 0xffffff, .04, .22); prev = p;
+function boltPath(a, b, segs, jag) {
+  const pts = [a.clone()], d = b.clone().sub(a), side = new THREE.Vector3(-d.z, 0, d.x).normalize();
+  for (let i = 1; i < segs; i++) {
+    const t = i / segs, p = a.clone().lerp(b, t), env = Math.sin(Math.PI * t);
+    p.addScaledVector(side, rand(-1, 1) * jag * env); p.x += rand(-.5, .5) * jag * env; p.z += rand(-.5, .5) * jag * env; pts.push(p);
   }
-  boltLight.position.copy(bot); boltLight.intensity = 60;
-  burst(bot.x, bot.y, bot.z, 30, [.7, .85, 1], 4);
+  pts.push(b.clone()); return pts;
+}
+function drawBolt(pts, thick, life) {
+  for (let i = 1; i < pts.length; i++) { tracer(pts[i - 1], pts[i], 0x7fb8ff, thick * 3, life); tracer(pts[i - 1], pts[i], 0xffffff, thick, life); }
+}
+function lightning(e, dmg) {
+  const bot = new THREE.Vector3(e.x, e.by + e.h * .5, e.z), top = new THREE.Vector3(e.x + rand(-7, 7), e.by + 48, e.z + rand(-7, 7));
+  const pts = boltPath(top, bot, 14, 2.6); drawBolt(pts, .05, .28);
+  for (let k = 0; k < 3; k++) { const s0 = pts[3 + ((Math.random() * 8) | 0)]; const end = s0.clone().add(new THREE.Vector3(rand(-6, 6), -rand(4, 11), rand(-6, 6))); drawBolt(boltPath(s0, end, 6, 1.3), .025, .2); }
+  const ground = new THREE.Vector3(e.x, e.y + .2, e.z);
+  glowFlash(bot.x, bot.y, bot.z, 5, [2.2, 2.8, 3.4], .3); glowFlash(ground.x, ground.y + .3, ground.z, 7, [1, 1.6, 2.6], .45);
+  sparks(bot.x, bot.y, bot.z, 45, [1.8, 2.4, 3.2], 7, .09);
+  groundRing(e.x, e.z, 5.5, new THREE.Color(1, 1.7, 2.8), .45, .14);
+  for (let i = 0; i < 4; i++) smoke(e.x, e.y + .3, e.z, .9, .22);
+  boltLight.position.copy(bot); boltLight.intensity = 160;
+  if (Math.hypot(e.x - P.pos.x, e.z - P.pos.z) < 25) screenFlash('rgba(190,220,255,.3)', 160);
   damageEnemy(e, dmg, false, false, 0, 0, bot.clone());
   e.slow = Math.max(e.slow, .6);
   SND.thunder();
@@ -1737,19 +1874,23 @@ function updateSkills(dt) {
   const gy = P.pos.y - EYE;
   // ateş çemberi
   const fl = skillLv('ates');
-  fireRing.visible = fireRing2.visible = fl > 0;
+  fireRing.visible = fireRing2.visible = fl > 0; if (!fl) fireLight.intensity = 0;
   if (fl) {
     const R = 3.2 + fl * .5;
     fireRing.position.set(P.pos.x, gy + .08, P.pos.z); fireRing.scale.setScalar(R); fireRing.rotation.y += dt * 1.5;
     fireRing2.position.copy(fireRing.position); fireRing2.position.y -= .02; fireRing2.scale.setScalar(R);
-    fireRing.material.opacity = .45 + Math.sin(performance.now() / 90) * .12;
-    for (let i = 0; i < 3; i++) { const a = Math.random() * 6.283; burst(P.pos.x + Math.cos(a) * R, gy + .15, P.pos.z + Math.sin(a) * R, 1, [1, .45 + Math.random() * .4, .1], .8); }
+    fireRing.material.opacity = .16 + Math.sin(performance.now() / 70) * .06; fireRing2.material.opacity = .035;
+    const nF = Math.min(22, Math.round(R * 120 * dt + Math.random()));
+    for (let i = 0; i < nF; i++) { const a = Math.random() * 6.283, rr = R * rand(.93, 1.04); flame(P.pos.x + Math.cos(a) * rr, gy + .05, P.pos.z + Math.sin(a) * rr, .9 + fl * .08); }
+    if (Math.random() < dt * 25) { const a = Math.random() * 6.283; ember(P.pos.x + Math.cos(a) * R, gy + .3, P.pos.z + Math.sin(a) * R, .8); }
+    if (Math.random() < dt * 3) { const a = Math.random() * 6.283; smoke(P.pos.x + Math.cos(a) * R, gy + 1, P.pos.z + Math.sin(a) * R, .7, .12); }
+    fireLight.position.set(P.pos.x, gy + 1.2, P.pos.z); fireLight.intensity = 2.6 + Math.sin(performance.now() / 45) * .6 + Math.random() * .6; fireLight.distance = R * 2.2;
     fireTick -= dt;
     if (fireTick <= 0) {
       fireTick = .25; const dps = 10 + fl * 8;
       for (const e of enemies) {
         if (e.dead || e.alt > 2.5) continue;
-        if (Math.hypot(e.x - P.pos.x, e.z - P.pos.z) < R + e.r) { e.burnT = .4; damageEnemy(e, dps * .25, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .5, e.z), true); }
+        if (Math.hypot(e.x - P.pos.x, e.z - P.pos.z) < R + e.r) { e.burnT = .4; for (let k = 0; k < 3; k++) flame(e.x, e.by + rand(.1, e.h * .6), e.z, .6); damageEnemy(e, dps * .25, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .5, e.z), true); }
       }
     }
   }
@@ -1774,6 +1915,7 @@ function updateSkills(dt) {
       const a = orbitA + i / n * Math.PI * 2;
       d.position.set(P.pos.x + Math.cos(a) * R, gy + 1 + Math.sin(orbitA * 3 + i) * .15, P.pos.z + Math.sin(a) * R);
       d.rotation.y = -a;
+      if (Math.random() < .6) FXA.add({ x: d.position.x, y: d.position.y, z: d.position.z, vy: .3, life: .5, s0: .22, s1: .02, c0: [2.6, 2.1, .6], c1: [1.4, .7, .1], a: .8 });
       for (const e of enemies) {
         if (e.dead || (e.duckCd || 0) > G2.time) continue;
         if (Math.hypot(e.x - d.position.x, e.z - d.position.z) < e.r + .35 && d.position.y > e.by - .2 && d.position.y < e.by + e.h) {
@@ -1796,13 +1938,18 @@ const meteorMat = new THREE.MeshStandardMaterial({ color: 0x3a2a20, roughness: .
 const holeCore = new THREE.SphereGeometry(1, 24, 16), holeDisk = new THREE.RingGeometry(1.1, 3.2, 48, 1).rotateX(-Math.PI / 2);
 
 function iceNova(l) {
-  const R = 6 + l, m = new THREE.Mesh(novaGeo, additive(new THREE.Color(.5, 1.6, 2.4), .8));
-  m.position.set(P.pos.x, P.pos.y - EYE + .1, P.pos.z); scene.add(m); novas.push({ m, t: 0, R });
+  const R = 6 + l, x0 = P.pos.x, z0 = P.pos.z, gy = P.pos.y - EYE;
+  groundRing(x0, z0, R, new THREE.Color(.7, 1.7, 2.8), .55, .1); groundRing(x0, z0, R * .7, new THREE.Color(.5, 1.2, 2), .7, .3);
+  const N = 22 + l * 5;
+  for (let k = 0; k < N; k++) { const a = k / N * 6.283 + rand(-.1, .1), r = R * rand(.35, 1); iceShard(x0 + Math.cos(a) * r, z0 + Math.sin(a) * r, r / R * .32, rand(.5, 1.3)); }
+  for (let k = 0; k < 30; k++) { const a = Math.random() * 6.283, r = rand(.5, R); FXN.add({ x: x0 + Math.cos(a) * r, y: gy + .3, z: z0 + Math.sin(a) * r, vx: Math.cos(a) * 1.5, vy: rand(.2, .7), vz: Math.sin(a) * 1.5, life: rand(1, 1.8), s0: .6, s1: 2.2, c0: [.8, .92, 1], c1: [.9, .97, 1], a: .4, drag: 1.5 }); }
+  glowFlash(x0, gy + 1, z0, 6, [1, 1.8, 2.6], .35);
+  screenFlash('rgba(170,220,255,.22)', 220);
   SND.ice();
   for (const e of enemies) {
     if (e.dead) continue;
-    const d = Math.hypot(e.x - P.pos.x, e.z - P.pos.z);
-    if (d < R + e.r) { e.slow = Math.max(e.slow, 2 + l * .4); damageEnemy(e, 15 + l * 10, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .6, e.z), true); burst(e.x, e.by + e.h * .5, e.z, 6, [.6, .9, 1], 1.5); }
+    const d = Math.hypot(e.x - x0, e.z - z0);
+    if (d < R + e.r) { e.slow = Math.max(e.slow, 2 + l * .4); damageEnemy(e, 15 + l * 10, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .6, e.z), true); sparks(e.x, e.by + e.h * .5, e.z, 8, [1.4, 2, 2.6], 2.5, .07); }
   }
 }
 function callMeteor(l) {
@@ -1811,8 +1958,10 @@ function callMeteor(l) {
   if (pool.length) { const t = pick(pool); tx = t.x + rand(-1, 1); tz = t.z + rand(-1, 1); }
   else { const a = Math.random() * 6.28, d = rand(8, 20); tx = P.pos.x + Math.cos(a) * d; tz = P.pos.z + Math.sin(a) * d; }
   const m = new THREE.Mesh(meteorGeo, meteorMat); const ty = heightAt(tx, tz);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: boomTex, color: new THREE.Color(3, 1.4, .4), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); halo.scale.setScalar(4); m.add(halo);
   m.position.set(tx + 18, ty + 45, tz - 10); scene.add(m);
-  meteors.push({ m, from: m.position.clone(), to: new THREE.Vector3(tx, ty, tz), t: 0, dmg: 50 + l * 30, R: 3 + l * .3 });
+  const mark = new THREE.Mesh(discGeo, additive(new THREE.Color(1.4, .45, .05), .25)); mark.position.set(tx, ty + .1, tz); mark.scale.setScalar(3 + l * .3); scene.add(mark);
+  meteors.push({ m, mark, from: m.position.clone(), to: new THREE.Vector3(tx, ty, tz), t: 0, dmg: 50 + l * 30, R: 3 + l * .3 });
   SND.whoosh();
 }
 function openHole(l) {
@@ -1824,7 +1973,8 @@ function openHole(l) {
   const core = new THREE.Mesh(holeCore, new THREE.MeshBasicMaterial({ color: 0x000000 }));
   const disk = new THREE.Mesh(holeDisk, additive(new THREE.Color(1.4, .5, 2.4), .7));
   const disk2 = new THREE.Mesh(holeDisk, additive(new THREE.Color(.5, .2, 1.2), .4)); disk2.rotation.x = .5;
-  g.add(core, disk, disk2); g.position.set(best.x, heightAt(best.x, best.z) + 1.4, best.z); g.scale.setScalar(.01); scene.add(g);
+  const lens = new THREE.Sprite(new THREE.SpriteMaterial({ map: boomTex, color: new THREE.Color(1.2, .4, 2.2), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); lens.scale.setScalar(9);
+  g.add(lens, core, disk, disk2); g.position.set(best.x, heightAt(best.x, best.z) + 1.4, best.z); g.scale.setScalar(.01); scene.add(g);
   holes.push({ g, disk, disk2, t: 0, life: 3 + l * .5, R: 9 + l, dps: 25 + l * 15, tick: 0 });
   SND.hole();
 }
@@ -1846,7 +1996,13 @@ function syncTurrets() {
 }
 function syncTornados() {
   const l = skillLv('kasirga'), want = l ? (l >= 4 ? 2 : 1) : 0;
-  while (tornados.length < want) { const m = new THREE.Mesh(tornGeo, additive(new THREE.Color(.75, .8, .85), .28)); scene.add(m); tornados.push({ m, tick: 0 }); }
+  while (tornados.length < want) {
+    const g = new THREE.Group();
+    const m1 = new THREE.Mesh(tornGeo, new THREE.MeshBasicMaterial({ color: 0x9a948a, transparent: true, opacity: .1, depthWrite: false, side: THREE.DoubleSide }));
+    const m2 = new THREE.Mesh(tornGeo, new THREE.MeshBasicMaterial({ color: 0xc8c2b6, transparent: true, opacity: .07, depthWrite: false, side: THREE.DoubleSide })); m2.scale.set(.75, 1.1, .75);
+    const m3 = new THREE.Mesh(tornGeo, additive(new THREE.Color(.35, .38, .42), .08)); m3.scale.set(1.25, .9, 1.25);
+    g.add(m1, m2, m3); scene.add(g); tornados.push({ m: g, layers: [m1, m2, m3], tick: 0 });
+  }
   while (tornados.length > want) scene.remove(tornados.pop().m);
 }
 function syncSkills() { syncOrbitDucks(); syncTurrets(); syncTornados(); }
@@ -1863,8 +2019,13 @@ function updateSkills2(dt) {
   tornados.forEach((t, i) => {
     const a = G2.time * .8 + i * Math.PI, R = 5.5 + Math.sin(G2.time * .6 + i) * 1.5;
     const x = P.pos.x + Math.cos(a) * R, z = P.pos.z + Math.sin(a) * R;
-    t.m.position.set(x, heightAt(x, z), z); t.m.rotation.y -= dt * 9; t.m.scale.setScalar(.9 + kl * .08);
-    kickDust(x + rand(-.6, .6), z + rand(-.6, .6), 2, 1.4);
+    const gy2 = heightAt(x, z);
+    t.m.position.set(x, gy2, z); t.m.scale.setScalar(.9 + kl * .08);
+    t.layers[0].rotation.y -= dt * 9; t.layers[1].rotation.y -= dt * 13; t.layers[2].rotation.y -= dt * 6;
+    t.m.rotation.z = Math.sin(G2.time * 2 + i) * .08;
+    for (let k = 0; k < 9; k++) FXN.add({ x, y: gy2 + rand(0, .4), z, vy: rand(1.8, 3.6), life: rand(1.1, 1.7), s0: .5, s1: 1.6, c0: [.62, .58, .52], c1: [.78, .76, .72], a: .38, orbit: { x, y: gy2 + rand(0, .3), z, a: Math.random() * 6.283, r: rand(.25, .7), w: rand(6, 9), inward: -.55 } });
+    if (Math.random() < .5) FXN.add({ x, y: gy2, z, vy: rand(2, 4), life: rand(.8, 1.4), s0: .12, s1: .1, c0: [.15, .14, .12], c1: [.2, .2, .18], a: .9, orbit: { x, y: gy2 + .2, z, a: Math.random() * 6.283, r: rand(.6, 1.4), w: rand(7, 11), inward: -.2 } });
+    kickDust(x + rand(-.8, .8), z + rand(-.8, .8), 2, 1.4);
     t.tick -= dt;
     if (t.tick <= 0) {
       t.tick = .2; const rad = 1.8 + kl * .15;
@@ -1879,11 +2040,19 @@ function updateSkills2(dt) {
   const ml = skillLv('meteor');
   if (ml) { meteorT -= dt; if (meteorT <= 0) { meteorT = Math.max(1.1, 4 - ml * .55); callMeteor(ml); } }
   for (const m of meteors) {
-    m.t += dt / .9; m.m.position.lerpVectors(m.from, m.to, Math.min(1, m.t)); m.m.rotation.x += dt * 5;
-    burst(m.m.position.x, m.m.position.y, m.m.position.z, 2, [1, .5, .1], .6);
+    m.t += dt / .9; m.m.position.lerpVectors(m.from, m.to, Math.min(1, m.t)); m.m.rotation.x += dt * 5; m.m.rotation.z += dt * 3;
+    const mp = m.m.position;
+    for (let k = 0; k < 4; k++) FXA.add({ x: mp.x + rand(-.3, .3), y: mp.y + rand(-.3, .3), z: mp.z + rand(-.3, .3), vx: rand(.5, 2), vy: rand(1, 3), vz: rand(-1.5, -.2), life: rand(.35, .6), s0: rand(1, 1.6), s1: .1, c0: FIRE_C0, c1: FIRE_C1, a: .9, drag: 1.5 });
+    smoke(mp.x, mp.y, mp.z, .8, .1);
+    m.mark.material.opacity = .15 + m.t * .35;
     if (m.t >= 1) {
-      m.done = true; scene.remove(m.m);
+      m.done = true; scene.remove(m.m); scene.remove(m.mark);
       const p = m.to.clone(); p.y += .5; blastFx(p, m.R, [3, 1.6, .6]);
+      glowFlash(p.x, p.y + .5, p.z, m.R * 3, [3, 1.6, .5], .4);
+      sparks(p.x, p.y, p.z, 40, [3, 1.5, .4], 8, .1); for (let k = 0; k < 25; k++) ember(p.x, p.y, p.z, 1.8);
+      for (let k = 0; k < 10; k++) smoke(p.x + rand(-1, 1), p.y, p.z + rand(-1, 1), 1.4, .14);
+      groundRing(p.x, p.z, m.R * 2.2, new THREE.Color(2.4, 1, .3), .55, .12);
+      if (Math.hypot(p.x - P.pos.x, p.z - P.pos.z) < 18) { shake(.35); screenFlash('rgba(255,170,90,.18)', 200); }
       for (const e of enemies) { if (e.dead) continue; const d = Math.hypot(e.x - p.x, e.z - p.z) - e.r; if (d < m.R) damageEnemy(e, m.dmg * (1 - Math.max(0, d) / m.R * .5), false, false, (e.x - p.x) * 2, (e.z - p.z) * 2, new THREE.Vector3(e.x, e.by + e.h * .5, e.z)); }
     }
   }
@@ -1905,7 +2074,12 @@ function updateSkills2(dt) {
         if (d < 2.4 && tick) damageEnemy(e, h.dps * .25, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .5, e.z), true);
       }
     }
-    if (Math.random() < .6) { const a = Math.random() * 6.28, r = rand(2, h.R * .7); burst(c.x + Math.cos(a) * r, c.y, c.z + Math.sin(a) * r, 1, [.7, .4, 1], .3); }
+    if (h.t < h.life) for (let k = 0; k < 7; k++) {
+      const a = Math.random() * 6.283, r = rand(2.5, h.R * .75);
+      FXA.add({ x: c.x, y: c.y, z: c.z, vy: rand(-.15, .15), life: rand(1.2, 1.8), s0: rand(.18, .35), s1: .04, c0: [1.6, .7, 2.6], c1: [2.6, 2.4, 3], a: .9, orbit: { x: c.x, y: c.y + rand(-.4, .4), z: c.z, a, r, w: rand(2.2, 3.8), inward: 1.1 } });
+      if (k < 2) FXN.add({ x: c.x, y: c.y, z: c.z, life: rand(1.4, 2), s0: 1.2, s1: .3, c0: [.08, .02, .12], c1: [.02, 0, .04], a: .5, orbit: { x: c.x, y: c.y + rand(-.2, .2), z: c.z, a, r: r * 1.1, w: 2.4, inward: .9 } });
+    }
+    for (const e of enemies) { if (!e.dead && Math.hypot(e.x - c.x, e.z - c.z) < h.R && Math.random() < .08) FXA.add({ x: e.x, y: e.by + e.h * .5, z: e.z, life: .9, s0: .15, s1: .02, c0: [1.4, .6, 2.4], c1: [2, 2, 3], orbit: { x: c.x, y: e.by + e.h * .5, z: c.z, a: Math.atan2(e.z - c.z, e.x - c.x), r: Math.hypot(e.x - c.x, e.z - c.z), w: 3, inward: 1.6 } }); }
   }
   holes = holes.filter(h => !h.done);
   // taretler
@@ -1923,7 +2097,8 @@ function updateSkills2(dt) {
         t.cd = 1 / (2 + tl * .4);
         const from = t.g.position.clone(); from.y += .7;
         const to = new THREE.Vector3(tgt.x, tgt.by + tgt.h * .6, tgt.z);
-        tracer(from, to, 0xffd84a, .025, .06); SND.turret();
+        tracer(from, to, 0xffd84a, .03, .07); SND.turret();
+        const mz = from.clone().add(to.clone().sub(from).normalize().multiplyScalar(.5)); glowFlash(mz.x, mz.y, mz.z, .9, [3, 2.2, .8], .06); sparks(to.x, to.y, to.z, 4, [3, 2, .7], 2.5, .06);
         damageEnemy(tgt, 14 + tl * 6, Math.random() < S.crit, false, 0, 0, to);
       }
     }
@@ -2019,11 +2194,11 @@ function scrap() {
    PATRONLAR
    ===================================================================== */
 const BOSSES = {
-  kral:    { ad: 'KRAL ERDİ', alt: 'Ay\'ın tahtındaki hükümdar · şok dalgasından zıplayarak kaç', h: 7.5, hp: 3200, spd: 2.3, dmg: 34, xp: 260, tint: [1.12, .96, .7], weapon: 'kralasa', key: 0 },
-  mecha:   { ad: 'MECHA ERDİ', alt: 'Önce zırhını kır, sonra kendisini', h: 7, hp: 2000, armor: 1800, spd: 2.0, dmg: 30, xp: 300, tint: [.72, .78, .9], weapon: 'mechatop', key: 3 },
-  boyun:   { ad: 'UZUN BOYUNLU ERDİ', alt: 'Boynu uzar · zayıf noktası kafası', h: 6.4, hp: 3000, spd: 2.5, dmg: 30, xp: 320, tint: [.95, 1.05, .8], weapon: 'gozlazer', key: 5 },
-  kralice: { ad: 'KLON KRALİÇESİ', alt: 'Kopyalarına bölünür · sadece biri gerçek', h: 6.6, hp: 2800, spd: 2.7, dmg: 28, xp: 330, tint: [1.18, .76, 1.32], weapon: 'klontab', key: 7 },
-  ay:      { ad: 'AY ERDİ', alt: 'FİNAL PATRONU', h: 4.8, ms: 12, hp: 11000, spd: 1.6, dmg: 40, xp: 900, tint: [1.08, 1.06, 1.12], weapon: 'ayisin', key: 2, headOnly: true }
+  kral:    { ad: 'KRAL ERDİ', alt: 'Ay\'ın tahtındaki hükümdar · şok dalgasından zıplayarak kaç', h: 7.5, hp: 3200, spd: 2.3, dmg: 20, xp: 260, tint: [1.12, .96, .7], weapon: 'kralasa', key: 0 },
+  mecha:   { ad: 'MECHA ERDİ', alt: 'Önce zırhını kır, sonra kendisini', h: 7, hp: 2000, armor: 1800, spd: 2.0, dmg: 18, xp: 300, tint: [.72, .78, .9], weapon: 'mechatop', key: 3 },
+  boyun:   { ad: 'UZUN BOYUNLU ERDİ', alt: 'Boynu uzar · zayıf noktası kafası', h: 6.4, hp: 3000, spd: 2.5, dmg: 18, xp: 320, tint: [.95, 1.05, .8], weapon: 'gozlazer', key: 5 },
+  kralice: { ad: 'KLON KRALİÇESİ', alt: 'Kopyalarına bölünür · sadece biri gerçek', h: 6.6, hp: 2800, spd: 2.7, dmg: 16, xp: 330, tint: [1.18, .76, 1.32], weapon: 'klontab', key: 7 },
+  ay:      { ad: 'AY ERDİ', alt: 'FİNAL PATRONU', h: 4.8, ms: 12, hp: 11000, spd: 1.6, dmg: 22, xp: 900, tint: [1.08, 1.06, 1.12], weapon: 'ayisin', key: 2, headOnly: true }
 };
 // oyuncunun tahmini saniyelik hasarı (en iyi silah + yetenekler)
 function playerDps() {
@@ -2045,7 +2220,7 @@ const beamGeo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0, .5);
 function spawnBoss(id) {
   const B = BOSSES[id], cyc = Math.floor((G2.wave - 5) / 20);
   const e = spawnEnemy('boss');
-  Object.assign(e, { boss: id, h: B.h, ms: B.ms || 0, spd: B.spd, dmg: B.dmg * (1 + .25 * cyc) * (1 + .03 * G2.wave), xp: B.xp, tint: B.tint.slice(), headOnly: !!B.headOnly,
+  Object.assign(e, { boss: id, h: B.h, ms: B.ms || 0, spd: B.spd, dmg: B.dmg * (1 + .18 * cyc) * (1 + .015 * G2.wave), xp: B.xp, tint: B.tint.slice(), headOnly: !!B.headOnly,
     t1: 4, t2: 7, t3: 9, neck: id === 'boyun' ? 1.7 : 1, neck0: id === 'boyun' ? 1.7 : 1, phase: '', pt: 0 });
   const dps = playerDps(), fightSec = (B.headOnly ? 75 : 45) * (1 + .15 * cyc);
   e.hp = e.max = Math.max(B.hp * (1 + .45 * cyc) * (1 + .12 * G2.wave), dps * fightSec);
@@ -2123,19 +2298,19 @@ function rocketBarrage(e) {
     const tx = P.pos.x + Math.cos(a) * d + P.vel.x * .8, tz = P.pos.z + Math.sin(a) * d + P.vel.z * .8;
     const mark = new THREE.Mesh(discGeo, additive(new THREE.Color(1.6, .15, .1), .35)); mark.position.set(tx, heightAt(tx, tz) + .1, tz); mark.scale.setScalar(3); scene.add(mark);
     const rk = new THREE.Mesh(rocketGeo, rocketMat); scene.add(rk);
-    hazards.push({ kind: 'rocket', mark, rk, from: new THREE.Vector3(e.x + rand(-1, 1), e.by + e.h * .8, e.z), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .12, dur: 1.4, dmg: 18 + G2.wave * .5 });
+    hazards.push({ kind: 'rocket', mark, rk, from: new THREE.Vector3(e.x + rand(-1, 1), e.by + e.h * .8, e.z), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .12, dur: 1.4, dmg: 10 + G2.wave * .25 });
   }
   SND.roket();
 }
 function laserSweep(e) {
   const a = Math.atan2(P.pos.x - e.x, P.pos.z - e.z), dir = Math.random() < .5 ? 1 : -1;
   const m = new THREE.Mesh(beamGeo, additive(new THREE.Color(3, .3, .2), .9)); scene.add(m);
-  hazards.push({ kind: 'laser', m, e, a0: a - .7 * dir, a1: a + .7 * dir, t: -.7, dur: 2.2, dmg: 32 });
+  hazards.push({ kind: 'laser', m, e, a0: a - .7 * dir, a1: a + .7 * dir, t: -.7, dur: 2.2, dmg: 18 });
   SND.charge();
 }
 function eyeLaser(e) {
   const m = new THREE.Mesh(beamGeo, additive(new THREE.Color(3, .25, .25), .9)); scene.add(m);
-  hazards.push({ kind: 'eye', m, e, aim: P.pos.clone(), t: -1, dur: 1.5, dmg: 42 });
+  hazards.push({ kind: 'eye', m, e, aim: P.pos.clone(), t: -1, dur: 1.5, dmg: 22 });
   SND.charge();
 }
 function meteorShower(e, n = 10) {
@@ -2144,7 +2319,7 @@ function meteorShower(e, n = 10) {
     const tx = P.pos.x + Math.cos(a) * d, tz = P.pos.z + Math.sin(a) * d;
     const mark = new THREE.Mesh(discGeo, additive(new THREE.Color(1.6, .5, .05), .3)); mark.position.set(tx, heightAt(tx, tz) + .1, tz); mark.scale.setScalar(3.2); scene.add(mark);
     const rk = new THREE.Mesh(meteorGeo, meteorMat); scene.add(rk);
-    hazards.push({ kind: 'meteor', mark, rk, from: new THREE.Vector3(tx + 20, heightAt(tx, tz) + 50, tz - 12), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .15 - .6, dur: 1, dmg: 26 });
+    hazards.push({ kind: 'meteor', mark, rk, from: new THREE.Vector3(tx + 20, heightAt(tx, tz) + 50, tz - 12), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .15 - .6, dur: 1, dmg: 14 });
   }
   SND.whoosh();
 }
@@ -2866,12 +3041,14 @@ addEventListener('keydown', e => {
     if (e.code === 'KeyR') startReload();
     if (e.code === 'Tab' || e.code === 'KeyI') openInv();
     if (e.code === 'KeyG' && G2.inBreak) G2.breakT = 0;
+    if (e.code === 'Escape' && !document.pointerLockElement) pause();
     if (/^Digit[1-6]$/.test(e.code)) switchWeapon(+e.code.slice(5) - 1);
   } else if (state === 'case' && (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter')) skipCase();
   else if (state === 'levelup' && /^Digit[1-3]$/.test(e.code)) chooseCard(+e.code.slice(5) - 1);
   else if (state === 'levelup' && e.code === 'KeyR') rerollCards();
   else if (state === 'inv' && (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape')) closeInv();
   else if (state === 'shop2' && (e.code === 'Escape' || e.code === 'KeyE')) closeShop();
+  else if (state === 'pause' && e.code === 'Escape') { if (!$('settings').classList.contains('hidden')) { $('settings').classList.add('hidden'); $('pause').classList.remove('hidden'); } else showGame(); }
   else if (state === 'menu') menuKey(e);
   if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();
 });
@@ -2890,9 +3067,15 @@ document.addEventListener('mousemove', e => {
   const s = .0021 * SET.sens * (1 - zoom * .7);
   P.yaw -= e.movementX * s; P.pitch = clamp(P.pitch - e.movementY * s, -1.5, 1.5);
 });
-document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && state === 'play' && !isTouch) pause(); });
+document.addEventListener('pointerlockchange', () => { if (!document.pointerLockElement && state === 'play' && !isTouch && $('clickResume').classList.contains('hidden')) pause(); });
 renderer.domElement.addEventListener('click', () => { if (state === 'play' && !isTouch && !document.pointerLockElement) lockPointer(); });
-function lockPointer() { if (isTouch) return; try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+function lockPointer() {
+  if (isTouch) return;
+  const fail = () => { if (state === 'play' && !document.pointerLockElement) $('clickResume').classList.remove('hidden'); };
+  try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => setTimeout(fail, 50)); else setTimeout(fail, 300); } catch (e) { fail(); }
+}
+document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement) $('clickResume').classList.add('hidden'); });
+document.addEventListener('pointerlockerror', () => { if (state === 'play') $('clickResume').classList.remove('hidden'); });
 
 function collideRocks(p) {
   for (const r of rocks) {
@@ -2989,7 +3172,8 @@ function updateWaves(dt) {
     G2.breakT -= dt;
     const c = Math.ceil(G2.breakT);
     if (G2.breakT <= 5 && c > 0 && c !== G2.cd) { G2.cd = c; const el = $('countdown'); el.textContent = c; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); SND.count(c); }
-    if (G2.breakT <= 0) { G2.cd = 0; $('countdown').classList.remove('pop'); startWave(G2.wave + 1); }
+    $('skipHint').innerHTML = `<kbd>G</kbd> Dalgayı hemen başlat${merchant ? ' &nbsp;·&nbsp; <kbd>E</kbd> Tüccar' : ''} <small>${Math.ceil(G2.breakT)} sn</small>`; $('skipHint').classList.add('on');
+    if (G2.breakT <= 0) { G2.cd = 0; $('countdown').classList.remove('pop'); $('skipHint').classList.remove('on'); startWave(G2.wave + 1); }
     return;
   }
   if (G2.bossT > 0) { G2.bossT -= dt; if (G2.bossT <= 0) spawnBoss(bossFor(G2.wave)); }
@@ -3005,7 +3189,7 @@ function updateWaves(dt) {
   } else if (alive === 0 && !G2.bossAlive && G2.bossT <= 0) {
     G2.inBreak = true;
     const shop = G2.wave % 2 === 0 || G2.wave % 5 === 0;
-    G2.breakT = shop ? 22 : 6;
+    G2.breakT = shop ? 12 : 6;
     if (shop) { spawnMerchant(); msg(`DALGA ${G2.wave} TAMAMLANDI`, 'Tüccar Erdi geldi! E ile alışveriş · G: dalgayı hemen başlat'); }
     else msg(`DALGA ${G2.wave} TAMAMLANDI`, 'Yeni dalga 6 saniye sonra · G: hemen başlat · Tab: envanter');
   }
@@ -3141,6 +3325,8 @@ function showWName() {
 }
 /* ---------- oyun akışı ---------- */
 function clearWorld() {
+  $('skipHint').classList.remove('on');
+  clearFX();
   $('countdown').classList.remove('pop');
   enemies = []; orbs = [];
   rockets.forEach(r => scene.remove(r.m)); rockets = []; ducksP.forEach(d => scene.remove(d.m)); ducksP = []; spits.forEach(s => scene.remove(s.m)); spits = [];
@@ -3267,6 +3453,7 @@ $('bShopBack').onclick = () => { $('shop').classList.add('hidden'); refreshMenu(
 $('bAchBack').onclick = () => { $('achv').classList.add('hidden'); refreshMenu(); };
 $('bSetBack').onclick = () => { $('settings').classList.add('hidden'); if (setFrom === 'pause') $('pause').classList.remove('hidden'); };
 $('bResume').onclick = () => showGame();
+$('clickResume').onclick = () => { $('clickResume').classList.add('hidden'); lockPointer(); };
 $('bPSet').onclick = () => { setFrom = 'pause'; $('pause').classList.add('hidden'); $('settings').classList.remove('hidden'); };
 let quitArm = 0;
 $('bPMenu').onclick = () => {
@@ -3363,7 +3550,7 @@ function frame(now) {
   else if (state === 'intro') { updateIntro(dt); updateEnemies(0); }
   if (state === 'play') { updateHazards(dt); updateMerchant(dt); updateMagnets(dt); }
   updateMutationFx(dt);
-  updateParts(dt); updateTracers(dt); updateDust(dt); updateDmgText(dt);
+  updateParts(dt); updateTracers(dt); updateDust(dt); updateDmgText(dt); updateFX(dt);
   hurtT -= dt; if (hurtT <= 0) $('hurt').style.opacity = 0;
   hmT -= dt; if (hmT <= 0) $('hitm').style.opacity = 0;
   if (!['play', 'pause', 'levelup', 'case'].includes(state)) vm.visible = false;
@@ -3386,7 +3573,7 @@ setTimeout(() => { $('fade').style.opacity = 0; }, 150);
 addEventListener('pagehide', () => { if (state === 'play') saveMeta(); });
 window.__ev = { get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
   heightAt, spawnEnemy, beginPlay, shoot, gainXp, chooseCard, get chests() { return chests; }, openChest, spawnChest, giveWeapon, camera, renderer, startReload,
-  killAll: () => enemies.forEach(e => !e.dead && !e.boss && killEnemy(e)), spawnBoss, playerDps, wStats, dropMagnet, get orbs() { return orbs; }, dmg: e => damageEnemy(e, 5, false, false, 0, 0, new THREE.Vector3(e.x, e.by + 1, e.z)), openShop, spawnMerchant, get merchant() { return merchant; }, startWave, rerollCards, skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
+  killAll: () => enemies.forEach(e => !e.dead && !e.boss && killEnemy(e)), spawnBoss, fx: { bolt: () => { const e = enemies.find(x => !x.dead); e && lightning(e, 50); }, ice: () => iceNova(4), meteor: () => callMeteor(4) }, playerDps, wStats, dropMagnet, get orbs() { return orbs; }, dmg: e => damageEnemy(e, 5, false, false, 0, 0, new THREE.Vector3(e.x, e.by + 1, e.z)), openShop, spawnMerchant, get merchant() { return merchant; }, startWave, rerollCards, skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
 </script>
 </body>
 </html>
