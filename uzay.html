@@ -266,6 +266,9 @@
   .daily.wide h5{font-size:13px;margin-bottom:6px}
   .daily.wide .dq b{font-size:14px}.daily.wide .dq small,.daily.wide .dq em{font-size:12px}
   .daily.wide .dq{gap:10px;padding:6px 0 8px}
+  #countdown{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:140px;font-weight:900;color:#fff;text-shadow:0 0 40px rgba(255,140,40,.8),0 6px 18px #000;pointer-events:none;opacity:0}
+  #countdown.pop{animation:cd .9s forwards;opacity:.92}
+  @keyframes cd{0%{transform:translate(-50%,-50%) scale(1.7)}20%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-50%,-50%) scale(.9)}}
 </style>
 </head>
 <body>
@@ -292,6 +295,7 @@
 <div id="dmgs"></div>
 <div id="prompt"></div>
 <div id="msg"></div>
+<div id="countdown"></div>
 <div id="loot"><small>SANDIK</small><b></b><span></span></div>
 
 <div id="menu">
@@ -806,7 +810,8 @@ function addPrint(x, z, yaw, side) {
 const dust = (() => {
   const MAX = 600, pos = new Float32Array(MAX * 3), vel = new Float32Array(MAX * 3), life = new Float32Array(MAX);
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const m = new THREE.PointsMaterial({ color: 0x9a968f, size: .05, transparent: true, opacity: .8, depthWrite: false });
+  const dt0 = document.createElement('canvas'); dt0.width = dt0.height = 32; const dx0 = dt0.getContext('2d'); const gr0 = dx0.createRadialGradient(16, 16, 0, 16, 16, 16); gr0.addColorStop(0, '#fff'); gr0.addColorStop(1, 'rgba(255,255,255,0)'); dx0.fillStyle = gr0; dx0.fillRect(0, 0, 32, 32);
+  const m = new THREE.PointsMaterial({ color: 0x9a968f, size: .06, map: new THREE.CanvasTexture(dt0), alphaTest: .05, transparent: true, opacity: .85, depthWrite: false });
   const pts = new THREE.Points(g, m); pts.frustumCulled = false;
   return { pts, pos, vel, life, MAX, i: 0 };
 })();
@@ -915,33 +920,35 @@ const SND = {
   horn() { tone(220, 210, 1, .25, 'sawtooth'); tone(330, 320, 1, .2, 'sawtooth', .1); },
   charge() { tone(200, 1800, .9, .15, 'sawtooth'); },
   magic() { [880, 1320, 1760, 1320].forEach((f, i) => tone(f, f, .15, .1, 'sine', i * .06)); },
+  count(c) { tone(c === 1 ? 1320 : 880, c === 1 ? 1320 : 880, .18, .22, 'square'); },
+  magnet() { tone(300, 1400, .5, .2, 'sawtooth'); [1046, 1318, 1568].forEach((f, i) => tone(f, f, .2, .1, 'sine', .3 + i * .07)); },
   merchant() { [523, 659, 784, 659, 1046].forEach((f, i) => tone(f, f, .18, .12, 'triangle', i * .1)); }
 };
 
 /* ---------- silahlar ---------- */
 const WEAPONS = {
-  tabanca:  { ad: 'Tabanca',         dmg: 26, rate: 3.4, spread: .01,  pellets: 1, mag: 12,  reload: 1.1, kick: .06, col: 0xffc070 },
-  pompali:  { ad: 'Pompalı',         dmg: 14, rate: 1.25, spread: .085, pellets: 8, mag: 6,   reload: 2.0, kick: .16, col: 0xffa040 },
-  makineli: { ad: 'Makineli',        dmg: 15, rate: 10,  spread: .032, pellets: 1, mag: 35,  reload: 1.8, kick: .035, col: 0xffd080 },
-  minigun:  { ad: 'Minigun',         dmg: 11, rate: 18,  spread: .05,  pellets: 1, mag: 120, reload: 3.2, kick: .02, col: 0xffe0a0 },
-  keskin:   { ad: 'Keskin Nişancı',  dmg: 170, rate: .9, spread: 0,    pellets: 1, mag: 5,   reload: 2.4, kick: .22, col: 0xffffff, pierce: 3, head: 2.6, scope: true },
-  lazer:    { ad: 'Lazer Tüfeği',    dmg: 75, rate: 1.4, spread: 0,    pellets: 1, mag: 5,   reload: 2.2, kick: .08, col: 0x60e0ff, pierce: 5, beam: true },
-  dondurucu:{ ad: 'Dondurucu',       dmg: 9,  rate: 12,  spread: .02,  pellets: 1, mag: 50,  reload: 1.8, kick: .015, col: 0x9fe8ff, freeze: true },
-  ordek:    { ad: 'Ördek Fırlatıcı', dmg: 42, rate: 2.2, spread: .01,  pellets: 1, mag: 8,   reload: 1.6, kick: .07, col: 0xffd84a, duck: true, bounces: 3 },
-  kralasa:  { ad: 'Kral Asası',      dmg: 55, rate: 2.5, spread: 0,    pellets: 1, mag: 10,  reload: 1.6, kick: .06, col: 0xffd23f, chain: 3, boss: true },
-  mechatop: { ad: 'Mecha Topu',      dmg: 45, rate: 4,   spread: .02,  pellets: 1, mag: 12,  reload: 2.0, kick: .1, col: 0xff9040, rocket: true, splash: 3, boss: true },
-  gozlazer: { ad: 'Göz Lazeri',      dmg: 9,  rate: 22,  spread: .004, pellets: 1, mag: 110, reload: 2.4, kick: .008, col: 0xff4040, pierce: 10, beam: true, boss: true },
-  klontab:  { ad: 'Klon Tabancası',  dmg: 30, rate: 4,   spread: .03,  pellets: 3, mag: 18,  reload: 1.3, kick: .07, col: 0xd080ff, boss: true },
-  ayisin:   { ad: 'Ay Işını',        dmg: 320, rate: .9, spread: 0,    pellets: 1, mag: 6,   reload: 2.6, kick: .25, col: 0xcfe8ff, pierce: 99, beam: true, head: 2.5, scope: true, blast: 3.5, boss: true },
-  roket:    { ad: 'Roketatar',       dmg: 120, rate: .75, spread: .006, pellets: 1, mag: 2,  reload: 2.6, kick: .2, col: 0xff7040, rocket: true, splash: 5 }
+  tabanca:  { ad: 'Tabanca',         dmg: 24, rate: 3.4, spread: .01,  pellets: 1, mag: 12,  reload: 1.1, kick: .06, col: 0xffc070 },
+  pompali:  { ad: 'Pompalı',         dmg: 11, rate: 1.25, spread: .085, pellets: 8, mag: 6,   reload: 2.0, kick: .16, col: 0xffa040 },
+  makineli: { ad: 'Makineli',        dmg: 12, rate: 10,  spread: .032, pellets: 1, mag: 35,  reload: 1.8, kick: .035, col: 0xffd080 },
+  minigun:  { ad: 'Minigun',         dmg: 8, rate: 18,  spread: .05,  pellets: 1, mag: 120, reload: 3.2, kick: .02, col: 0xffe0a0 },
+  keskin:   { ad: 'Keskin Nişancı',  dmg: 115, rate: .9, spread: 0,    pellets: 1, mag: 5,   reload: 2.4, kick: .22, col: 0xffffff, pierce: 3, head: 2.2, scope: true },
+  lazer:    { ad: 'Lazer Tüfeği',    dmg: 55, rate: 1.4, spread: 0,    pellets: 1, mag: 5,   reload: 2.2, kick: .08, col: 0x60e0ff, pierce: 5, beam: true },
+  dondurucu:{ ad: 'Dondurucu',       dmg: 7,  rate: 12,  spread: .02,  pellets: 1, mag: 50,  reload: 1.8, kick: .015, col: 0x9fe8ff, freeze: true },
+  ordek:    { ad: 'Ördek Fırlatıcı', dmg: 32, rate: 2.2, spread: .01,  pellets: 1, mag: 8,   reload: 1.6, kick: .07, col: 0xffd84a, duck: true, bounces: 3 },
+  kralasa:  { ad: 'Kral Asası',      dmg: 40, rate: 2.5, spread: 0,    pellets: 1, mag: 10,  reload: 1.6, kick: .06, col: 0xffd23f, chain: 3, boss: true },
+  mechatop: { ad: 'Mecha Topu',      dmg: 34, rate: 4,   spread: .02,  pellets: 1, mag: 12,  reload: 2.0, kick: .1, col: 0xff9040, rocket: true, splash: 3, boss: true },
+  gozlazer: { ad: 'Göz Lazeri',      dmg: 7,  rate: 22,  spread: .004, pellets: 1, mag: 110, reload: 2.4, kick: .008, col: 0xff4040, pierce: 10, beam: true, boss: true },
+  klontab:  { ad: 'Klon Tabancası',  dmg: 22, rate: 4,   spread: .03,  pellets: 3, mag: 18,  reload: 1.3, kick: .07, col: 0xd080ff, boss: true },
+  ayisin:   { ad: 'Ay Işını',        dmg: 170, rate: .9, spread: 0,    pellets: 1, mag: 6,   reload: 2.6, kick: .25, col: 0xcfe8ff, pierce: 99, beam: true, head: 2, scope: true, blast: 3.5, boss: true },
+  roket:    { ad: 'Roketatar',       dmg: 90, rate: .75, spread: .006, pellets: 1, mag: 2,  reload: 2.6, kick: .2, col: 0xff7040, rocket: true, splash: 5 }
 };
 const WIDS = Object.keys(WEAPONS);
 const MAX_W = 6;
 const RAR = [
   { ad: 'SIRADAN', c: '#b8c2cc', p: 55, m: 1 },
-  { ad: 'NADİR', c: '#4da3ff', p: 28, m: 1.15 },
-  { ad: 'EPİK', c: '#b45cff', p: 13, m: 1.32 },
-  { ad: 'EFSANEVİ', c: '#ffb020', p: 4, m: 1.55 }
+  { ad: 'NADİR', c: '#4da3ff', p: 28, m: 1.1 },
+  { ad: 'EPİK', c: '#b45cff', p: 13, m: 1.22 },
+  { ad: 'EFSANEVİ', c: '#ffb020', p: 4, m: 1.38 }
 ];
 // şans: nadir sonuçların ağırlığını büyütür
 function rarOdds(bonus = 0) {
@@ -956,15 +963,15 @@ function rollRar(bonus = 0) {
 
 /* ---------- seviye güçleri ---------- */
 const UPG = [
-  { id: 'rate', ad: 'Atış Hızı', ic: '⚡', v: [.10, .18, .28, .45], f: v => S.rate *= 1 + v, t: v => `+%${Math.round(v * 100)} atış hızı` },
-  { id: 'dmg', ad: 'Hasar', ic: '💥', v: [.10, .18, .28, .45], f: v => S.dmg *= 1 + v, t: v => `+%${Math.round(v * 100)} hasar` },
-  { id: 'multi', ad: 'Mermi Sayısı', ic: '🔱', v: [0, 1, 1, 2], min: 1, f: v => S.extra += v, t: v => `Her atışta +${v} mermi` },
-  { id: 'speed', ad: 'Koşma Hızı', ic: '👟', v: [.06, .10, .15, .22], f: v => S.speed *= 1 + v, t: v => `+%${Math.round(v * 100)} hareket hızı` },
+  { id: 'rate', ad: 'Atış Hızı', ic: '⚡', v: [.06, .10, .15, .22], f: v => S.rate += v, t: v => `+%${Math.round(v * 100)} atış hızı` },
+  { id: 'dmg', ad: 'Hasar', ic: '💥', v: [.07, .12, .18, .26], f: v => S.dmg += v, t: v => `+%${Math.round(v * 100)} hasar` },
+  { id: 'multi', ad: 'Mermi Sayısı', ic: '🔱', v: [0, 1, 1, 2], min: 1, f: v => S.extra = Math.min(4, S.extra + v), t: v => `Her atışta +${v} mermi (%55 hasar)` },
+  { id: 'speed', ad: 'Koşma Hızı', ic: '👟', v: [.05, .08, .12, .18], f: v => S.speed = Math.min(1.8, S.speed + v), t: v => `+%${Math.round(v * 100)} hareket hızı` },
   { id: 'hp', ad: 'Maksimum Can', ic: '❤️', v: [15, 25, 40, 60], f: v => { P.maxHp += v; P.hp += v; }, t: v => `+${v} maksimum can` },
   { id: 'regen', ad: 'Can Yenileme', ic: '💚', v: [.5, 1, 1.8, 3], f: v => S.regen += v, t: v => `Saniyede +${v} can` },
-  { id: 'crit', ad: 'Kritik Vuruş', ic: '🎯', v: [.05, .08, .12, .20], f: v => S.crit += v, t: v => `+%${Math.round(v * 100)} kritik şansı (2x hasar)` },
+  { id: 'crit', ad: 'Kritik Vuruş', ic: '🎯', v: [.04, .06, .09, .14], f: v => S.crit = Math.min(.45, S.crit + v), t: v => `+%${Math.round(v * 100)} kritik şansı (1.8x hasar)` },
   { id: 'pierce', ad: 'Delici Mermi', ic: '🗡️', v: [0, 1, 1, 2], min: 1, f: v => S.pierce += v, t: v => `Mermiler +${v} düşmanı deler` },
-  { id: 'magnet', ad: 'XP Mıknatısı', ic: '🧲', v: [.3, .5, .8, 1.2], f: v => S.magnet *= 1 + v, t: v => `+%${Math.round(v * 100)} XP toplama alanı` },
+  { id: 'magnet', ad: 'XP Mıknatısı', ic: '🧲', v: [.3, .5, .8, 1.2], f: v => S.magnet += v, t: v => `+%${Math.round(v * 100)} XP toplama alanı` },
   { id: 'jump', ad: 'Zıplama', ic: '🦘', v: [.15, .25, .4, .6], f: v => S.jump *= 1 + v, t: v => `+%${Math.round(v * 100)} zıplama gücü` },
   { id: 'steal', ad: 'Can Çalma', ic: '🩸', v: [0, 0, 1, 2], min: 2, f: v => S.steal += v, t: v => `Her öldürmede +${v} can` },
   { id: 'armor', ad: 'Zırh', ic: '🛡️', v: [.05, .08, .12, .18], f: v => S.armor = Math.min(.6, S.armor + v), t: v => `Alınan hasar -%${Math.round(v * 100)}` },
@@ -989,7 +996,7 @@ const SKILL_MAX = 5;
 
 /* ---------- oyun durumu ---------- */
 let S, P, G2;
-function xpNeedFor(lv) { return Math.round(22 + lv * 11 + Math.pow(lv, 1.7) * 2.5); }
+function xpNeedFor(lv) { return Math.round(26 + lv * 14 + Math.pow(lv, 1.85) * 3); }
 
 /* ---------- kalıcı geliştirmeler + başarımlar ---------- */
 const META_KEY = 'ev_meta';
@@ -1018,8 +1025,8 @@ function cloudPush() {
 }
 const PERMA = [
   { id: 'hp', ad: 'Dayanıklılık', ic: '❤️', max: 10, d: l => `Başlangıç canı +${l * 10}`, cost: l => 40 + l * 35 },
-  { id: 'dmg', ad: 'Ateş Gücü', ic: '💥', max: 10, d: l => `Hasar +%${l * 5}`, cost: l => 50 + l * 45 },
-  { id: 'rate', ad: 'Tetik Parmağı', ic: '⚡', max: 8, d: l => `Atış hızı +%${l * 4}`, cost: l => 50 + l * 45 },
+  { id: 'dmg', ad: 'Ateş Gücü', ic: '💥', max: 10, d: l => `Hasar +%${l * 4}`, cost: l => 50 + l * 45 },
+  { id: 'rate', ad: 'Tetik Parmağı', ic: '⚡', max: 8, d: l => `Atış hızı +%${l * 3}`, cost: l => 50 + l * 45 },
   { id: 'speed', ad: 'Ay Botları', ic: '👟', max: 6, d: l => `Hareket hızı +%${l * 3}`, cost: l => 40 + l * 40 },
   { id: 'reload', ad: 'Hızlı Eller', ic: '🔄', max: 6, d: l => `Şarjör değiştirme -%${l * 6}`, cost: l => 40 + l * 40 },
   { id: 'band', ad: 'İlk Yardım', ic: '🩹', max: 3, d: l => `Oyuna +${l} bandajla başla`, cost: l => 80 + l * 80 },
@@ -1080,7 +1087,7 @@ function checkAch() {
 }
 
 function freshRun() {
-  S = { dmg: 1 + UL('dmg') * .05, rate: 1 + UL('rate') * .04, extra: 0, speed: 1 + UL('speed') * .03, regen: 0, crit: .05, pierce: 0,
+  S = { dmg: 1 + UL('dmg') * .04, rate: 1 + UL('rate') * .03, extra: 0, speed: 1 + UL('speed') * .03, regen: 0, crit: .05, pierce: 0,
         magnet: 1 + UL('magnet') * .15, jump: 1, steal: 0, armor: 0, reload: 1 - UL('reload') * .06, mag: 1, xp: 1 + UL('xp') * .08, luck: UL('luck'), taken: {} };
   const hp = 100 + UL('hp') * 10;
   P = { pos: new THREE.Vector3(0, 0, 9), vel: new THREE.Vector3(), yaw: 0, pitch: 0, ground: true, stam: 1,
@@ -1232,10 +1239,10 @@ function spawnEnemy(type, px, pz, opts = {}) {
     x = P.pos.x + Math.cos(a) * d; z = P.pos.z + Math.sin(a) * d;
     const r = Math.hypot(x, z); if (r > WALK_R + 10) { x *= (WALK_R + 10) / r; z *= (WALK_R + 10) / r; }
   }
-  const hpMul = 1 + .2 * (w - 1) + .006 * (w - 1) * (w - 1) + (type === 'boss' ? .3 * Math.max(0, Math.floor(w / 5) - 1) : 0);
+  const hpMul = 1 + .24 * (w - 1) + .014 * (w - 1) * (w - 1) + (type === 'boss' ? .3 * Math.max(0, Math.floor(w / 5) - 1) : 0);
   const elite = !opts.ally && type !== 'boss' && type !== 'yavru' && w >= 4 && Math.random() < Math.min(.18, .04 + w * .008);
   const e = { type, x, z, y: heightAt(x, z), h: T.h * rand(.94, 1.06) * (elite ? 1.25 : 1), hp: T.hp * hpMul * (elite ? 2.6 : 1), max: 0,
-    spd: T.spd * Math.min(1.3, 1 + .022 * (w - 1)) * rand(.9, 1.1) * (elite ? 1.12 : 1), dmg: T.dmg * (1 + .09 * (w - 1)) * (elite ? 1.4 : 1),
+    spd: T.spd * Math.min(1.3, 1 + .022 * (w - 1)) * rand(.9, 1.1) * (elite ? 1.12 : 1), dmg: T.dmg * (1 + .11 * (w - 1)) * (elite ? 1.4 : 1),
     xp: T.xp * (elite ? 3 : 1), tint: elite ? [1.45, 1.15, .45] : T.tint, drop: T.drop * (elite ? 3 : 1), elite,
     ph: Math.random() * 6.28, yaw: 0, flash: 0, cd: rand(.3, 1), dead: 0, kx: 0, kz: 0, atk: 0, wind: 0, age: 0, slow: 0, burnT: 0,
     alt: T.fly ? 4 : T.balloon ? 7 : 0, vy: 0, swell: 0, fuse: 0, side: Math.random() < .5 ? -1 : 1, leapCd: rand(1, 2.5) };
@@ -1531,7 +1538,7 @@ function updateOrbs(dt) {
     o.t += dt;
     const dx = P.pos.x - o.x, dz = P.pos.z - o.z, dy = (P.pos.y - .9) - o.y, d = Math.hypot(dx, dy, dz) || .01;
     if (d < R || o.pull) {
-      o.pull = true; const sp = 6 + o.t * 8;
+      o.pull = true; const sp = 6 + Math.min(o.t * 8, 60) + d * .6;
       o.x += dx / d * sp * dt; o.y += dy / d * sp * dt; o.z += dz / d * sp * dt;
       if (d < .7) { o.got = true; gainXp(o.val); SND.xp(); }
     } else {
@@ -1549,12 +1556,38 @@ function gainXp(v) {
   if (G2.pendingLv && state === 'play') openLevelUp();
 }
 
+/* ---------- mıknatıs eşyası ---------- */
+let magnets = [];
+const magGeo = merge([new THREE.TorusGeometry(.26, .08, 10, 20, Math.PI).rotateZ(Math.PI)]);
+const magTipGeo = merge([new THREE.CylinderGeometry(.085, .085, .14, 10).translate(-.26, .07, 0), new THREE.CylinderGeometry(.085, .085, .14, 10).translate(.26, .07, 0)]);
+const magMat = new THREE.MeshStandardMaterial({ color: 0xe0302a, roughness: .35, metalness: .3, emissive: 0x400808 });
+const magTipMat = new THREE.MeshStandardMaterial({ color: 0xdfe6ee, roughness: .2, metalness: .9 });
+function dropMagnet(x, z) {
+  const g = new THREE.Group();
+  const a = new THREE.Mesh(magGeo, magMat), b = new THREE.Mesh(magTipGeo, magTipMat);
+  const glow = new THREE.Mesh(new THREE.CircleGeometry(.8, 32).rotateX(-Math.PI / 2), additive(new THREE.Color(1.2, .3, .3), .35)); glow.position.y = -.85;
+  g.add(a, b, glow); g.position.set(x, heightAt(x, z) + .9, z); scene.add(g);
+  magnets.push({ g, x, z, t: 0 }); msg('', '🧲 Mıknatıs düştü!');
+}
+function updateMagnets(dt) {
+  for (const m of magnets) {
+    m.t += dt; m.g.rotation.y += dt * 2.5; m.g.position.y = heightAt(m.x, m.z) + .9 + Math.sin(m.t * 3) * .12;
+    if (Math.hypot(P.pos.x - m.x, P.pos.z - m.z) < 1.5) {
+      m.done = true; orbs.forEach(o => { o.pull = true; o.t = Math.max(o.t, 1); });
+      SND.magnet(); msg('🧲 MIKNATIS!', 'Haritadaki bütün XP sana geliyor'); burst(m.x, m.g.position.y, m.z, 40, [1, .3, .3], 3);
+    } else if (m.t > 40) m.done = true;
+    if (m.done) scene.remove(m.g);
+  }
+  magnets = magnets.filter(m => !m.done);
+}
+
 /* ---------- parçacıklar ---------- */
 const PMAX = 900;
 const pPos = new Float32Array(PMAX * 3).fill(-1e4), pCol = new Float32Array(PMAX * 3), pVel = new Float32Array(PMAX * 3), pLife = new Float32Array(PMAX);
 const pGeo = new THREE.BufferGeometry();
 pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3)); pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
-const parts = new THREE.Points(pGeo, new THREE.PointsMaterial({ size: .09, vertexColors: true, transparent: true, depthWrite: false }));
+const dotTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, '#fff'); g.addColorStop(.5, 'rgba(255,255,255,.8)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+const parts = new THREE.Points(pGeo, new THREE.PointsMaterial({ size: .09, map: dotTex, alphaTest: .05, vertexColors: true, transparent: true, depthWrite: false }));
 parts.frustumCulled = false; scene.add(parts);
 let pI = 0;
 function burst(x, y, z, n, col, pow) {
@@ -1986,12 +2019,24 @@ function scrap() {
    PATRONLAR
    ===================================================================== */
 const BOSSES = {
-  kral:    { ad: 'KRAL ERDİ', alt: 'Ay\'ın tahtındaki hükümdar · şok dalgasından zıplayarak kaç', h: 7.5, hp: 2600, spd: 2.3, dmg: 34, xp: 260, tint: [1.12, .96, .7], weapon: 'kralasa', key: 0 },
+  kral:    { ad: 'KRAL ERDİ', alt: 'Ay\'ın tahtındaki hükümdar · şok dalgasından zıplayarak kaç', h: 7.5, hp: 3200, spd: 2.3, dmg: 34, xp: 260, tint: [1.12, .96, .7], weapon: 'kralasa', key: 0 },
   mecha:   { ad: 'MECHA ERDİ', alt: 'Önce zırhını kır, sonra kendisini', h: 7, hp: 2000, armor: 1800, spd: 2.0, dmg: 30, xp: 300, tint: [.72, .78, .9], weapon: 'mechatop', key: 3 },
   boyun:   { ad: 'UZUN BOYUNLU ERDİ', alt: 'Boynu uzar · zayıf noktası kafası', h: 6.4, hp: 3000, spd: 2.5, dmg: 30, xp: 320, tint: [.95, 1.05, .8], weapon: 'gozlazer', key: 5 },
   kralice: { ad: 'KLON KRALİÇESİ', alt: 'Kopyalarına bölünür · sadece biri gerçek', h: 6.6, hp: 2800, spd: 2.7, dmg: 28, xp: 330, tint: [1.18, .76, 1.32], weapon: 'klontab', key: 7 },
   ay:      { ad: 'AY ERDİ', alt: 'FİNAL PATRONU', h: 4.8, ms: 12, hp: 11000, spd: 1.6, dmg: 40, xp: 900, tint: [1.08, 1.06, 1.12], weapon: 'ayisin', key: 2, headOnly: true }
 };
+// oyuncunun tahmini saniyelik hasarı (en iyi silah + yetenekler)
+function playerDps() {
+  let best = 0;
+  for (const w of P.weapons.concat(P.bag.filter(Boolean))) {
+    const st = wStats(w), shots = st.pellets + S.extra * (st.pellets > 1 ? 2 : 1) * .55;
+    const per = st.dmg * shots * (1 + S.crit * .8) * (st.rocket ? 1.6 : 1) * (st.chain ? 1.8 : 1) * (st.blast ? 1.4 : 1);
+    const cycle = st.mag / st.rate + st.reload;
+    best = Math.max(best, per * st.mag / cycle);
+  }
+  let sk = 0; for (const [id, l] of Object.entries(P.skills)) sk += l * 9;
+  return best + sk;
+}
 function bossFor(w) { if (w % 20 === 0) return 'ay'; return ['kral', 'mecha', 'boyun', 'kralice'][((w / 5) - 1 - Math.floor(w / 20)) % 4]; }
 let hazards = [];              // şok dalgaları, roket nişanları, meteor nişanları, lazerler
 const ringGeo = new THREE.RingGeometry(.88, 1, 64).rotateX(-Math.PI / 2);
@@ -2002,8 +2047,9 @@ function spawnBoss(id) {
   const e = spawnEnemy('boss');
   Object.assign(e, { boss: id, h: B.h, ms: B.ms || 0, spd: B.spd, dmg: B.dmg * (1 + .25 * cyc) * (1 + .03 * G2.wave), xp: B.xp, tint: B.tint.slice(), headOnly: !!B.headOnly,
     t1: 4, t2: 7, t3: 9, neck: id === 'boyun' ? 1.7 : 1, neck0: id === 'boyun' ? 1.7 : 1, phase: '', pt: 0 });
-  e.hp = e.max = B.hp * (1 + .45 * cyc) * (1 + .025 * G2.wave);
-  if (B.armor) { e.armor = e.armorMax = B.armor * (1 + .45 * cyc); }
+  const dps = playerDps(), fightSec = (B.headOnly ? 75 : 45) * (1 + .15 * cyc);
+  e.hp = e.max = Math.max(B.hp * (1 + .45 * cyc) * (1 + .12 * G2.wave), dps * fightSec);
+  if (B.armor) { e.armor = e.armorMax = e.hp * .55; e.hp = e.max = e.hp * .7; }
   e.r = (B.ms ? B.ms * .15 : B.h * .15); if (B.headOnly) { e.alt = 9; }
   G2.bossAlive = e; G2.bossId = id;
   $('boss').querySelector('b').textContent = B.ad;
@@ -2267,7 +2313,7 @@ const SHOP_POOL = [
   { id: 'reroll', ic: '🎲', ad: 'Kart Yenileme', d: '+2 kart yenileme hakkı', p: w => 35 + w * 2, f: () => { P.rerolls += 2; } },
   { id: 'maxhp', ic: '❤️', ad: 'Can Taşı', d: '+15 maksimum can', p: w => 60 + w * 4, f: () => { P.maxHp += 15; P.hp += 15; } },
   { id: 'level', ic: '📈', ad: 'Bilgelik İksiri', d: 'Hemen 1 seviye atla', p: w => 90 + w * 8, f: () => { G2.potion = true; } },
-  { id: 'gunup', ic: '🔧', ad: 'Silah Bakımı', d: 'Elindeki silaha +%12 hasar', p: w => 70 + w * 5, f: () => { curW().lv++; hbKey = ''; } },
+  { id: 'gunup', ic: '🔧', ad: 'Silah Bakımı', d: 'Elindeki silaha +%8 hasar', p: w => 70 + w * 5, f: () => { curW().lv++; hbKey = ''; } },
   { id: 'heal', ic: '💖', ad: 'Tam İyileşme', d: 'Canını tamamen doldur', p: w => 45 + w * 3, can: () => P.hp < P.maxHp, f: () => { P.hp = P.maxHp; } }
 ];
 function goldFor(e) { return Math.round((1 + e.xp * .35) * (G2.mut === 'altin' ? 3 : 1)); }
@@ -2515,7 +2561,7 @@ let fireCd = 0, firing = false, muzzleT = 0, aiming = false, zoom = 0;
 const curW = () => P.weapons[P.cur];
 const wStats = w => {
   const b = WEAPONS[w.id];
-  return { ...b, dmg: b.dmg * RAR[w.rar].m * (1 + .12 * w.lv) * S.dmg, rate: b.rate * S.rate, mag: Math.max(1, Math.round(b.mag * S.mag * (1 + w.rar * .1))), reload: b.reload * S.reload };
+  return { ...b, dmg: b.dmg * RAR[w.rar].m * (1 + .08 * w.lv) * S.dmg, rate: b.rate * S.rate, mag: Math.max(1, Math.round(b.mag * S.mag * (1 + w.rar * .1))), reload: b.reload * S.reload };
 };
 let reloadT = 0, reloadMax = 0;
 function startReload() {
@@ -2541,11 +2587,12 @@ function shoot() {
     const dir = _ray.clone();
     const fan = st.pellets === 1 && S.extra > 0 ? (i - (shots - 1) / 2) * .035 : 0;
     dir.addScaledVector(_right, fan + rand(-st.spread, st.spread) * spreadMul).addScaledVector(_upv, rand(-st.spread, st.spread) * .8 * spreadMul).normalize();
+    const sx = i < st.pellets ? st : { ...st, dmg: st.dmg * .55 };   // fazladan mermiler daha zayıf
     if (st.rocket) {
       const m = new THREE.Mesh(rocketGeo, rocketMat); m.position.copy(_tip); m.lookAt(_tip.clone().add(dir)); scene.add(m);
-      rockets.push({ m, v: dir.clone().multiplyScalar(38), life: 4, dmg: st.dmg, radius: st.splash });
-    } else if (st.duck) fireDuck(_tip, dir, st);
-    else hitscan(_o, dir, st, _tip);
+      rockets.push({ m, v: dir.clone().multiplyScalar(38), life: 4, dmg: sx.dmg, radius: st.splash });
+    } else if (st.duck) fireDuck(_tip, dir, sx);
+    else hitscan(_o, dir, sx, _tip);
   }
   SND[w.id](); recoil = Math.min(1, recoil + st.kick * 4); P.pitch = Math.min(1.5, P.pitch + st.kick * (zoom > .5 ? .25 : .12));
   muzzle.visible = zoom < .5; muzzle.material.rotation = Math.random() * 6; muzzleT = .05; muzzleLight.intensity = 6;
@@ -2571,7 +2618,7 @@ function hitscan(o, dir, st, tip) {
     const p = o.clone().addScaledVector(dir, h.t);
     if (!head && shieldBlocks(h.e, dir)) { blockFx(p); left = 0; end = h.t; break; }
     if (st.freeze) h.e.slow = Math.max(h.e.slow, 1.8);
-    damageEnemy(h.e, st.dmg * (crit ? 2 : 1) * (head ? (st.head || 1.6) : 1), crit, head, dir.x * 2.5, dir.z * 2.5, p);
+    damageEnemy(h.e, st.dmg * (crit ? 1.8 : 1) * (head ? (st.head || 1.5) : 1), crit, head, dir.x * 2.5, dir.z * 2.5, p);
     if (st.chain && !chained) { chained = true; chainBolt(h.e, st.dmg * .6, st.chain); }
     left--; end = h.t;
   }
@@ -2607,6 +2654,7 @@ function killEnemy(e) {
   e.dead = .001; G2.kills++; META.st.kills++; SND.kill(); addCombo(); G2.gold += goldFor(e); questProg('kill', 1); if (e.elite) questProg('elite', 1);
   burst(e.x, e.by + e.h * .55, e.z, e.type === 'boss' ? 120 : 30, [.9, .65, .5], e.type === 'boss' ? 6 : 3.5);
   dropXp(e.x, e.z, e.xp * comboMult() * S.xp);
+  if (e.type !== 'yavru' && !e.decoy && (e === G2.bossAlive || Math.random() < (e.elite ? .05 : .012))) dropMagnet(e.x + rand(-1, 1), e.z + rand(-1, 1));
   dropPity++;
   if (e.type !== 'boss' && (Math.random() < e.drop * (1 + S.luck * .1) || dropPity >= 28)) { dropPity = 0; spawnChest(e.x, e.z, false, true); }
   if (S.steal) P.hp = Math.min(P.maxHp, P.hp + S.steal);
@@ -2773,7 +2821,7 @@ function giveWeapon(id, rar) {
     if (have.copies >= 2) {
       have.copies = 0;
       if (have.rar < 3) { have.rar++; META.st.merges++; SND.merge(); loot('BİRLEŞTİ!', ad, `3 kopya → ${RAR[have.rar].ad}`, RAR[have.rar].c); msg('SİLAH BİRLEŞTİ!', `${ad} artık ${RAR[have.rar].ad}`); }
-      else { have.lv++; loot('SİLAH GÜÇLENDİ', ad, `3 kopya → +%12 hasar (+${have.lv})`, RAR[have.rar].c); }
+      else { have.lv++; loot('SİLAH GÜÇLENDİ', ad, `3 kopya → +%8 hasar (+${have.lv})`, RAR[have.rar].c); }
     } else loot('KOPYA', ad, `${have.copies + 1}/3 kopya · 3 olunca birleşir`, RAR[have.rar].c);
   }
   if (curW() === have) buildGun(have.id, have.rar);
@@ -2937,7 +2985,13 @@ function startWave(n) {
   else msg(`DALGA ${n}`, n % 5 === 0 ? 'Patron dalgası!' : n === 1 ? 'Erdiler geliyor…' : 'Hazır ol');
 }
 function updateWaves(dt) {
-  if (G2.inBreak) { G2.breakT -= dt; if (G2.breakT <= 0) startWave(G2.wave + 1); return; }
+  if (G2.inBreak) {
+    G2.breakT -= dt;
+    const c = Math.ceil(G2.breakT);
+    if (G2.breakT <= 5 && c > 0 && c !== G2.cd) { G2.cd = c; const el = $('countdown'); el.textContent = c; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); SND.count(c); }
+    if (G2.breakT <= 0) { G2.cd = 0; $('countdown').classList.remove('pop'); startWave(G2.wave + 1); }
+    return;
+  }
   if (G2.bossT > 0) { G2.bossT -= dt; if (G2.bossT <= 0) spawnBoss(bossFor(G2.wave)); }
   const alive = enemies.filter(e => !e.dead).length + diggers.length;
   if (G2.toSpawn > 0) {
@@ -3087,12 +3141,13 @@ function showWName() {
 }
 /* ---------- oyun akışı ---------- */
 function clearWorld() {
+  $('countdown').classList.remove('pop');
   enemies = []; orbs = [];
   rockets.forEach(r => scene.remove(r.m)); rockets = []; ducksP.forEach(d => scene.remove(d.m)); ducksP = []; spits.forEach(s => scene.remove(s.m)); spits = [];
   chests.forEach(c => scene.remove(c.g)); chests = []; if (G2) G2.bossAlive = null; $('boss').classList.add('hidden');
   shGeo.instanceCount = 0; orbMesh.count = 0; dropPity = 0;
   if (P) { P.skills = {}; } syncSkills(); clearSkills2(); fireRing.visible = fireRing2.visible = false;
-  diggers = []; allies = []; removeMerchant(); clearHazards(); stopBossMusic(); if (intro) { intro = null; $('bossIntro').classList.add('hidden'); $('letterbox').classList.remove('on'); } if (G2) { G2.mut = null; } darkK = 0; $('merchant').classList.add('hidden'); PI.n = PG.n = 0; for (const L of LAYERS) for (const k in L) if (L[k] && L[k].isInstancedMesh) L[k].count = 0; for (const k in PROP) PROP[k].count = 0;
+  diggers = []; allies = []; magnets.forEach(m => scene.remove(m.g)); magnets = []; removeMerchant(); clearHazards(); stopBossMusic(); if (intro) { intro = null; $('bossIntro').classList.add('hidden'); $('letterbox').classList.remove('on'); } if (G2) { G2.mut = null; } darkK = 0; $('merchant').classList.add('hidden'); PI.n = PG.n = 0; for (const L of LAYERS) for (const k in L) if (L[k] && L[k].isInstancedMesh) L[k].count = 0; for (const k in PROP) PROP[k].count = 0;
   caseRun = null; $('case').classList.add('hidden'); reloadT = 0; aiming = false; zoom = 0; camera.fov = 72; camera.updateProjectionMatrix(); $('scope').style.opacity = 0;
 }
 function beginPlay(fromSave) {
@@ -3306,7 +3361,7 @@ function frame(now) {
     updateEnemies(dt);
   } else if (state === 'case') updateCase(dt);
   else if (state === 'intro') { updateIntro(dt); updateEnemies(0); }
-  if (state === 'play') { updateHazards(dt); updateMerchant(dt); }
+  if (state === 'play') { updateHazards(dt); updateMerchant(dt); updateMagnets(dt); }
   updateMutationFx(dt);
   updateParts(dt); updateTracers(dt); updateDust(dt); updateDmgText(dt);
   hurtT -= dt; if (hurtT <= 0) $('hurt').style.opacity = 0;
@@ -3331,7 +3386,7 @@ setTimeout(() => { $('fade').style.opacity = 0; }, 150);
 addEventListener('pagehide', () => { if (state === 'play') saveMeta(); });
 window.__ev = { get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
   heightAt, spawnEnemy, beginPlay, shoot, gainXp, chooseCard, get chests() { return chests; }, openChest, spawnChest, giveWeapon, camera, renderer, startReload,
-  killAll: () => enemies.forEach(e => !e.dead && !e.boss && killEnemy(e)), spawnBoss, dmg: e => damageEnemy(e, 5, false, false, 0, 0, new THREE.Vector3(e.x, e.by + 1, e.z)), openShop, spawnMerchant, get merchant() { return merchant; }, startWave, rerollCards, skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
+  killAll: () => enemies.forEach(e => !e.dead && !e.boss && killEnemy(e)), spawnBoss, playerDps, wStats, dropMagnet, get orbs() { return orbs; }, dmg: e => damageEnemy(e, 5, false, false, 0, 0, new THREE.Vector3(e.x, e.by + 1, e.z)), openShop, spawnMerchant, get merchant() { return merchant; }, startWave, rerollCards, skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
 </script>
 </body>
 </html>
