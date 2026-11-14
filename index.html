@@ -1497,9 +1497,9 @@ const T = 3, H = 3, CELLS = 13, N = CELLS*2 + 1;
 const ROOM = { x0: 1, y0: 1, x1: 5, y1: 5, doorX: 6, doorY: 3 };   // Seviye 1 başlangıç odası (karo cinsinden)
 const P = { walk: 3.0, run: 5.6, r: 0.3, eye: 1.6 };
 const DIFF = {
-  kolay:  { name: 'Kolay', ducks: 4, zones: 3, speed: 0.92, drain: 1.1, bats: 5, wake: 5, hunt: 0.4, desc: 'Daha az karanlık, biraz yavaş Zeynep, 4 ördek' },
-  normal: { name: 'Normal', ducks: 5, zones: 4, speed: 1.0, drain: 1.5, bats: 4, wake: 5, hunt: 0.55, desc: 'Asıl deneyim' },
-  kabus:  { name: 'Kâbus', ducks: 6, zones: 6, speed: 1.12, drain: 2.2, bats: 3, wake: 3, hunt: 0.75, desc: 'Her yer karanlık, pil az, Zeynep hızlı' },
+  kolay:  { name: 'Kolay', ducks: 4, zones: 3, speed: 0.92, drain: 1.1, bats: 5, wake: 5, hunt: 0.7, pressure: 55, desc: 'Daha az karanlık, biraz yavaş Zeynep, 4 ördek' },
+  normal: { name: 'Normal', ducks: 5, zones: 4, speed: 1.0, drain: 1.5, bats: 4, wake: 4, hunt: 0.88, pressure: 32, desc: 'Asıl deneyim' },
+  kabus:  { name: 'Kâbus', ducks: 6, zones: 6, speed: 1.12, drain: 2.2, bats: 3, wake: 3, hunt: 0.95, pressure: 22, desc: 'Her yer karanlık, pil az, Zeynep hızlı' },
 };
 const NOTES = [
   '<b>1. gün.</b><br>Erdi’nin kaybolduğu odayı buldum. İçeri girdiğim an kapı arkamdan kendiliğinden kapandı. Burası… sonsuz.',
@@ -1701,6 +1701,7 @@ function bfs(sx, sy){
   return { d, prev };
 }
 function pathTo(sx, sy, tx, ty){
+  if (!Number.isFinite(sx) || !Number.isFinite(sy) || !Number.isFinite(tx) || !Number.isFinite(ty)) return [];
   if (sx<0||sy<0||sx>=N||sy>=N) return [];
   const { prev, d } = bfs(sx, sy); if (ty<0||tx<0||ty>=N||tx>=N||d[ty][tx] < 0) return [];
   const path = []; let cur = [tx,ty];
@@ -1799,20 +1800,20 @@ function fxOut(pan){
 function nbuf(c, dur){ const b = c.createBuffer(1, Math.max(1, c.sampleRate*dur), c.sampleRate), d = b.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b; }
 function sfxDoor(){
   const c = ac(); if (!c) return; try{
-    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, dur = rnd(1.4, 2.4), n = Math.floor(dur * rnd(14, 22));
+    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, dur = rnd(3.2, 5.5), n = Math.floor(dur * rnd(11, 17));
     const vol = rnd(.18, .3);
     for (let i=0;i<n;i++){
-      const t = t0 + i/n*dur + rnd(-.01, .01), k = i/n;
+      const t = t0 + i/n*dur + rnd(-.02, .02), k = i/n;
       const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(rnd(70, 110) + k*60 + Math.sin(k*9)*25, t);
       const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700 + Math.sin(k*5)*300 + rnd(0, 250); f.Q.value = 7;
-      const g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * (1 - Math.abs(k-.45)), t + .012); g.gain.exponentialRampToValueAtTime(.001, t + .07);
-      o.connect(f).connect(g).connect(dest); o.start(t); o.stop(t + .08);
+      const g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * (.55 + .45*Math.sin(k*Math.PI)) * (Math.random() < .15 ? 1.4 : 1), t + .015); g.gain.exponentialRampToValueAtTime(.001, t + .11);
+      o.connect(f).connect(g).connect(dest); o.start(t); o.stop(t + .12);
     }
   }catch(e){}
 }
 function sfxLamp(){
   const c = ac(); if (!c) return; try{
-    const dest = fxOut(rnd(-.6, .6)), t0 = c.currentTime + .02, dur = rnd(1.2, 2.6);
+    const dest = fxOut(rnd(-.6, .6)), t0 = c.currentTime + .02, dur = rnd(3.5, 6.5);
     const o = c.createOscillator(); o.type = 'square'; o.frequency.value = 100;
     const o2 = c.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 200.5;
     const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 1.4;
@@ -1821,17 +1822,17 @@ function sfxLamp(){
     g.gain.setValueAtTime(0, t0 + dur);
     o.connect(f); o2.connect(f); f.connect(g).connect(dest); o.start(t0); o2.start(t0); o.stop(t0 + dur + .05); o2.stop(t0 + dur + .05);
     // çıtırtılar
-    for (let i = 0; i < 10; i++){ const t = t0 + rnd(0, dur), s = c.createBufferSource(); s.buffer = nbuf(c, .012); const hg = c.createGain(); hg.gain.value = rnd(.1, .25); const hf = c.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = 3000; s.connect(hf).connect(hg).connect(dest); s.start(t); }
+    for (let i = 0; i < 26; i++){ const t = t0 + rnd(0, dur), s = c.createBufferSource(); s.buffer = nbuf(c, .012); const hg = c.createGain(); hg.gain.value = rnd(.1, .25); const hf = c.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = 3000; s.connect(hf).connect(hg).connect(dest); s.start(t); }
     // ışıklar da titreyip kısa süre söner
     if (typeof blackout !== 'undefined') setTimeout(() => { if (state === 'play') blackout = Math.max(blackout, rnd(.35, 1.1)); }, dur * 600);
   }catch(e){}
 }
 function sfxScratch(){
   const c = ac(); if (!c) return; try{
-    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, n = 5 + (Math.random()*6|0);
+    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, n = 12 + (Math.random()*9|0);
     let t = t0;
     for (let i = 0; i < n; i++){
-      const d = rnd(.12, .32), s = c.createBufferSource(); s.buffer = nbuf(c, d);
+      const d = rnd(.2, .48), s = c.createBufferSource(); s.buffer = nbuf(c, d);
       const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(rnd(1800, 2600), t); f.frequency.linearRampToValueAtTime(rnd(3200, 4800), t + d);
       const g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(rnd(.12, .22), t + d*.3); g.gain.linearRampToValueAtTime(0, t + d);
       s.connect(f).connect(g).connect(dest); s.start(t); t += d + rnd(.06, .3);
@@ -1840,13 +1841,13 @@ function sfxScratch(){
 }
 function sfxScream(){
   const c = ac(); if (!c) return; try{
-    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, dur = rnd(1.1, 1.8), base = rnd(520, 760);
+    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, dur = rnd(2.6, 4.2), base = rnd(520, 760);
     const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
     const g = c.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(rnd(.08, .13), t0 + .12); g.gain.setValueAtTime(rnd(.08, .12), t0 + dur*.7); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
     const vib = c.createOscillator(); vib.frequency.value = rnd(6, 9); const vg = c.createGain(); vg.gain.value = base * .05; vib.connect(vg);
     [1, 1.007, 1.5].forEach((m, i) => {
       const o = c.createOscillator(); o.type = 'sawtooth';
-      o.frequency.setValueAtTime(base*m*.8, t0); o.frequency.linearRampToValueAtTime(base*m*1.35, t0 + dur*.35); o.frequency.linearRampToValueAtTime(base*m*.75, t0 + dur);
+      o.frequency.setValueAtTime(base*m*.8, t0); o.frequency.linearRampToValueAtTime(base*m*1.35, t0 + dur*.25); o.frequency.linearRampToValueAtTime(base*m*1.2, t0 + dur*.6); o.frequency.linearRampToValueAtTime(base*m*.6, t0 + dur);
       vg.connect(o.frequency);
       const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = i === 2 ? 2600 : 1150; f1.Q.value = 4;
       const og = c.createGain(); og.gain.value = i === 2 ? .35 : .6; o.connect(f1).connect(og).connect(lp); o.start(t0); o.stop(t0 + dur + .05);
@@ -1858,7 +1859,7 @@ function sfxScream(){
 function ambTick(dt){
   if (!ambT || state !== 'play') return;
   ambT.door -= dt; ambT.lamp -= dt; ambT.scratch -= dt; ambT.scream -= dt;
-  if (ambT.door <= 0){ ambT.door = rnd(22, 48); sfxDoor(); }
+  if (ambT.door <= 0){ ambT.door = rnd(18, 40); sfxDoor(); }
   if (ambT.lamp <= 0){ ambT.lamp = rnd(16, 38); sfxLamp(); }
   if (ambT.scratch <= 0){ ambT.scratch = rnd(26, 55); sfxScratch(); }
   if (ambT.scream <= 0){ ambT.scream = rnd(60, 130); if (!chase) sfxScream(); }
@@ -1942,6 +1943,17 @@ const sDuck = () => { tone2('square', 700, 1100, .12, .06); setTimeout(()=>tone2
 const sClick = () => tone2('square', 1800, 900, .04, .06);
 const sPick = () => noise(.15, .4, 2500);
 const sDoor = () => { tone2('sawtooth', 140, 70, .8, .08); noise(.6, .3, 300); };
+const sDoorClose = () => { tone2('sawtooth', 90, 150, .6, .06); noise(.5, .22, 400); };
+const sDoorShut = () => { noise(.25, .6, 180); tone2('sine', 70, 40, .3, .2); };
+// kapı aralığında biri varsa kapı kapanmaz
+function doorBlocked(){
+  const dx = ROOM.doorX, dy = ROOM.doorY;
+  const inT = (x, z) => Math.floor(x/T) === dx && Math.floor(z/T) === dy;
+  if (inT(pos.x, pos.z) || Math.abs(pos.x - dx*T) < 0.6 && Math.abs(pos.z - (dy+.5)*T) < 1) return true;
+  if (ent && ent.sp && inT(ent.sp.position.x, ent.sp.position.z)) return true;
+  if (erdi && erdi.sp && inT(erdi.sp.position.x, erdi.sp.position.z)) return true;
+  return false;
+}
 const sHeart = v => { tone2('sine', 70, 45, .12, .35*v); setTimeout(()=>tone2('sine', 65, 42, .12, .25*v), 180); };
 const sSting = () => { tone2('sawtooth', 1200, 150, .7, .14); noise(.7, .6, 1800); };
 function sScream(){ noise(1.3, 1.5, 1400); noise(1.3, 1.1, 300); tone2('sawtooth', 900, 120, 1.1, .28); tone2('square', 1300, 200, 1.0, .16); }
@@ -2054,7 +2066,7 @@ function build(){
   const far = open.filter(o => o[2] > 18); const es = far[Math.floor(Math.random()*far.length)] || open[3];
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: monsterTex, transparent: true, fog: true, alphaTest: 0.1 }));
   sp.scale.set(2.3, 2.37, 1); const ep = center(es[0], es[1]); sp.position.set(ep.x, 1.18, ep.z); scene.add(sp);
-  ent = { sp, mode: 'sleep', path: [], repath: 0, lastSeen: 0, speedW: 1.8, speedC: 3.4, heard: null, wake: run.test ? 25 : DIFF[run.diff].wake, sawHide: 0 };
+  ent = { sp, mode: 'sleep', path: [], repath: 0, lastSeen: 0, speedW: 1.8, speedC: 3.4, heard: null, wake: run.test ? 25 : DIFF[run.diff].wake, sawHide: 0, calm: 0, farT: 0 };
   setMonsterSpeed();
   phantom = new THREE.Sprite(new THREE.SpriteMaterial({ map: monsterTex, transparent: true, fog: true, alphaTest: 0.1, opacity: .85 }));
   phantom.scale.set(2.3, 2.37, 1); phantom.visible = false; scene.add(phantom);
@@ -2069,8 +2081,9 @@ function build(){
 }
 function setMonsterSpeed(){
   const mul = DIFF[run.diff].speed, base = level === 2 ? 3.6 : 3.4;
-  ent.speedC = Math.min(P.run - 0.25, (base + got*0.4) * mul);
-  ent.speedW = (1.8 + got*0.15) * mul;
+  const g = Number.isFinite(got) ? got : 0;          // ilk kurulumda got henüz sıfırlanmamış olabilir
+  ent.speedC = Math.min(P.run - 0.25, (base + g*0.4) * mul);
+  ent.speedW = (1.8 + g*0.15) * mul;
 }
 function wallSide(x, y){ for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) if (grid[y+dy] && grid[y+dy][x+dx]===1) return [dx, dy]; return null; }
 function buildRoom(){
@@ -2084,23 +2097,23 @@ function buildRoom(){
   lights.bulb = bulb;
   const wood = phong({ map: woodTex('#6b4a2b') });
   const zWall = (ROOM.y1+1)*T;
-  const tx = (ROOM.x0+1.4)*T, tz = zWall - 0.65;
-  box(1.6, 0.08, 0.9, wood, tx, 0.82, tz);
-  for (const [a,b] of [[-.72,-.38],[.72,-.38],[-.72,.38],[.72,.38]]) box(0.07, 0.8, 0.07, wood, tx+a, 0.4, tz+b);
+  const tx = ROOM.doorX*T - 0.5, tz = (ROOM.doorY+.5)*T + 1.75;   // kapının hemen yanında
+  box(0.9, 0.08, 1.6, wood, tx, 0.82, tz);
+  for (const [a,b] of [[-.38,-.72],[.38,-.72],[-.38,.72],[.38,.72]]) box(0.07, 0.8, 0.07, wood, tx+a, 0.4, tz+b);
   const bx = (ROOM.x1-0.2)*T, bz = zWall - 1.05;
   box(2.2, 0.35, 1.9, wood, bx, 0.28, bz);
   box(2.1, 0.2, 1.8, phong({ color: '#8a8270' }), bx, 0.55, bz);
   box(0.6, 0.15, 1.4, phong({ color: '#cfc6ad' }), bx+0.7, 0.72, bz);
   box(1.3, 0.06, 1.85, phong({ color: '#5a3a4a' }), bx-0.35, 0.68, bz);
   box(0.12, 1.0, 1.9, wood, bx+1.1, 0.5, bz);
-  solids.push([tx, tz, 0.85, 0.5], [bx, bz, 1.15, 1.0]);
+  solids.push([tx, tz, 0.5, 0.85], [bx, bz, 1.15, 1.0]);
   const paper = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.3), phong({ map: paperTex(), emissive: '#2a2010' }));
-  paper.rotation.x = -Math.PI/2; paper.rotation.z = 0.25; paper.position.set(tx-0.35, 0.865, tz); scene.add(paper);
+  paper.rotation.x = -Math.PI/2; paper.rotation.z = Math.PI/2 + 0.25; paper.position.set(tx, 0.865, tz-0.35); scene.add(paper);
   const fg = new THREE.Group();
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.28, 12), phong({ color: '#2b2b2b' })); body.rotation.z = Math.PI/2; fg.add(body);
   const head = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.05, 0.1, 12), phong({ color: '#b53a22' })); head.rotation.z = Math.PI/2; head.position.x = 0.18; fg.add(head);
   const lens = new THREE.Mesh(new THREE.CircleGeometry(0.06, 12), new THREE.MeshBasicMaterial({ color: '#fff3c0' })); lens.rotation.y = Math.PI/2; lens.position.x = 0.231; fg.add(lens);
-  fg.position.set(tx+0.35, 0.91, tz-0.05); fg.rotation.y = 0.6; scene.add(fg);
+  fg.position.set(tx-0.05, 0.91, tz+0.35); fg.rotation.y = 2.2; scene.add(fg);
   const dx = ROOM.doorX*T, dz = (ROOM.doorY+.5)*T;
   const pivot = new THREE.Group(); pivot.position.set(dx+0.08, 0, dz - 0.75); scene.add(pivot);
   box(0.12, 2.3, 1.5, phong({ map: woodTex('#4a3220') }), 0, 1.15, 0.75, pivot);
@@ -2109,10 +2122,10 @@ function buildRoom(){
   box(T, H-2.3, T, wm, dx+T/2, 2.3+(H-2.3)/2, dz);
   box(T, 2.3, (T-1.5)/2, wm, dx+T/2, 1.15, dz - 0.75 - (T-1.5)/4);
   box(T, 2.3, (T-1.5)/2, wm, dx+T/2, 1.15, dz + 0.75 + (T-1.5)/4);
-  roomDoor = { pivot, open: 0, opening: false };
+  roomDoor = { pivot, open: 0, target: 0 };
   const hasInv = id => (run.invRestore || []).includes(id);
-  if (hasInv('not')) scene.remove(paper); else items.push({ kind: 'not0', obj: paper, at: new THREE.Vector3(tx-0.35, 0.86, tz), label: 'Kağıdı oku' });
-  if (hasInv('fener')) scene.remove(fg); else items.push({ kind: 'fener', obj: fg, at: new THREE.Vector3(tx+0.35, 0.9, tz), label: 'Feneri al' });
+  if (hasInv('not')) scene.remove(paper); else items.push({ kind: 'not0', obj: paper, at: new THREE.Vector3(tx, 0.86, tz-0.35), label: 'Kağıdı oku' });
+  if (hasInv('fener')) scene.remove(fg); else items.push({ kind: 'fener', obj: fg, at: new THREE.Vector3(tx, 0.9, tz+0.35), label: 'Feneri al' });
 }
 function makeDuck(tx, ty){
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: duckTex, transparent: true, alphaTest: 0.1, fog: true }));
@@ -2288,7 +2301,7 @@ function canSee(p, maxD){
 function findFocus(){
   if (hidden) return { kind: 'unhide', label: 'Dolaptan çık' };
   for (const it of items) if (!it.taken && canSee(it.at, 2.2)) return { kind: 'item', it, label: it.label };
-  if (hasRoom() && !roomDoor.opening){ const dc = new THREE.Vector3((ROOM.doorX+.2)*T, 0, (ROOM.doorY+.5)*T); if (canSee(dc, 2.6)) return { kind: 'door', label: 'Kapıyı aç' }; }
+  if (hasRoom()){ const dc = new THREE.Vector3((ROOM.doorX+.2)*T, 0, (ROOM.doorY+.5)*T); if (canSee(dc, 2.6)){ if (roomDoor.target === 0) return { kind: 'door', label: 'Kapıyı aç' }; if (roomDoor.open > .95 && !doorBlocked()) return { kind: 'doorclose', label: 'Kapıyı kapat' }; } }
   for (const dk of ducks) if (!dk.got && canSee(dk.sp.position, 2.0)) return { kind: 'duck', dk, label: 'Ördeği al' };
   if (erdi && !erdi.found && canSee(erdi.sp.position, 2.2)) return { kind: 'erdi', label: 'Erdi’ye dokun' };
   for (const l of lockers) if (canSee(l.front, 1.6)) return { kind: 'hide', l, label: 'Dolaba saklan' };
@@ -2311,7 +2324,9 @@ function interact(){
     else if (it.kind === 'trace'){ run.traces.push(it.id); showPaper(`<h4>${TRACES[it.id].name}</h4>` + TRACES[it.id].html + '<small>— kapatmak için E</small>', 'trace'); checkSecret(); if (run.traces.length >= 3) setTimeout(() => unlock('dedektif'), 900); }
     updateHud(true); saveRun();
   } else if (f.kind === 'door'){
-    roomDoor.opening = true; grid[ROOM.doorY][ROOM.doorX] = 0; doorOpenedAt = performance.now()/1000; sDoor();
+    roomDoor.target = 1; grid[ROOM.doorY][ROOM.doorX] = 0; if (!doorOpenedAt) doorOpenedAt = performance.now()/1000; sDoor();
+  } else if (f.kind === 'doorclose'){
+    roomDoor.target = 0; sDoorClose();
   } else if (f.kind === 'duck'){
     const dk = f.dk; dk.got = true; scene.remove(dk.sp, dk.glow); got++; sDuck(); setMonsterSpeed();
     if (got >= need){ addItem('anahtar'); exitObj.unlocked = true; drawSign(exitObj); say('Bütün ördekler toplandı! Envanterine bir ANAHTAR geldi 🗝️ Şimdi çıkışı bul!', 4.5); }
@@ -2438,7 +2453,11 @@ function update(dt){
     const k = Math.random() < 0.04 ? 0.45 : 1; mats.floorMat.lightMapIntensity = mats.ceilMat.lightMapIntensity = k; mats.litWallMat.emissiveIntensity = k; if (mats.waterMat) mats.waterMat.lightMapIntensity = 1.2*k;
     if (lights.bulb) lights.bulb.intensity = Math.random() < 0.06 ? 0.4 : 1.6;
   }
-  if (hasRoom() && roomDoor.opening && roomDoor.open < 1){ roomDoor.open = Math.min(1, roomDoor.open + dt*0.9); roomDoor.pivot.rotation.y = -roomDoor.open * 1.75; }
+  if (hasRoom() && roomDoor.open !== roomDoor.target){
+    if (roomDoor.target > roomDoor.open) roomDoor.open = Math.min(1, roomDoor.open + dt*0.9);
+    else { roomDoor.open = Math.max(0, roomDoor.open - dt*1.3); if (roomDoor.open === 0){ if (doorBlocked()){ roomDoor.target = 1; } else { grid[ROOM.doorY][ROOM.doorX] = 2; sDoorShut(); } } }
+    roomDoor.pivot.rotation.y = -roomDoor.open * 1.75;
+  }
   if (state !== 'play') return;
   let fx = 0, fz = 0;
   if (!reading && !hidden){
@@ -2495,9 +2514,9 @@ function updateEntity(dt, now, isRunning){
     else return;
   }
   const dist = Math.hypot(ep.x-pos.x, ep.z-pos.z);
-  const sight = crouch ? (lightAt(pos) < 0.5 ? 6 : 10) : 15;   // eğilince, hele karanlıkta, zor görür
+  const sight = crouch ? (lightAt(pos) < 0.5 ? 6 : 10) : 18;   // eğilince, hele karanlıkta, zor görür
   let sees = !hidden && dist < sight && los(ep, pos);
-  const hears = !hidden && isRunning && dist < 12;
+  const hears = !hidden && ((isRunning && dist < 16) || (!crouch && dist < 5));
   if (hidden && hidden.seen && dist < 6) sees = true;          // saklanırken gördüyse dolabı açar
   if (sees || hears){
     if (e.mode !== 'chase'){ say(sees ? 'ZEYNEP SENİ GÖRDÜ. KAÇ!' : 'Zeynep seni duydu…', 2.2); chaseSound(true); }
@@ -2505,6 +2524,12 @@ function updateEntity(dt, now, isRunning){
   } else if (e.mode === 'chase' && ((now - e.lastSeen > 3 && dist > 9) || now - e.lastSeen > 7 || (hidden && now - e.lastSeen > 1.5))){
     e.mode = 'search'; e.path = []; chaseSound(false); say(hidden ? 'Seni bulamadı… yakınlarda dolaşıyor.' : 'Seni kaybetti… şimdilik.', 2.2);
   }
+  if (e.mode !== 'chase'){
+    e.calm += dt;
+    const pr = DIFF[run.diff].pressure || 60;
+    if (e.calm > pr && !hidden){ e.calm = rnd(-10, 0); e.mode = 'search'; e.heard = pos.clone(); e.repath = 0; e.path = []; say('Bir şey sana doğru geliyor…', 3); sHeart(.6); }
+    if (dist > 26 && !sees){ e.farT += dt; if (e.farT > 12){ e.farT = 0; relocateNear(); } } else e.farT = 0;
+  } else e.calm = 0;
   // saklanırken yakınındaysa kalp atışı
   if (hidden){ heart -= dt; if (heart <= 0 && dist < 12){ sHeart(1 - dist/12); heart = 0.45 + dist/12; } }
   e.repath -= dt;
@@ -2512,10 +2537,10 @@ function updateEntity(dt, now, isRunning){
   if (e.repath <= 0 || !e.path.length){
     if (e.mode === 'chase'){ e.repath = 0.35; const [px, py] = tileOf(pos); e.path = pathTo(ex, ey, px, py); }
     else if (e.mode === 'search' && e.heard){ e.repath = 99; const [hx, hy] = tileOf(e.heard); e.path = pathTo(ex, ey, hx, hy); e.heard = null; }
-    else if (!e.path.length){
-      e.mode = 'wander'; e.repath = 99;
+    else if (!e.path.length || e.mode === 'wander'){
+      e.mode = 'wander'; e.repath = rnd(6, 10);   // hedefini sık sık günceller
       // çoğu zaman oyuncunun bulunduğu bölgeye doğru dolaşır (ama tam yerini bilmez)
-      const hunt = Math.random() < DIFF[run.diff].hunt, [px, py] = tileOf(pos), R2 = 7;
+      const hunt = Math.random() < DIFF[run.diff].hunt, [px, py] = tileOf(pos), R2 = 3;
       let tx, ty, k = 0; do {
         if (hunt){ tx = px + Math.round(rnd(-R2, R2)); ty = py + Math.round(rnd(-R2, R2)); }
         else { tx = 1+Math.floor(Math.random()*(N-2)); ty = 1+Math.floor(Math.random()*(N-2)); }
@@ -2523,7 +2548,7 @@ function updateEntity(dt, now, isRunning){
       e.path = pathTo(ex, ey, tx, ty);
     }
   }
-  const speed = e.mode === 'chase' ? e.speedC : e.speedW;
+  const speed = e.mode === 'chase' ? e.speedC : dist > 22 ? e.speedW * 1.7 : e.mode === 'search' ? e.speedW * 1.3 : e.speedW;
   let target;
   if (e.mode === 'chase' && sees && dist < T*1.2) target = pos;
   else if (e.path.length){ const c = center(e.path[0][0], e.path[0][1]); target = c; if (Math.hypot(c.x-ep.x, c.z-ep.z) < 0.15) e.path.shift(); }
@@ -2534,6 +2559,18 @@ function updateEntity(dt, now, isRunning){
   e.sp.material.color.setScalar(Math.max(0.08, lightAt(ep)));
   overlay.style.setProperty('--fear', (e.mode==='chase' ? Math.max(0.25, 1 - dist/14) : Math.max(0, 1 - dist/14)*0.5).toFixed(2));
   if (dist < (hidden ? 1.3 : 0.95)) caught();
+}
+function relocateNear(){
+  // görüş dışında, oyuncuya 12-20 m uzaklıkta boş bir kareye geçer
+  const [px, py] = tileOf(pos);
+  for (let k = 0; k < 200; k++){
+    const tx = px + Math.round(rnd(-7, 7)), ty = py + Math.round(rnd(-7, 7));
+    if (isWall(tx, ty) || inRoom(tx, ty)) continue;
+    const c = center(tx, ty), d = Math.hypot(c.x - pos.x, c.z - pos.z);
+    if (d < 12 || d > 21 || los(c, pos)) continue;
+    ent.sp.position.x = c.x; ent.sp.position.z = c.z; ent.path = []; ent.repath = 0; ent.mode = 'wander';
+    return;
+  }
 }
 function caught(){
   state = 'dead'; resumable = false; run.stats.deaths++; saveRun(); chaseSound(false); closeNote(); hudPrompt.classList.remove('show'); hideEl.classList.remove('show'); hidden = null; mapOpen = false; mapEl.classList.remove('show');
@@ -2761,7 +2798,7 @@ function playCine(){
   cine = { a, t0: performance.now(), audioOk: false, flashed: false, titled: false, sub: '' };
   a.addEventListener('playing', () => { cine && (cine.audioOk = true); });
   a.play().catch(() => {});
-  audioStart();
+  humStop();
   requestAnimationFrame(cineTick);
 }
 function cineTime(){ return cine.audioOk && !cine.a.ended ? cine.a.currentTime : cine.a.ended ? Math.max(cine.a.duration || 49.3, (performance.now()-cine.t0)/1000) : (performance.now()-cine.t0)/1000; }
@@ -2887,7 +2924,7 @@ function close(){
 }
 $('playBR').addEventListener('click', open);
 $('closeBR').addEventListener('click', close);
-window.__br = { sfx: { door: () => sfxDoor(), lamp: () => sfxLamp(), scratch: () => sfxScratch(), scream: () => sfxScream() }, get bgm(){ return !!bgm; }, get hum(){ return !!hum; }, get ambT(){ return ambT; }, get state(){return state}, get pos(){return pos}, get ent(){return ent}, get ducks(){return ducks}, get exitObj(){return exitObj},
+window.__br = { get roomDoor(){ return roomDoor; }, update: dt => update(dt), sfx: { door: () => sfxDoor(), lamp: () => sfxLamp(), scratch: () => sfxScratch(), scream: () => sfxScream() }, get bgm(){ return !!bgm; }, get hum(){ return !!hum; }, get ambT(){ return ambT; }, get state(){return state}, get pos(){return pos}, get ent(){return ent}, get ducks(){return ducks}, get exitObj(){return exitObj},
   start, keys, playCine, endCine, cineTime: () => cine && cineTime(), cineSeek(t){ if (!cine) return; try{ cine.a.pause(); }catch(e){} cine.audioOk = false; cine.a = { currentTime: 0, ended: false, pause(){}, duration: 49.3 }; cine.t0 = performance.now() - t*1000; },
   get dark(){ return dark; }, get writings(){ return writings; }, get items(){ return items; }, get lockers(){ return lockers; }, get run(){ return run; }, get level(){ return level; }, get erdi(){ return erdi; }, get hidden(){ return hidden; },
   get explored(){ return explored; }, toggleMap, jumpScare, openSettings, closeSettings, SET, setYaw(v){yaw=v}, setPitch(v){pitch=v}, get grid(){return grid}, interact, toggleFlash, selectSlot, get inv(){return inv}, get focus(){return focus}, ROOM, T,
