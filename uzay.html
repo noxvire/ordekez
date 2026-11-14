@@ -291,6 +291,7 @@
   .cls small{font-size:12.5px;color:#cfd8e2;line-height:1.45}
   .cls .guns{display:flex;gap:6px;margin-top:auto}
   .cls .guns img{max-width:80px;max-height:36px;background:rgba(0,0,0,.35);border-radius:6px;padding:3px}
+  .cls small.pool{font-size:11px;color:#9fb0c0;line-height:1.35}
   .cls em{font-style:normal;font-weight:800;font-size:13px;color:#ffe9a8}
   .cls.shake{animation:shk .35s}
   @keyframes shk{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
@@ -918,6 +919,15 @@ const SND = {
   makineli() { noise(2400, .07, .35, 'bandpass', .9); tone(150, 60, .06, .35, 'triangle'); },
   lazer() { tone(1600, 180, .28, .25, 'sawtooth'); tone(900, 120, .3, .2, 'square'); },
   roket() { noise(500, .7, .5); tone(90, 40, .5, .5, 'sawtooth'); },
+  tufek() { noise(2200, .09, .4, 'bandpass', .9); tone(200, 70, .08, .35, 'triangle'); },
+  bombaatar() { noise(400, .25, .5, 'lowpass'); tone(160, 90, .15, .35, 'sine'); },
+  alevasa() { noise(900, .12, .18, 'lowpass'); },
+  alevmak() { noise(700, .12, .22, 'lowpass'); },
+  meteorasa() { noise(500, .6, .5, 'lowpass'); tone(260, 60, .5, .3, 'sawtooth'); },
+  havan() { noise(300, .8, .9, 'lowpass'); tone(80, 30, .6, .7, 'sine'); },
+  yay() { noise(2600, .08, .3, 'bandpass', 2); tone(500, 200, .1, .2, 'triangle'); },
+  zehirarb() { noise(2200, .1, .33, 'bandpass', 2); tone(340, 140, .12, .25, 'triangle'); },
+  tesla() { noise(3500, .25, .45, 'bandpass', .5); tone(1500, 150, .15, .2, 'square'); },
   buzasa() { tone(2600, 1400, .18, .12, 'sine'); noise(6000, .15, .14, 'highpass'); },
   atesasa() { noise(700, .5, .45, 'lowpass'); tone(220, 70, .35, .3, 'sawtooth'); },
   simsekasa() { noise(3000, .2, .4, 'bandpass', .6); tone(1200, 200, .12, .2, 'square'); },
@@ -992,6 +1002,15 @@ const WEAPONS = {
   arbalet:  { ad: 'Arbalet',         dmg: 70, rate: 1.5, spread: 0,    pellets: 1, mag: 6,   reload: 1.6, kick: .12, col: 0xfff0c0, pierce: 2, head: 2.0 },
   cekic:    { ad: 'Ağır Pompalı',    dmg: 10, rate: .9,  spread: .12,  pellets: 12, mag: 4,  reload: 2.2, kick: .22, col: 0xff8040 },
   miniroket:{ ad: 'Mini Roketatar',  dmg: 38, rate: 3,   spread: .015, pellets: 1, mag: 8,   reload: 2.0, kick: .08, col: 0xffa060, rocket: true, splash: 2.6 },
+  tufek:    { ad: 'Piyade Tüfeği',   dmg: 22, rate: 8,   spread: .012, pellets: 1, mag: 30,  reload: 1.7, kick: .04, col: 0xffe0a0 },
+  bombaatar:{ ad: 'Bomba Atar',      dmg: 60, rate: 1.3, spread: .01,  pellets: 1, mag: 6,   reload: 2.0, kick: .14, col: 0xc0ff80, rocket: true, splash: 3.8 },
+  alevasa:  { ad: 'Alev Asası',      dmg: 5,  rate: 14,  spread: .08,  pellets: 3, mag: 80,  reload: 1.6, kick: .01, col: 0xff8a2a, flame: 11, staff: true, sc: [2.8, .9, .1] },
+  meteorasa:{ ad: 'Meteor Asası',    dmg: 95, rate: .8,  spread: .006, pellets: 1, mag: 5,   reload: 2.2, kick: .12, col: 0xff6020, rocket: true, splash: 4.6, fire: true, staff: true, sc: [3, .5, .15] },
+  alevmak:  { ad: 'Alev Makinesi',   dmg: 6,  rate: 16,  spread: .1,   pellets: 4, mag: 100, reload: 2.4, kick: .015, col: 0xff7a20, flame: 9 },
+  havan:    { ad: 'Havan Topu',      dmg: 140, rate: .5, spread: .01,  pellets: 1, mag: 3,   reload: 2.8, kick: .3, col: 0xffa040, rocket: true, splash: 6 },
+  yay:      { ad: 'Uzun Yay',        dmg: 52, rate: 2,   spread: 0,    pellets: 1, mag: 8,   reload: 1.4, kick: .08, col: 0xfff0c0, pierce: 3, head: 2.2 },
+  zehirarb: { ad: 'Zehirli Arbalet', dmg: 40, rate: 2.2, spread: 0,    pellets: 1, mag: 8,   reload: 1.5, kick: .1, col: 0x80ff60, pierce: 1, poison: true, head: 1.8 },
+  tesla:    { ad: 'Tesla Topu',      dmg: 30, rate: 2,   spread: .004, pellets: 1, mag: 10,  reload: 1.8, kick: .06, col: 0x9fe0ff, chain: 5, bolt: true },
   kralasa:  { ad: 'Kral Asası',      dmg: 40, rate: 2.5, spread: 0,    pellets: 1, mag: 10,  reload: 1.6, kick: .06, col: 0xffd23f, chain: 3, boss: true },
   mechatop: { ad: 'Mecha Topu',      dmg: 34, rate: 4,   spread: .02,  pellets: 1, mag: 12,  reload: 2.0, kick: .1, col: 0xff9040, rocket: true, splash: 3, boss: true },
   gozlazer: { ad: 'Göz Lazeri',      dmg: 7,  rate: 22,  spread: .004, pellets: 1, mag: 110, reload: 2.4, kick: .008, col: 0xff4040, pierce: 10, beam: true, boss: true },
@@ -1542,7 +1561,7 @@ function updateEnemies(dt) {
     else if (e.hop && !e.balloon && !e.spider && !e.boss) e.alt = Math.abs(Math.sin(e.age * 3.2 + e.ph)) * 1.4;
     e.x += e.kx * dt; e.z += e.kz * dt; const damp = Math.pow(.02, dt); e.kx *= damp; e.kz *= damp;
     e.flash = Math.max(0, e.flash - dt * 6); e.burnT -= dt;
-    if (e.burnT > 0 && active) { e.hp -= 9 * dt * (S.skill || 1); if (Math.random() < dt * 14) flame(e.x, e.by + rand(.1, e.h * .7), e.z, .5); if (e.hp <= 0) killEnemy(e); }
+    if (e.burnT > 0 && active) { e.hp -= 9 * dt * (S.skill || 1); if (Math.random() < dt * 14) { if (e.poison) FXN.add({ x: e.x + rand(-.3, .3), y: e.by + rand(.1, e.h * .7), z: e.z + rand(-.3, .3), vy: .6, life: .7, s0: .3, s1: .6, c0: [.4, 1, .3], c1: [.2, .5, .15], a: .7 }); else flame(e.x, e.by + rand(.1, e.h * .7), e.z, .5); } if (e.hp <= 0) killEnemy(e); }
   }
   for (let i = 0; i < enemies.length; i++) {
     const a = enemies[i]; if (a.dead) continue;
@@ -2679,23 +2698,23 @@ function renderDaily(el) {
 const CLASSES = {
   asker:    { ad: 'Asker', ic: '🪖', c: '#9fd06a', cost: 0, start: ['tabanca', 'makineli'],
               d: 'Ateşli silah ustası. Şarjörü %25 hızlı değiştirir, %10 fazla mermi taşır.',
-              pool: ['tabanca', 'pompali', 'makineli', 'minigun', 'keskin', 'roket'],
+              pool: ['tabanca', 'makineli', 'pompali', 'tufek', 'bombaatar', 'roket'],
               apply() { S.reload *= .75; S.mag *= 1.1; } },
   buyucu:   { ad: 'Büyücü', ic: '🧙', c: '#b48cff', cost: 400, start: ['buzasa'],
               d: 'Asalarla savaşır. Yetenekleri %30 güçlü, rastgele bir yetenekle başlar.',
-              pool: ['buzasa', 'atesasa', 'simsekasa', 'karaasa'],
+              pool: ['buzasa', 'atesasa', 'simsekasa', 'karaasa', 'alevasa', 'meteorasa'],
               apply() { S.skill = 1.3; const ids = Object.keys(SKILLS); P.skills[pick(ids)] = 1; } },
-  tank:     { ad: 'Tank', ic: '🛡️', c: '#7fb4ff', cost: 400, start: ['pompali'],
+  tank:     { ad: 'Tank', ic: '🛡️', c: '#7fb4ff', cost: 400, start: ['cekic'],
               d: '+60 can, %15 zırh, %8 yavaş. Ağır ve yakın menzilli silahlar.',
-              pool: ['pompali', 'minigun', 'roket', 'cekic'],
+              pool: ['cekic', 'minigun', 'alevmak', 'havan'],
               apply() { P.maxHp += 60; P.hp += 60; S.armor = .15; S.speed *= .92; } },
   avci:     { ad: 'Avcı', ic: '🏹', c: '#ffcf5a', cost: 500, start: ['arbalet'],
               d: 'Kafadan vuruşlar %35 fazla hasar, +%10 kritik. Uzun menzilli silahlar.',
-              pool: ['arbalet', 'keskin', 'lazer', 'dondurucu', 'tabanca'],
+              pool: ['arbalet', 'keskin', 'yay', 'zehirarb'],
               apply() { S.headMul = 1.35; S.crit += .1; } },
   muhendis: { ad: 'Mühendis', ic: '🔧', c: '#ff9a4a', cost: 600, start: ['lazer'],
               d: 'Robot ördek taretle başlar, taretler %50 güçlü. Teknoloji silahları.',
-              pool: ['lazer', 'dondurucu', 'ordek', 'minigun', 'miniroket'],
+              pool: ['lazer', 'dondurucu', 'ordek', 'miniroket', 'tesla'],
               apply() { P.skills.taret = 1; S.turret = 1.5; } }
 };
 function clsOwned(id) { return id === 'asker' || !!(META.cls && META.cls[id]); }
@@ -2715,7 +2734,7 @@ function renderClassSel() {
     const own = clsOwned(id), sel = id === selCls;
     const guns = C.start.map(w => `<img src="${GUN_ICON[w] || ''}" alt="${WEAPONS[w].ad}" title="${WEAPONS[w].ad}">`).join('');
     return `<button class="cls${sel ? ' sel' : ''}${own ? '' : ' locked'}" data-id="${id}" style="--c:${C.c}">
-      <span class="ic">${C.ic}</span><b>${C.ad}</b><small>${C.d}</small><div class="guns">${guns}</div>
+      <span class="ic">${C.ic}</span><b>${C.ad}</b><small>${C.d}</small><small class="pool">Sandıktan: ${C.pool.map(w => WEAPONS[w].ad).join(', ')}</small><div class="guns">${guns}</div>
       <em>${own ? (sel ? 'SEÇİLDİ' : 'Seç') : `🔒 🌕 ${C.cost}`}</em></button>`;
   }).join('');
   $('clsGrid').querySelectorAll('.cls').forEach(b => b.onclick = () => {
@@ -2891,6 +2910,37 @@ function makeGun(id, rar, vm) {
     cyl(.055, .55, new THREE.MeshStandardMaterial({ color: 0x7a4a2a, roughness: .5, metalness: .3 }), 0, .04, -.15);
     cyl(.062, .05, dark, 0, .04, -.43); box(.05, .12, .06, dark, 0, -.06, 0).rotation.x = .3; box(.07, .012, .35, acc, 0, .1, -.15);
     tip = new THREE.Vector3(0, .04, -.46);
+  } else if (id === 'tufek') {
+    box(.07, .1, .5, dark, 0, 0, -.14); cyl(.017, .3, mid, 0, .02, -.52); box(.045, .17, .07, mid, 0, -.13, -.12).rotation.x = -.15;
+    box(.05, .12, .06, dark, 0, -.1, .07).rotation.x = .3; box(.06, .09, .26, wood, 0, -.02, .25); cyl(.025, .14, dark, 0, .09, -.1); box(.072, .012, .36, acc, 0, .056, -.14);
+    tip = new THREE.Vector3(0, .02, -.68);
+  } else if (id === 'bombaatar') {
+    cyl(.06, .4, new THREE.MeshStandardMaterial({ color: 0x3f5a2a, roughness: .6 }), 0, .03, -.2); for (let i = 0; i < 6; i++) { const a = i / 6 * 6.28; cyl(.022, .14, dark, Math.cos(a) * .07, .03 + Math.sin(a) * .07, .02); }
+    box(.05, .13, .06, dark, 0, -.09, .08).rotation.x = .3; box(.07, .012, .3, acc, 0, .1, -.15); tip = new THREE.Vector3(0, .03, -.42);
+  } else if (id === 'alevmak') {
+    const tank = new THREE.MeshStandardMaterial({ color: 0xa02a1a, metalness: .4, roughness: .5 });
+    cyl(.03, .5, dark, 0, .02, -.32); cyl(.045, .08, mid, 0, .02, -.6); box(.08, .1, .25, mid, 0, -.01, -.03);
+    const t1 = new THREE.Mesh(new THREE.CylinderGeometry(.045, .045, .3, 12), tank); t1.position.set(0, -.12, -.15); t1.rotation.x = Math.PI / 2; vm.add(t1);
+    box(.05, .13, .06, dark, 0, -.1, .1).rotation.x = .3; box(.082, .012, .25, acc, 0, .05, -.03); tip = new THREE.Vector3(0, .02, -.66);
+  } else if (id === 'havan') {
+    cyl(.09, .7, new THREE.MeshStandardMaterial({ color: 0x3d4630, roughness: .6, metalness: .3 }), 0, .07, -.18); cyl(.1, .06, dark, 0, .07, -.54);
+    box(.06, .15, .08, dark, 0, -.07, .05).rotation.x = .3; box(.12, .012, .45, acc, 0, .17, -.18); box(.03, .08, .03, mid, 0, .2, -.35);
+    tip = new THREE.Vector3(0, .07, -.58);
+  } else if (id === 'yay') {
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(.32, .014, 6, 30, Math.PI * .9), wood); bow.rotation.set(0, Math.PI / 2, Math.PI / 2 + .16); bow.position.set(0, .02, -.12); vm.add(bow);
+    box(.004, .62, .004, new THREE.MeshBasicMaterial({ color: 0xdddddd }), 0, .02, .02); box(.012, .012, .62, mid, 0, .02, -.18); box(.035, .1, .04, acc, 0, .02, -.12);
+    tip = new THREE.Vector3(0, .02, -.5);
+  } else if (id === 'zehirarb') {
+    box(.05, .06, .5, new THREE.MeshStandardMaterial({ color: 0x2f3a22, roughness: .6 }), 0, 0, -.08); box(.05, .12, .06, dark, 0, -.08, .08).rotation.x = .3;
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(.2, .012, 6, 24, Math.PI), mid); bow.rotation.set(Math.PI / 2, 0, 0); bow.position.set(0, .03, -.28); vm.add(bow);
+    box(.4, .004, .004, new THREE.MeshBasicMaterial({ color: 0xdddddd }), 0, .03, -.2);
+    const vial = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, .09, 10), new THREE.MeshBasicMaterial({ color: new THREE.Color(.5, 1.8, .4), toneMapped: false })); vial.position.set(.05, .05, -.02); vm.add(vial);
+    box(.012, .012, .4, new THREE.MeshBasicMaterial({ color: new THREE.Color(.5, 1.6, .4), toneMapped: false }), 0, .045, -.15); tip = new THREE.Vector3(0, .045, -.36);
+  } else if (id === 'tesla') {
+    box(.09, .11, .3, mid, 0, 0, -.05); cyl(.018, .3, dark, 0, .01, -.32);
+    for (let i = 0; i < 3; i++) { const c = new THREE.Mesh(new THREE.TorusGeometry(.06 - i * .01, .012, 8, 20), new THREE.MeshStandardMaterial({ color: 0xc87533, metalness: .9, roughness: .3 })); c.position.set(0, .01, -.22 - i * .07); vm.add(c); }
+    const orb = new THREE.Mesh(new THREE.SphereGeometry(.04, 12, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.4, 2, 3), toneMapped: false })); orb.position.set(0, .01, -.5); vm.add(orb);
+    box(.05, .13, .06, dark, 0, -.1, .05).rotation.x = .3; tip = new THREE.Vector3(0, .01, -.52);
   } else if (id === 'kralasa') {
     const gold = new THREE.MeshStandardMaterial({ color: 0xffc83a, metalness: 1, roughness: .25 });
     cyl(.016, .7, gold, 0, -.02, -.15); const gem = new THREE.Mesh(new THREE.OctahedronGeometry(.06), new THREE.MeshBasicMaterial({ color: new THREE.Color(2.6, .4, .5), toneMapped: false })); gem.position.set(0, -.02, -.54); vm.add(gem);
@@ -2991,8 +3041,8 @@ function shoot() {
   if (w.ammo <= 0) setTimeout(() => { if (state === 'play' && curW() === w && w.ammo <= 0) startReload(); }, 180);
 }
 function hitscan(o, dir, st, tip) {
-  let tMax = 140;
-  for (let t = 1.5; t < 140; t += 1.5) { const x = o.x + dir.x * t, y = o.y + dir.y * t, z = o.z + dir.z * t; if (y < heightAt(x, z)) { tMax = t; break; } }
+  let tMax = st.flame || 140;
+  for (let t = 1.5; t < tMax; t += 1.5) { const x = o.x + dir.x * t, y = o.y + dir.y * t, z = o.z + dir.z * t; if (y < heightAt(x, z)) { tMax = t; break; } }
   const hits = [];
   for (const e of enemies) {
     if (e.dead) continue;
@@ -3010,13 +3060,17 @@ function hitscan(o, dir, st, tip) {
     const p = o.clone().addScaledVector(dir, h.t);
     if (!head && shieldBlocks(h.e, dir)) { blockFx(p); left = 0; end = h.t; break; }
     if (st.freeze) h.e.slow = Math.max(h.e.slow, 1.8);
+    if (st.flame) { h.e.burnT = Math.max(h.e.burnT || 0, 2.2); h.e.poison = false; }
+    if (st.poison) { h.e.burnT = Math.max(h.e.burnT || 0, 4); h.e.poison = true; }
     damageEnemy(h.e, st.dmg * (crit ? 1.8 : 1) * (head ? (st.head || 1.5) * (S.headMul || 1) : 1), crit, head, dir.x * 2.5, dir.z * 2.5, p);
     if (st.drain) P.hp = Math.min(P.maxHp, P.hp + st.drain);
     if (st.chain && !chained) { chained = true; chainBolt(h.e, st.dmg * .6, st.chain); }
     left--; end = h.t;
   }
   const endP = o.clone().addScaledVector(dir, left > 0 ? Math.min(tMax, 120) : end);
-  if (st.bolt) drawBolt(boltPath(tip, endP, 9, .5), .03, .14);
+  if (st.flame && left > 0 && tMax < 140) kickDust(endP.x, endP.z, 1, .5);
+  if (st.flame) { if (Math.random() < .4) for (let k = 1; k < 6; k++) { const q = tip.clone().lerp(endP, k / 6); flame(q.x + rand(-.2, .2), q.y + rand(-.2, .2), q.z + rand(-.2, .2), .35 + k * .12); } }
+  else if (st.bolt) drawBolt(boltPath(tip, endP, 9, .5), .03, .14);
   else if (st.beam) tracer(tip, endP, st.col, .05, .18);
   else if (st.freeze) tracer(tip, endP, st.col, .035, .1);
   else if (st.scope) tracer(tip, endP, st.col, .03, .25);
@@ -3129,7 +3183,6 @@ function updateChests(dt) {
 /* ---------- CS tarzı açılış ---------- */
 function pickWeaponId() {
   const pool = (CLASSES[P.cls] || CLASSES.asker).pool;
-  if (Math.random() < .07) { const all = WIDS.filter(w => !WEAPONS[w].boss && !pool.includes(w)); if (all.length) return pick(all); }
   return pick(pool);
 }
 function rollReward(special) {
