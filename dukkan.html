@@ -27,7 +27,11 @@
   #toast.on{opacity:1}
   /* diyalog */
   #dlg{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);width:min(760px,94vw);display:flex;gap:14px;background:rgba(8,8,12,.88);border:2px solid #e8e2d0;padding:12px;z-index:5}
-  #dlg canvas{width:96px;height:114px;border:2px solid #555;flex:none;background:#111}
+  #dlg canvas{width:132px;height:157px;border:2px solid #555;flex:none;background:#111;transform-origin:50% 60%}
+  #dlg canvas.zin{animation:zin .45s cubic-bezier(.2,.8,.3,1)}
+  @keyframes zin{from{transform:scale(.55);opacity:.2}to{transform:scale(1);opacity:1}}
+  #dlg.me{border-color:#c8bcff}
+  #dlg.me .nm{color:#c8bcff}
   #dlg .t{flex:1;display:flex;flex-direction:column;gap:6px}
   #dlg .nm{font-size:14px;font-weight:700;color:#ffd870;letter-spacing:1px}
   #dlg .tx{font-size:17px;line-height:1.4;min-height:48px}
@@ -577,6 +581,7 @@ const CH = {
   adam:  { ad: 'Takım Elbiseli Adam', skin: '#cfc2b0', hair: '#111', shirt: '#151518', pants: '#151518', h: 1.06, eyeC: '#111' },
   ogr:   { ad: 'Üniversiteli', skin: '#c99878', hair: '#3a2010', shirt: '#2a6a5a', pants: '#3a3a40', glasses: true, beard: true },
   kurye: { ad: 'Kurye', skin: '#b88868', hair: '#1a1a1a', shirt: '#c03020', pants: '#222', beanie: '#c03020' },
+  self:  { ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f' },
   zeynep:{ ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f', shoes: '#e8e4dc', print: 'cat', longHair: true, eyes: [[21, 32], [46, 32]], mouth: [35, 52],
            sprite: { on: 'dk_zeynep_on.png', arka: 'dk_zeynep_arka.png', h: 1.7, eyes: [[76, 46], [96, 46]], mouth: [85, 63],
              rigF: { armR: [117, 153, 95, 268], hip: 246, split: 78 }, rigB: { armL: [0, 33, 104, 276], armR: [140, 177, 104, 276], hip: 248, split: 88 } } },
@@ -912,13 +917,18 @@ function toast(t, dur = 2.6) { const e = $('toast'); e.innerHTML = t; e.classLis
 function showTitle(a, b) { const e = $('title'); e.innerHTML = a + (b ? `<small>${b}</small>` : ''); e.classList.add('on'); setTimeout(() => e.classList.remove('on'), 3200); }
 
 let dlg = null;   // { lines:[], i, choices, cb, typing }
+let dlgLastWho = null;
 function say(who, lines, choices, cb, fake) {
   if (!Array.isArray(lines)) lines = [lines];
   dlg = { who, lines, i: 0, choices, cb, shown: 0, full: false, sel: 0, fake };
   const el = $('dlg'); el.classList.remove('hidden');
   const pc = el.querySelector('canvas'), def = CH[who];
-  if (def) { const g = pc.getContext('2d'); g.clearRect(0, 0, 64, 76); if (N && N.cust && N.cust.p.cv) g.drawImage(N.cust.p.cv, 0, 0); else drawFace(pc, def, fake); pc.style.visibility = 'visible'; }
+  if (def) { const g = pc.getContext('2d'); g.clearRect(0, 0, 64, 76); if (who !== 'self' && N && N.cust && N.cust.v.who === who && N.cust.p.cv) g.drawImage(N.cust.p.cv, 0, 0); else drawFace(pc, def, fake); pc.style.visibility = 'visible'; }
   else pc.style.visibility = 'hidden';
+  if (dlgLastWho !== who) { pc.classList.remove('zin'); void pc.offsetWidth; pc.classList.add('zin'); dlgLastWho = who; }
+  el.classList.toggle('me', who === 'self');
+  // konuşurken imleç görünsün
+  if (document.pointerLockElement) { lockGrace = performance.now() + 700; unlockPointer(); }
   el.querySelector('.nm').textContent = def ? def.ad.toUpperCase() : (who || '');
   renderDlg();
 }
@@ -947,8 +957,12 @@ function advanceDlg() {
   if (dlg.choices) return;
   closeDlg(-1);
 }
-function chooseDlg(i) { if (!dlg || !dlg.choices || !dlg.full || dlg.i !== dlg.lines.length - 1) return; SND.click(); closeDlg(i); }
-function closeDlg(i) { const cb = dlg.cb; dlg = null; $('dlg').classList.add('hidden'); if (cb) cb(i); }
+function chooseDlg(i) {
+  if (!dlg || !dlg.choices || !dlg.full || dlg.i !== dlg.lines.length - 1) return; SND.click();
+  const txt = dlg.choices[i], cb = dlg.cb; dlg = null;
+  say('self', txt, null, () => { if (cb) cb(i); });
+}
+function closeDlg(i) { const cb = dlg.cb; dlg = null; $('dlg').classList.add('hidden'); if (cb) cb(i); if (!dlg) { dlgLastWho = null; if (state === 'play') lockPointer(); } }
 $('dlg').addEventListener('click', () => { if (dlg && !(dlg.choices && dlg.full && dlg.i === dlg.lines.length - 1)) advanceDlg(); });
 
 function showPaper(html) { $('paper').innerHTML = html; $('paper').classList.remove('hidden'); SND.pick(); }
@@ -1335,7 +1349,23 @@ function collide(x, z) {
   if (N && N.cust && N.cust.p) { const cp = N.cust.p.g.position; if (Math.hypot(cp.x - x, cp.z - z) < .45) return true; }
   return false;
 }
+const _hp = new THREE.Vector3();
+function dialogCam(dt) {
+  let fovT = 72;
+  if (dlg && N && N.cust && (dlg.who === N.cust.v.who || dlg.who === 'self') && ['talk', 'wait', 'final', 'arrived', 'vanish'].includes(N.cust.st)) {
+    const g = N.cust.p.g; _hp.set(g.position.x, (N.cust.p.isSprite ? 1.58 : 1.5) * (CH[N.cust.v.who].h || 1), g.position.z);
+    const dx = _hp.x - camera.position.x, dz = _hp.z - camera.position.z, dy = _hp.y - camera.position.y;
+    const wantYaw = Math.atan2(-dx, -dz), wantPitch = Math.atan2(dy, Math.hypot(dx, dz));
+    let dy2 = wantYaw - P.yaw; dy2 = Math.atan2(Math.sin(dy2), Math.cos(dy2));
+    const k = Math.min(1, dt * 4); P.yaw += dy2 * k; P.pitch += (wantPitch - P.pitch) * k;
+    fovT = dlg.who === 'self' ? 52 : 40;
+  }
+  if (Math.abs(camera.fov - fovT) > .05) { camera.fov += (fovT - camera.fov) * Math.min(1, dt * 3.5); camera.updateProjectionMatrix(); }
+  camera.rotation.set(P.pitch, P.yaw, 0);
+}
 function updatePlayer(dt) {
+  if (state === 'play' && dlg) { dialogCam(dt); return; }
+  if (camera.fov !== 72 && state === 'play') dialogCam(dt);
   if (dlg || state !== 'play') return;
   let fx = 0, fz = 0;
   if (keys.KeyW || keys.ArrowUp) fz -= 1; if (keys.KeyS || keys.ArrowDown) fz += 1;
