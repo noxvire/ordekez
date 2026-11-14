@@ -1762,6 +1762,107 @@ function audioStart(){
     hum = { g, o: [o1, o2] };
   }catch(e){}
 }
+/* ---------- oyun içi ortam: müzik + rastgele korku sesleri ---------- */
+let bgm = null, bgmBuf = null, bgmLoading = false, ambT = null, echo = null;
+function humStop(){ if (hum){ try{ hum.o.forEach(o=>o.stop()); hum.g.disconnect(); }catch(e){} } hum = null; }
+function loadBgm(cb){
+  if (bgmBuf){ cb && cb(); return; } if (bgmLoading) return; bgmLoading = true;
+  fetch('br_muzik.mp3').then(r => r.arrayBuffer()).then(b => ac().decodeAudioData(b)).then(buf => { bgmBuf = buf; cb && cb(); }).catch(() => { bgmLoading = false; });
+}
+function bgmStart(){
+  const c = ac(); if (!c || bgm) return;
+  if (!bgmBuf){ loadBgm(() => { if (state === 'play' && ambT) bgmStart(); }); return; }
+  try{
+    const s = c.createBufferSource(); s.buffer = bgmBuf; s.loop = true;
+    const g = c.createGain(); g.gain.setValueAtTime(0, c.currentTime); g.gain.linearRampToValueAtTime(chase ? .07 : .2, c.currentTime + 4);
+    s.connect(g).connect(out()); s.start(); bgm = { s, g };
+  }catch(e){}
+}
+function bgmStop(){
+  if (!bgm) return; const b = bgm; bgm = null;
+  try{ b.g.gain.cancelScheduledValues(ac().currentTime); b.g.gain.setTargetAtTime(0, ac().currentTime, .4); setTimeout(() => { try{ b.s.stop(); }catch(e){} }, 1800); }catch(e){}
+}
+function bgmDuck(on){ if (bgm) try{ bgm.g.gain.setTargetAtTime(on ? .07 : .2, ac().currentTime, .6); }catch(e){} }
+function gameAmbStart(){ humStop(); bgmStart(); if (!ambT) ambT = { door: rnd(10, 22), lamp: rnd(6, 16), scratch: rnd(18, 32), scream: rnd(45, 80) }; }
+function gameAmbStop(){ bgmStop(); ambT = null; }
+// koridor yankısı
+function fxOut(pan){
+  const c = ac();
+  if (!echo){
+    const d = c.createDelay(1); d.delayTime.value = .27; const fb = c.createGain(); fb.gain.value = .38; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1600;
+    d.connect(lp).connect(fb).connect(d); const wet = c.createGain(); wet.gain.value = .55; lp.connect(wet).connect(out()); echo = d;
+  }
+  const g = c.createGain(); let n = g;
+  if (c.createStereoPanner){ const p = c.createStereoPanner(); p.pan.value = pan; g.connect(p); n = p; }
+  n.connect(out()); n.connect(echo); return g;
+}
+function nbuf(c, dur){ const b = c.createBuffer(1, Math.max(1, c.sampleRate*dur), c.sampleRate), d = b.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b; }
+function sfxDoor(){
+  const c = ac(); if (!c) return; try{
+    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, dur = rnd(1.4, 2.4), n = Math.floor(dur * rnd(14, 22));
+    const vol = rnd(.18, .3);
+    for (let i=0;i<n;i++){
+      const t = t0 + i/n*dur + rnd(-.01, .01), k = i/n;
+      const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(rnd(70, 110) + k*60 + Math.sin(k*9)*25, t);
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700 + Math.sin(k*5)*300 + rnd(0, 250); f.Q.value = 7;
+      const g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol * (1 - Math.abs(k-.45)), t + .012); g.gain.exponentialRampToValueAtTime(.001, t + .07);
+      o.connect(f).connect(g).connect(dest); o.start(t); o.stop(t + .08);
+    }
+  }catch(e){}
+}
+function sfxLamp(){
+  const c = ac(); if (!c) return; try{
+    const dest = fxOut(rnd(-.6, .6)), t0 = c.currentTime + .02, dur = rnd(1.2, 2.6);
+    const o = c.createOscillator(); o.type = 'square'; o.frequency.value = 100;
+    const o2 = c.createOscillator(); o2.type = 'sawtooth'; o2.frequency.value = 200.5;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1200; f.Q.value = 1.4;
+    const g = c.createGain(); g.gain.setValueAtTime(0, t0);
+    for (let t = 0; t < dur; t += rnd(.03, .14)) g.gain.setValueAtTime(Math.random() < .55 ? rnd(.05, .14) : 0, t0 + t);
+    g.gain.setValueAtTime(0, t0 + dur);
+    o.connect(f); o2.connect(f); f.connect(g).connect(dest); o.start(t0); o2.start(t0); o.stop(t0 + dur + .05); o2.stop(t0 + dur + .05);
+    // çıtırtılar
+    for (let i = 0; i < 10; i++){ const t = t0 + rnd(0, dur), s = c.createBufferSource(); s.buffer = nbuf(c, .012); const hg = c.createGain(); hg.gain.value = rnd(.1, .25); const hf = c.createBiquadFilter(); hf.type = 'highpass'; hf.frequency.value = 3000; s.connect(hf).connect(hg).connect(dest); s.start(t); }
+    // ışıklar da titreyip kısa süre söner
+    if (typeof blackout !== 'undefined') setTimeout(() => { if (state === 'play') blackout = Math.max(blackout, rnd(.35, 1.1)); }, dur * 600);
+  }catch(e){}
+}
+function sfxScratch(){
+  const c = ac(); if (!c) return; try{
+    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, n = 5 + (Math.random()*6|0);
+    let t = t0;
+    for (let i = 0; i < n; i++){
+      const d = rnd(.12, .32), s = c.createBufferSource(); s.buffer = nbuf(c, d);
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(rnd(1800, 2600), t); f.frequency.linearRampToValueAtTime(rnd(3200, 4800), t + d);
+      const g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(rnd(.12, .22), t + d*.3); g.gain.linearRampToValueAtTime(0, t + d);
+      s.connect(f).connect(g).connect(dest); s.start(t); t += d + rnd(.06, .3);
+    }
+  }catch(e){}
+}
+function sfxScream(){
+  const c = ac(); if (!c) return; try{
+    const dest = fxOut(rnd(-1, 1)), t0 = c.currentTime + .05, dur = rnd(1.1, 1.8), base = rnd(520, 760);
+    const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400;
+    const g = c.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(rnd(.08, .13), t0 + .12); g.gain.setValueAtTime(rnd(.08, .12), t0 + dur*.7); g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+    const vib = c.createOscillator(); vib.frequency.value = rnd(6, 9); const vg = c.createGain(); vg.gain.value = base * .05; vib.connect(vg);
+    [1, 1.007, 1.5].forEach((m, i) => {
+      const o = c.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(base*m*.8, t0); o.frequency.linearRampToValueAtTime(base*m*1.35, t0 + dur*.35); o.frequency.linearRampToValueAtTime(base*m*.75, t0 + dur);
+      vg.connect(o.frequency);
+      const f1 = c.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = i === 2 ? 2600 : 1150; f1.Q.value = 4;
+      const og = c.createGain(); og.gain.value = i === 2 ? .35 : .6; o.connect(f1).connect(og).connect(lp); o.start(t0); o.stop(t0 + dur + .05);
+    });
+    const ns = c.createBufferSource(); ns.buffer = nbuf(c, dur); const nf = c.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 1800; const ng = c.createGain(); ng.gain.value = .25; ns.connect(nf).connect(ng).connect(lp); ns.start(t0);
+    vib.start(t0); vib.stop(t0 + dur); lp.connect(g).connect(dest);
+  }catch(e){}
+}
+function ambTick(dt){
+  if (!ambT || state !== 'play') return;
+  ambT.door -= dt; ambT.lamp -= dt; ambT.scratch -= dt; ambT.scream -= dt;
+  if (ambT.door <= 0){ ambT.door = rnd(22, 48); sfxDoor(); }
+  if (ambT.lamp <= 0){ ambT.lamp = rnd(16, 38); sfxLamp(); }
+  if (ambT.scratch <= 0){ ambT.scratch = rnd(26, 55); sfxScratch(); }
+  if (ambT.scream <= 0){ ambT.scream = rnd(60, 130); if (!chase) sfxScream(); }
+}
 function demonLevel(){
   const ep = ent.sp.position, dx = ep.x - pos.x, dz = ep.z - pos.z, d = Math.hypot(dx, dz) || 1;
   const vol = Math.pow(Math.max(0.06, Math.min(1, 1 - d/24)), 1.3);
@@ -1782,9 +1883,9 @@ function playDemon(){
   else { try{ const a = new Audio(CHASE_FILE); a.volume = Math.min(1, vol*SET.vol); a.play().catch(()=>{}); chase.cur = { a }; }catch(e){} }
 }
 function chaseSound(on){
-  if (on && !chase){ chase = { t: 0, cur: null }; playDemon(); chase.t = rnd(2.0, 3.2); }
+  if (on && !chase){ chase = { t: 0, cur: null }; playDemon(); chase.t = rnd(2.0, 3.2); bgmDuck(true); }
   else if (!on && chase){
-    const cur = chase.cur; chase = null;
+    const cur = chase.cur; chase = null; bgmDuck(false);
     if (cur){ try{ if (cur.src){ cur.g.gain.setTargetAtTime(0, ac().currentTime, 0.15); setTimeout(()=>{ try{ cur.src.stop(); }catch(e){} }, 600); } else cur.a.pause(); }catch(e){} }
   }
 }
@@ -1796,7 +1897,7 @@ function chaseTick(dt){
   try{ if (cur.src){ cur.g.gain.setTargetAtTime(vol, c.currentTime, 0.08); if (cur.p) cur.p.pan.setTargetAtTime(pan, c.currentTime, 0.08); } else cur.a.volume = Math.min(1, vol*SET.vol); }catch(e){}
 }
 function audioStop(){
-  chaseSound(false); waterAmb(false);
+  chaseSound(false); waterAmb(false); gameAmbStop();
   if (hum){ try{ hum.o.forEach(o=>o.stop()); hum.g.disconnect(); }catch(e){} }
   hum = null;
 }
@@ -2427,7 +2528,7 @@ function updateEntity(dt, now, isRunning){
   if (e.mode === 'chase' && sees && dist < T*1.2) target = pos;
   else if (e.path.length){ const c = center(e.path[0][0], e.path[0][1]); target = c; if (Math.hypot(c.x-ep.x, c.z-ep.z) < 0.15) e.path.shift(); }
   if (target){ const vx = target.x-ep.x, vz = target.z-ep.z, L = Math.hypot(vx,vz) || 1; const s = Math.min(L, speed*dt); ep.x += vx/L*s; ep.z += vz/L*s; }
-  chaseTick(dt);
+  chaseTick(dt); ambTick(dt);
   ep.y = 1.18 + Math.abs(Math.sin(now*(e.mode==='chase'?9:4)))*0.06;
   e.sp.material.rotation = Math.sin(now*(e.mode==='chase'?14:5))*0.04;
   e.sp.material.color.setScalar(Math.max(0.08, lightAt(ep)));
@@ -2485,7 +2586,7 @@ function start(lv, keep){
   if (level === 1 && !keep) run = { diff: SET.diff || 'normal', pages: [], traces: [], bat: 100, pils: 0, time: 0, erdi: false, stats: newStats() };
   setCrouch(false); eyeH = P.eye;
   build(); saveRun(); resumable = true; state = 'play'; t0 = performance.now()/1000; lastGot = -1;
-  audioStart(); waterAmb(level === 2); showTitle(run.test ? 'TEST MODU<br><small>Erdi’yi bul · 1 ördek · çıkış</small>' : LEVEL_DATA[level].name.replace(' — ', '<br><small>') + '</small>');
+  gameAmbStart(); waterAmb(level === 2); showTitle(run.test ? 'TEST MODU<br><small>Erdi’yi bul · 1 ördek · çıkış</small>' : LEVEL_DATA[level].name.replace(' — ', '<br><small>') + '</small>');
   lockPointer();
 }
 function retryLevel(){ continueSaved(); }
@@ -2710,7 +2811,7 @@ function creditMusic(){
 function playCredits(){
   state = 'credits'; credEl.classList.remove('post', 'end'); credEl.classList.add('show');
   const roll = credEl.querySelector('.roll'); roll.style.animation = 'none'; void roll.offsetWidth; roll.style.animation = '';
-  chaseSound(false); waterAmb(false); if (hum){ try{ hum.o.forEach(o=>o.stop()); }catch(e){} hum = null; }
+  chaseSound(false); waterAmb(false); gameAmbStop(); if (hum){ try{ hum.o.forEach(o=>o.stop()); }catch(e){} hum = null; }
   if (document.pointerLockElement) document.exitPointerLock?.();
   cred = { t0: performance.now() }; creditMusic();
   cred.post = setTimeout(postCredits, 23000);
@@ -2746,7 +2847,7 @@ function canContinue(){ return (resumable && scene) || !!loadSave(); }
 function menuGo(m){
   ac(); tone2('square', 660, 440, .08, .06);
   if (m === 'cont'){
-    if (resumable && scene){ menuEl.classList.remove('show'); overlay.classList.remove('menu-on'); panel.classList.add('hidden'); state = 'play'; audioStart(); waterAmb(level === 2); last = performance.now(); lockPointer(); }
+    if (resumable && scene){ menuEl.classList.remove('show'); overlay.classList.remove('menu-on'); panel.classList.add('hidden'); state = 'play'; gameAmbStart(); waterAmb(level === 2); last = performance.now(); lockPointer(); }
     else continueSaved();
     return;
   }
@@ -2761,7 +2862,7 @@ function showMenu(){
   const cb = menuItems.find(b => b.dataset.m === 'cont'); cb.style.display = canContinue() ? '' : 'none';
   const sv = loadSave(); cb.querySelector('span').textContent = 'Devam Et' + (resumable && scene ? '' : sv ? ' · Seviye ' + sv.level : '');
   menuSel(0);
-  chaseSound(false); waterAmb(false); closeNote(); mapOpen = false; mapEl.classList.remove('show');
+  chaseSound(false); waterAmb(false); gameAmbStop(); audioStart(); closeNote(); mapOpen = false; mapEl.classList.remove('show');
   if (document.pointerLockElement) document.exitPointerLock?.();
 }
 menuItems.forEach((b, i) => {
@@ -2786,7 +2887,7 @@ function close(){
 }
 $('playBR').addEventListener('click', open);
 $('closeBR').addEventListener('click', close);
-window.__br = { get state(){return state}, get pos(){return pos}, get ent(){return ent}, get ducks(){return ducks}, get exitObj(){return exitObj},
+window.__br = { sfx: { door: () => sfxDoor(), lamp: () => sfxLamp(), scratch: () => sfxScratch(), scream: () => sfxScream() }, get bgm(){ return !!bgm; }, get hum(){ return !!hum; }, get ambT(){ return ambT; }, get state(){return state}, get pos(){return pos}, get ent(){return ent}, get ducks(){return ducks}, get exitObj(){return exitObj},
   start, keys, playCine, endCine, cineTime: () => cine && cineTime(), cineSeek(t){ if (!cine) return; try{ cine.a.pause(); }catch(e){} cine.audioOk = false; cine.a = { currentTime: 0, ended: false, pause(){}, duration: 49.3 }; cine.t0 = performance.now() - t*1000; },
   get dark(){ return dark; }, get writings(){ return writings; }, get items(){ return items; }, get lockers(){ return lockers; }, get run(){ return run; }, get level(){ return level; }, get erdi(){ return erdi; }, get hidden(){ return hidden; },
   get explored(){ return explored; }, toggleMap, jumpScare, openSettings, closeSettings, SET, setYaw(v){yaw=v}, setPitch(v){pitch=v}, get grid(){return grid}, interact, toggleFlash, selectSlot, get inv(){return inv}, get focus(){return focus}, ROOM, T,
