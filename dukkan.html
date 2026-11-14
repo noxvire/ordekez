@@ -726,10 +726,10 @@ const RULES = `<h3>DÜKKÂN KURALLARI</h3><ol>
 // gece senaryoları: m = 22:00'den sonraki dakika
 const NIGHTS = {
   1: { title: 'GECE 1', sub: 'Hoş geldin', visits: [
-      { m: 4, who: 'erdi', want: ['ordekavi'], pay: 200,
-        hi: 'ZEYNEP! Duydun mu, Ördek Avcısı 2 çıkmış!!',
-        thanks: 'Bu gece uyumuyorum! Ördekler beni bekler!',
-        chat: { q: 'Ya bu oyunda ördekleri vuruyor muyuz? Ben ördekleri severim ama...', o: [['Merak etme, sonunda ördekler kazanıyor.', 2, 10, 'Biliyordum! Ördekler her zaman kazanır!'], ['Evet, hepsini vuruyorsun.', -1, 0, '...Hepsini mi? Ben yine de alayım ama içim burkuldu.'], ['Al şunu, git.', 0, 0, 'Bugün pek neşeli değilsin Zeynep.']] } },
+      { m: 8, who: 'cocuk', want: ['sberdi'], pay: 200,
+        hi: 'Abla iyi akşamlar! Süper Erdi Bros. var mı? Harçlığımı biriktirdim!',
+        thanks: 'Yaşasın! Annem uyumadan eve koşmam lazım!',
+        chat: { q: 'Abla bu oyunda prenses kurtarılıyor mu?', o: [['Hayır, prensesi Erdi kurtarıyor.', 1, 5, 'Erdi mi? O kim ya? Neyse, sağ ol abla!'], ['Prenses kendi kendini kurtarıyor.', 2, 15, 'Vay be! Prenses güçlüymüş! Al abla, bahşiş!'], ['Oyna da gör.', 0, 0, 'Peki...']] } },
       { m: 40, who: 'ogr', want: ['erdikart'], pay: 250,
         hi: 'Selam! Burası yeniden mi açıldı? Hayırlı olsun!',
         ask: 'Erdi Kart 64 lazım. Yurtta turnuva var, rezil olmayayım.',
@@ -739,10 +739,10 @@ const NIGHTS = {
         hi: 'Kızım iyi akşamlar. Torunuma şu atari mi neyse, ondan alacağım. PlayKutu mu ne...',
         thanks: 'Allah razı olsun kızım. Gece gece burada tek başına durma, olur mu?',
         chat: { q: 'Necmi Bey\'in yeğeni sen misin? O da hep gece açardı burayı... Hep birini beklerdi.', o: [['Kimi beklerdi?', 0, 0, '...Bilmem kızım. Gece gelenleri. Hadi hayırlı işler.'], ['Evet, dayımın yerine ben baktım.', 1, 20, 'Aferin kızım. Al, şeker al kendine.']] } },
-      { m: 140, who: 'cocuk', want: ['sberdi'], pay: 200,
-        hi: 'Abla iyi akşamlar! Süper Erdi Bros. var mı? Harçlığımı biriktirdim!',
-        thanks: 'Yaşasın! Annem uyumadan eve koşmam lazım!',
-        chat: { q: 'Abla bu oyunda prenses kurtarılıyor mu?', o: [['Hayır, prensesi Erdi kurtarıyor.', 1, 5, 'Erdi mi? O kim ya? Neyse, sağ ol abla!'], ['Prenses kendi kendini kurtarıyor.', 2, 15, 'Vay be! Prenses güçlüymüş! Al abla, bahşiş!'], ['Oyna da gör.', 0, 0, 'Peki...']] } },
+      { m: 140, who: 'erdi', want: ['ordekavi'], pay: 200,
+        hi: 'ZEYNEP! Duydun mu, Ördek Avcısı 2 çıkmış!!',
+        thanks: 'Bu gece uyumuyorum! Ördekler beni bekler!',
+        chat: { q: 'Ya bu oyunda ördekleri vuruyor muyuz? Ben ördekleri severim ama...', o: [['Merak etme, sonunda ördekler kazanıyor.', 2, 10, 'Biliyordum! Ördekler her zaman kazanır!'], ['Evet, hepsini vuruyorsun.', -1, 0, '...Hepsini mi? Ben yine de alayım ama içim burkuldu.'], ['Al şunu, git.', 0, 0, 'Bugün pek neşeli değilsin Zeynep.']] } },
     ], events: [{ m: 285, f: 'ghostBell' }] },
   2: { title: 'GECE 2', sub: 'Bir şeyler yerinden oynuyor', visits: [
       { m: 6, who: 'kurye', want: ['hafiza', 'kol'], pay: 400,
