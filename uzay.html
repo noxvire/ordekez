@@ -291,6 +291,23 @@
   .cls small{font-size:12.5px;color:#cfd8e2;line-height:1.45}
   .cls .guns{display:flex;gap:6px;margin-top:auto}
   .cls .guns img{max-width:80px;max-height:36px;background:rgba(0,0,0,.35);border-radius:6px;padding:3px}
+  .cls .ic{font-size:40px}
+  .cls .lv{font-size:12px;background:var(--c);color:#111;border-radius:6px;padding:1px 6px;vertical-align:middle}
+  .cls .xpb{width:100%;height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
+  .cls .xpb i{display:block;height:100%;background:var(--c)}
+  .cls ul.perks{list-style:none;margin:0;padding:0;text-align:left;font-size:11px;line-height:1.4;color:#6c7480}
+  .cls ul.perks li.ok{color:#d8f0c8}
+  .cls .guns{display:grid !important;grid-template-columns:repeat(4,1fr);gap:4px !important;width:100%}
+  .cls .guns img{cursor:pointer;border:2px solid transparent;max-width:100% !important;width:100%;height:30px;object-fit:contain;box-sizing:border-box;padding:1px !important}
+  .cls .guns img.on{border-color:var(--c)}
+  .cls .guns img.lk{filter:grayscale(1) brightness(.45);cursor:not-allowed}
+  .clsxp{margin:14px auto 0;max-width:420px;text-align:left;background:rgba(0,0,0,.35);border:1px solid color-mix(in srgb,var(--c) 60%,transparent);border-radius:10px;padding:10px 14px;font-size:14px}
+  .clsxp .bar{height:7px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;margin:6px 0 3px}
+  .clsxp .bar i{display:block;height:100%;background:var(--c)}
+  .clsxp .lvup{color:#ffe36a;font-weight:900;animation:pulse 1s infinite}
+  .clsxp .g{font-size:12px;opacity:.75}
+  .clsxp .hd b{color:var(--c)}
+  .clsxp .unl{color:#ffe9a8;font-weight:700;margin-top:4px}
   .cls small.pool{font-size:11px;color:#9fb0c0;line-height:1.35}
   .cls em{font-style:normal;font-weight:800;font-size:13px;color:#ffe9a8}
   .cls.shake{animation:shk .35s}
@@ -2719,11 +2736,52 @@ const CLASSES = {
 };
 function clsOwned(id) { return id === 'asker' || !!(META.cls && META.cls[id]); }
 let selCls = (META.lastCls && clsOwned(META.lastCls)) ? META.lastCls : 'asker';
+/* ---------- sınıf seviyeleri ---------- */
+const CLS_MAX = 10;
+const clsNeed = l => 250 + l * 200;                 // l -> l+1 için gereken XP
+const CLS_PROG = {
+  asker:    { starts: [[1, 'makineli'], [3, 'tufek'], [6, 'bombaatar'], [9, 'roket']],
+              perks: [[5, 'Atış hızı +%15', () => { S.rate += .15; }], [8, '+2 bandajla başla', () => { P.bandage += 2; }], [10, 'Başlangıç silahı Destansı', () => { const i = P.weapons.length - 1; P.weapons[i] = newWeapon(P.weapons[i].id, Math.max(2, P.weapons[i].rar)); }]] },
+  buyucu:   { starts: [[1, 'buzasa'], [3, 'atesasa'], [6, 'simsekasa'], [9, 'meteorasa']],
+              perks: [[5, 'Yetenekler +%15 daha güçlü', () => { S.skill += .15; }], [8, '+1 rastgele yetenekle başla', () => { const ids = Object.keys(SKILLS).filter(k => !P.skills[k]); if (ids.length) P.skills[pick(ids)] = 1; }], [10, 'Başlangıç yetenekleri 2. seviye', () => { for (const k in P.skills) P.skills[k] = Math.max(2, P.skills[k]); }]] },
+  tank:     { starts: [[1, 'cekic'], [3, 'minigun'], [6, 'alevmak'], [9, 'havan']],
+              perks: [[5, 'Zırh +%10', () => { S.armor += .1; }], [8, '+40 can', () => { P.maxHp += 40; P.hp += 40; }], [10, 'Her öldürmede +1 can', () => { S.steal += 1; }]] },
+  avci:     { starts: [[1, 'arbalet'], [3, 'yay'], [6, 'zehirarb'], [9, 'keskin']],
+              perks: [[5, 'Kafadan vuruş +%20', () => { S.headMul += .2; }], [8, 'Kritik şansı +%8', () => { S.crit += .08; }], [10, 'Mermiler +1 düşman deler', () => { S.pierce += 1; }]] },
+  muhendis: { starts: [[1, 'lazer'], [3, 'ordek'], [6, 'tesla'], [9, 'miniroket']],
+              perks: [[5, 'Taretler +%40', () => { S.turret += .4; }], [8, 'Taret 2. seviyeden başlar', () => { P.skills.taret = Math.max(2, P.skills.taret || 0); }], [10, 'Taretler +%50 daha', () => { S.turret += .5; }]] },
+};
+function clsInfo(id) {
+  let xp = (META.clsXp || {})[id] || 0, lv = 1;
+  while (lv < CLS_MAX && xp >= clsNeed(lv)) { xp -= clsNeed(lv); lv++; }
+  return { lv, xp, need: lv < CLS_MAX ? clsNeed(lv) : 0 };
+}
+function clsStart(id) {
+  const lv = clsInfo(id).lv, pr = CLS_PROG[id], want = (META.clsStart || {})[id];
+  return pr.starts.some(([l, w]) => w === want && l <= lv) ? want : pr.starts[0][1];
+}
 function applyClass(id) {
-  const C = CLASSES[id]; P.cls = id;
+  const C = CLASSES[id], pr = CLS_PROG[id], lv = clsInfo(id).lv; P.cls = id; P.clsLv = lv;
   S.skill = S.skill || 1; S.headMul = S.headMul || 1; S.turret = S.turret || 1;
-  P.weapons = C.start.map((w, i) => newWeapon(w, i === 0 ? UL('start') : 0));
+  const st = clsStart(id);
+  P.weapons = (id === 'asker' ? ['tabanca', st] : [st]).map((w, i) => newWeapon(w, i === 0 ? UL('start') : 0));
   C.apply();
+  S.dmg += (lv - 1) * .03;                            // her sınıf seviyesi +%3 hasar
+  for (const [l, , fn] of pr.perks) if (lv >= l) fn();
+}
+function clsGainXp() {
+  const id = P.cls || 'asker', before = clsInfo(id);
+  const gain = Math.round(G2.kills + G2.wave * 25 + G2.bosses * 150);
+  META.clsXp = META.clsXp || {}; META.clsXp[id] = (META.clsXp[id] || 0) + gain;
+  const after = clsInfo(id), C = CLASSES[id], pr = CLS_PROG[id];
+  const unlocked = [];
+  for (let l = before.lv + 1; l <= after.lv; l++) {
+    pr.starts.filter(([sl]) => sl === l).forEach(([, w]) => unlocked.push('🔫 Yeni başlangıç silahı: ' + WEAPONS[w].ad));
+    pr.perks.filter(([pl]) => pl === l).forEach(([, d]) => unlocked.push('⭐ ' + d));
+  }
+  const pct = after.need ? Math.round(after.xp / after.need * 100) : 100;
+  return `<div class="clsxp" style="--c:${C.c}"><div class="hd">${C.ic} <b>${C.ad}</b> Sv. ${after.lv}${after.lv > before.lv ? ' <span class="lvup">SEVİYE ATLADI!</span>' : ''} <span class="g">+${gain} XP</span></div>
+    <div class="bar"><i style="width:${pct}%"></i></div><span class="g">${after.need ? `${after.xp} / ${after.need} XP` : 'MAKS SEVİYE'}</span>${unlocked.map(u => `<div class="unl">${u}</div>`).join('')}</div>`;
 }
 function openClassSel() {
   renderClassSel(); $('classSel').classList.remove('hidden');
@@ -2732,11 +2790,18 @@ function renderClassSel() {
   $('clsCoins').innerHTML = `🌕 <b>${META.coins}</b> Ay Parası`;
   $('clsGrid').innerHTML = Object.entries(CLASSES).map(([id, C]) => {
     const own = clsOwned(id), sel = id === selCls;
-    const guns = C.start.map(w => `<img src="${GUN_ICON[w] || ''}" alt="${WEAPONS[w].ad}" title="${WEAPONS[w].ad}">`).join('');
+    const inf = clsInfo(id), pr = CLS_PROG[id], cur = clsStart(id);
+    const guns = pr.starts.map(([l, w]) => `<img data-w="${w}" class="${l > inf.lv ? 'lk' : w === cur ? 'on' : ''}" src="${GUN_ICON[w] || ''}" alt="${WEAPONS[w].ad}" title="${WEAPONS[w].ad}${l > inf.lv ? ' — Sv. ' + l + ' gerekir' : ''}">`).join('');
+    const perks = [`<li class="ok">+%${(inf.lv - 1) * 3} hasar (her sv. +%3)</li>`].concat(pr.perks.map(([l, d]) => `<li class="${inf.lv >= l ? 'ok' : ''}">Sv.${l}: ${d}</li>`)).join('');
     return `<button class="cls${sel ? ' sel' : ''}${own ? '' : ' locked'}" data-id="${id}" style="--c:${C.c}">
-      <span class="ic">${C.ic}</span><b>${C.ad}</b><small>${C.d}</small><small class="pool">Sandıktan: ${C.pool.map(w => WEAPONS[w].ad).join(', ')}</small><div class="guns">${guns}</div>
+      <span class="ic">${C.ic}</span><b>${C.ad} <span class="lv">Sv. ${inf.lv}</span></b><div class="xpb"><i style="width:${inf.need ? inf.xp / inf.need * 100 : 100}%"></i></div><small>${C.d}</small><ul class="perks">${perks}</ul><small class="pool">Başlangıç silahı:</small><div class="guns">${guns}</div>
       <em>${own ? (sel ? 'SEÇİLDİ' : 'Seç') : `🔒 🌕 ${C.cost}`}</em></button>`;
   }).join('');
+  $('clsGrid').querySelectorAll('.guns img').forEach(im => im.onclick = ev => {
+    ev.stopPropagation(); const id = im.closest('.cls').dataset.id;
+    if (!clsOwned(id) || im.classList.contains('lk')) { SND.block && SND.block(); return; }
+    META.clsStart = META.clsStart || {}; META.clsStart[id] = im.dataset.w; selCls = id; META.lastCls = id; saveMeta(); SND.pick(); renderClassSel();
+  });
   $('clsGrid').querySelectorAll('.cls').forEach(b => b.onclick = () => {
     const id = b.dataset.id, C = CLASSES[id];
     if (!clsOwned(id)) {
@@ -3668,9 +3733,10 @@ function gameOver(quit = false) {
   const rec = !best.wave || G2.wave > best.wave || (G2.wave === best.wave && G2.kills > best.kills);
   if (rec) { best = { wave: G2.wave, kills: G2.kills }; try { localStorage.setItem(BEST_KEY, JSON.stringify(best)); } catch (e) {} }
   const coins = Math.round(G2.kills * .5 + G2.wave * 6 + G2.bosses * 40 + G2.bestCombo * .5);
+  const clsHtml = clsGainXp();
   META.coins += coins; META.life += coins; META.st.bestCombo = Math.max(META.st.bestCombo, G2.bestCombo); saveMeta(); checkAch();
   $('deadStats').innerHTML = `<div><b>${G2.wave}</b><span>DALGA</span></div><div><b>${G2.kills}</b><span>ÖLDÜRME</span></div><div><b>${P.level}</b><span>SEVİYE</span></div><div><b>${G2.bestCombo}x</b><span>EN İYİ KOMBO</span></div><div><b>${mm}:${ss}</b><span>SÜRE</span></div>`;
-  $('best').innerHTML = (rec ? '🏆 Yeni rekor!' : `Rekorun: Dalga ${best.wave} · ${best.kills} öldürme`) + `<br><span class="coin">+${coins} 🌕 Ay Parası</span> <small>(toplam ${META.coins})</small>`;
+  $('best').innerHTML = (rec ? '🏆 Yeni rekor!' : `Rekorun: Dalga ${best.wave} · ${best.kills} öldürme`) + `<br><span class="coin">+${coins} 🌕 Ay Parası</span> <small>(toplam ${META.coins})</small>` + clsHtml;
   setTimeout(() => { if (state === 'dead') $('dead').classList.remove('hidden'); }, 1100);
   submitScore();
 }
@@ -3679,7 +3745,7 @@ function submitScore() {
   if (!token) return;
   fetch('https://servvglgsudtjouqknvx.supabase.co/rest/v1/rpc/skor_kaydet', {
     method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J' },
-    body: JSON.stringify({ p_token: token, p_oyun: 'erdivur', p_deger: G2.wave, p_detay: { oldurme: G2.kills, seviye: P.level } })
+    body: JSON.stringify({ p_token: token, p_oyun: 'erdivur', p_deger: G2.wave, p_detay: { oldurme: G2.kills, seviye: P.level, sinif: CLASSES[P.cls] ? CLASSES[P.cls].ad : '' } })
   }).catch(() => {});
 }
 
@@ -3859,7 +3925,7 @@ refreshMenu();
 requestAnimationFrame(frame);
 setTimeout(() => { $('fade').style.opacity = 0; }, 150);
 addEventListener('pagehide', () => { if (state === 'play') saveMeta(); });
-window.__ev = { hz: { rocket: e => rocketBarrage(e), meteor: e => meteorShower(e, 10), shock: e => shockwave(e) }, pickW: () => pickWeaponId(), get heads() { return heads; }, get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
+window.__ev = { gameOver: q => gameOver(q), hz: { rocket: e => rocketBarrage(e), meteor: e => meteorShower(e, 10), shock: e => shockwave(e) }, pickW: () => pickWeaponId(), get heads() { return heads; }, get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
   heightAt, spawnEnemy, beginPlay, shoot, gainXp, chooseCard, get chests() { return chests; }, openChest, spawnChest, giveWeapon, camera, renderer, startReload,
   killAll: () => enemies.forEach(e => !e.dead && !e.boss && killEnemy(e)), spawnBoss, fx: { bolt: () => { const e = enemies.find(x => !x.dead); e && lightning(e, 50); }, ice: () => iceNova(4), meteor: () => callMeteor(4) }, playerDps, wStats, dropMagnet, get orbs() { return orbs; }, dmg: e => damageEnemy(e, 5, false, false, 0, 0, new THREE.Vector3(e.x, e.by + 1, e.z)), openShop, spawnMerchant, get merchant() { return merchant; }, startWave, rerollCards, skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
 </script>
