@@ -2267,6 +2267,10 @@ let hazards = [];              // şok dalgaları, roket nişanları, meteor ni�
 const ringGeo = new THREE.RingGeometry(.88, 1, 64).rotateX(-Math.PI / 2);
 const discGeo = new THREE.CircleGeometry(1, 40).rotateX(-Math.PI / 2);
 const beamGeo = new THREE.BoxGeometry(1, 1, 1).translate(0, 0, .5);
+const pillarGeo = new THREE.CylinderGeometry(.5, .5, 1, 16, 1, true).translate(0, .5, 0);
+// patron uyarıları kayaların/tümseklerin arkasında kalmasın: her zaman üstte çizilir
+function onTop(m, order = 20) { m.material.depthTest = false; m.renderOrder = order; return m; }
+function warnPillar(x, z, col, h = 14) { const m = onTop(new THREE.Mesh(pillarGeo, additive(col, .22)), 19); m.position.set(x, heightAt(x, z), z); m.scale.set(.55, h, .55); scene.add(m); return m; }
 function spawnBoss(id) {
   const B = BOSSES[id], cyc = Math.floor((G2.wave - 5) / 20);
   const e = spawnEnemy('boss');
@@ -2336,7 +2340,7 @@ function startBossMusic(key) {
 function stopBossMusic() { clearInterval(musicT); musicT = null; }
 
 /* ---------- patron saldırıları ---------- */
-function addRing(x, z, col, opacity = .7) { const m = new THREE.Mesh(ringGeo, additive(col, opacity)); m.position.set(x, heightAt(x, z) + .12, z); scene.add(m); return m; }
+function addRing(x, z, col, opacity = .7) { const m = onTop(new THREE.Mesh(ringGeo, additive(col, opacity))); m.position.set(x, heightAt(x, z) + .12, z); scene.add(m); return m; }
 function shockwave(e) {
   const m = addRing(e.x, e.z, new THREE.Color(2.4, 1.6, .5), .9);
   hazards.push({ kind: 'shock', m, x: e.x, z: e.z, r: 1, spd: 13, max: 30, dmg: e.dmg, hit: false });
@@ -2346,20 +2350,21 @@ function rocketBarrage(e) {
   for (let i = 0; i < 6; i++) {
     const a = Math.random() * 6.28, d = i === 0 ? 0 : rand(1.5, 7);
     const tx = P.pos.x + Math.cos(a) * d + P.vel.x * .8, tz = P.pos.z + Math.sin(a) * d + P.vel.z * .8;
-    const mark = new THREE.Mesh(discGeo, additive(new THREE.Color(1.6, .15, .1), .35)); mark.position.set(tx, heightAt(tx, tz) + .1, tz); mark.scale.setScalar(3); scene.add(mark);
+    const mark = onTop(new THREE.Mesh(discGeo, additive(new THREE.Color(1.6, .15, .1), .35))); mark.position.set(tx, heightAt(tx, tz) + .1, tz); mark.scale.setScalar(3); scene.add(mark);
+    const pil = warnPillar(tx, tz, new THREE.Color(1.6, .2, .1));
     const rk = new THREE.Mesh(rocketGeo, rocketMat); scene.add(rk);
-    hazards.push({ kind: 'rocket', mark, rk, from: new THREE.Vector3(e.x + rand(-1, 1), e.by + e.h * .8, e.z), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .12, dur: 1.4, dmg: 10 + G2.wave * .25 });
+    hazards.push({ kind: 'rocket', mark, pil, rk, from: new THREE.Vector3(e.x + rand(-1, 1), e.by + e.h * .8, e.z), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .12, dur: 1.4, dmg: 10 + G2.wave * .25 });
   }
   SND.roket();
 }
 function laserSweep(e) {
   const a = Math.atan2(P.pos.x - e.x, P.pos.z - e.z), dir = Math.random() < .5 ? 1 : -1;
-  const m = new THREE.Mesh(beamGeo, additive(new THREE.Color(3, .3, .2), .9)); scene.add(m);
+  const m = onTop(new THREE.Mesh(beamGeo, additive(new THREE.Color(3, .3, .2), .9)), 21); scene.add(m);
   hazards.push({ kind: 'laser', m, e, a0: a - .7 * dir, a1: a + .7 * dir, t: -.7, dur: 2.2, dmg: 18 });
   SND.charge();
 }
 function eyeLaser(e) {
-  const m = new THREE.Mesh(beamGeo, additive(new THREE.Color(3, .25, .25), .9)); scene.add(m);
+  const m = onTop(new THREE.Mesh(beamGeo, additive(new THREE.Color(3, .25, .25), .9)), 21); scene.add(m);
   hazards.push({ kind: 'eye', m, e, aim: P.pos.clone(), t: -1, dur: 1.5, dmg: 22 });
   SND.charge();
 }
@@ -2367,9 +2372,10 @@ function meteorShower(e, n = 10) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * 6.28, d = i === 0 ? 0 : rand(2, 13);
     const tx = P.pos.x + Math.cos(a) * d, tz = P.pos.z + Math.sin(a) * d;
-    const mark = new THREE.Mesh(discGeo, additive(new THREE.Color(1.6, .5, .05), .3)); mark.position.set(tx, heightAt(tx, tz) + .1, tz); mark.scale.setScalar(3.2); scene.add(mark);
+    const mark = onTop(new THREE.Mesh(discGeo, additive(new THREE.Color(1.6, .5, .05), .3))); mark.position.set(tx, heightAt(tx, tz) + .1, tz); mark.scale.setScalar(3.2); scene.add(mark);
+    const pil = warnPillar(tx, tz, new THREE.Color(1.8, .7, .1));
     const rk = new THREE.Mesh(meteorGeo, meteorMat); scene.add(rk);
-    hazards.push({ kind: 'meteor', mark, rk, from: new THREE.Vector3(tx + 20, heightAt(tx, tz) + 50, tz - 12), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .15 - .6, dur: 1, dmg: 14 });
+    hazards.push({ kind: 'meteor', mark, pil, rk, from: new THREE.Vector3(tx + 20, heightAt(tx, tz) + 50, tz - 12), to: new THREE.Vector3(tx, heightAt(tx, tz), tz), t: -i * .15 - .6, dur: 1, dmg: 14 });
   }
   SND.whoosh();
 }
@@ -2390,7 +2396,7 @@ function distToBeam(o, dir, len, p) { const v = p.clone().sub(o); const t = clam
 function updateHazards(dt) {
   for (const h of hazards) {
     if (h.kind === 'shock') {
-      h.r += h.spd * dt; h.m.scale.setScalar(h.r); h.m.material.opacity = .9 * (1 - h.r / h.max);
+      h.r += h.spd * dt; h.m.scale.setScalar(h.r); h.m.material.depthTest = Math.abs(Math.hypot(P.pos.x - h.x, P.pos.z - h.z) - h.r) < 4; h.m.position.y = heightAt(P.pos.x, P.pos.z) + .15; h.m.material.opacity = .9 * (1 - h.r / h.max);
       if (Math.random() < .5) { const a = Math.random() * 6.28; kickDust(h.x + Math.cos(a) * h.r, h.z + Math.sin(a) * h.r, 2, 1.5); }
       const d = Math.hypot(P.pos.x - h.x, P.pos.z - h.z), feet = P.pos.y - EYE - heightAt(P.pos.x, P.pos.z);
       if (!h.hit && Math.abs(d - h.r) < .9 && feet < .5) { h.hit = true; hurtPlayer(h.dmg); shake(.5); }
@@ -2401,7 +2407,9 @@ function updateHazards(dt) {
         const t = Math.min(1, h.t); h.rk.position.lerpVectors(h.from, h.to, t); if (h.kind === 'rocket') h.rk.position.y += Math.sin(t * Math.PI) * 9;
         h.rk.lookAt(h.to); burst(h.rk.position.x, h.rk.position.y, h.rk.position.z, 1, [1, .5, .1], .5);
       }
-      h.mark.material.opacity = .25 + Math.sin(performance.now() / 70) * .12;
+      h.mark.material.opacity = .3 + Math.sin(performance.now() / 70) * .14;
+      { const md = Math.hypot(P.pos.x - h.to.x, P.pos.z - h.to.z); h.mark.material.depthTest = md < 5.5; }
+      if (h.pil) { const pd = Math.hypot(P.pos.x - h.to.x, P.pos.z - h.to.z); h.pil.material.opacity = (.1 + Math.max(0, h.t) * .18 + Math.sin(performance.now() / 60) * .03) * clamp((pd - 1.5) / 6, .12, 1); }
       if (h.t >= 1) {
         h.done = true; const p = h.to.clone(); p.y += .4; blastFx(p, 3.2, [3, 1.4, .5]);
         const d = Math.hypot(P.pos.x - p.x, P.pos.z - p.z); if (d < 3.2) hurtPlayer(h.dmg * (1 - d / 4.5));
@@ -2429,11 +2437,11 @@ function updateHazards(dt) {
       if (h.t > 0) { if (distToBeam(o, dir, len, want) < 1.2) hurtPlayer(h.dmg * dt); const ep = o.clone().addScaledVector(dir, len - 4); kickDust(ep.x, ep.z, 3, 1.5); }
       if (h.t > h.dur) h.done = true;
     }
-    if (h.done) { ['m', 'mark', 'rk'].forEach(k => h[k] && scene.remove(h[k])); }
+    if (h.done) { ['m', 'mark', 'rk', 'pil'].forEach(k => h[k] && scene.remove(h[k])); }
   }
   hazards = hazards.filter(h => !h.done);
 }
-function clearHazards() { hazards.forEach(h => ['m', 'mark', 'rk'].forEach(k => h[k] && scene.remove(h[k]))); hazards = []; }
+function clearHazards() { hazards.forEach(h => ['m', 'mark', 'rk', 'pil'].forEach(k => h[k] && scene.remove(h[k]))); hazards = []; }
 // patron yapay zekâsı: true dönerse normal hareket atlanır
 function bossAI(e, dt, dist, dx, dz) {
   e.t1 -= dt; e.t2 -= dt; e.t3 -= dt;
@@ -3798,7 +3806,7 @@ refreshMenu();
 requestAnimationFrame(frame);
 setTimeout(() => { $('fade').style.opacity = 0; }, 150);
 addEventListener('pagehide', () => { if (state === 'play') saveMeta(); });
-window.__ev = { pickW: () => pickWeaponId(), get heads() { return heads; }, get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
+window.__ev = { hz: { rocket: e => rocketBarrage(e), meteor: e => meteorShower(e, 10), shock: e => shockwave(e) }, pickW: () => pickWeaponId(), get heads() { return heads; }, get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
   heightAt, spawnEnemy, beginPlay, shoot, gainXp, chooseCard, get chests() { return chests; }, openChest, spawnChest, giveWeapon, camera, renderer, startReload,
   killAll: () => enemies.forEach(e => !e.dead && !e.boss && killEnemy(e)), spawnBoss, fx: { bolt: () => { const e = enemies.find(x => !x.dead); e && lightning(e, 50); }, ice: () => iceNova(4), meteor: () => callMeteor(4) }, playerDps, wStats, dropMagnet, get orbs() { return orbs; }, dmg: e => damageEnemy(e, 5, false, false, 0, 0, new THREE.Vector3(e.x, e.by + 1, e.z)), openShop, spawnMerchant, get merchant() { return merchant; }, startWave, rerollCards, skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
 </script>
