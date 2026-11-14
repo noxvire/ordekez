@@ -80,7 +80,7 @@
   #menu{position:fixed;inset:0;background:#000;overflow:hidden}
   #stage{position:absolute;left:50%;top:50%;aspect-ratio:1672/941;transform:translate(-50%,-50%);width:max(100vw,calc(100vh*1672/941))}
   #stage img{position:absolute;inset:0;width:100%;height:100%}
-  #mbtns{position:absolute;left:55.2%;top:50.5%;width:22.2%;display:flex;flex-direction:column;gap:.62cqw}
+  #mbtns{position:absolute;left:55.2%;top:52%;width:22.2%;display:flex;flex-direction:column;gap:.62cqw}
   #stage{container-type:inline-size}
   .mb{position:relative;height:2.95cqw;border:none;background:none;cursor:pointer;color:#e9edf2;font:600 1.5cqw/1 "Bahnschrift","Segoe UI",sans-serif;letter-spacing:.08em;text-transform:uppercase}
   .mb:before{content:"";position:absolute;inset:0;transform:skewX(-14deg);background:linear-gradient(180deg,rgba(40,44,52,.88),rgba(16,18,22,.92));border:1px solid rgba(255,255,255,.14);border-radius:.3cqw;transition:.15s}
@@ -260,7 +260,6 @@
   <div id="stage"><img src="erdivur_menu.jpg" alt="Erdiyi Vur">
     <div id="mbtns">
       <button class="mb sel" data-a="new"><span>Yeni Oyun</span></button>
-      <button class="mb" data-a="cont"><span>Devam Et</span></button>
       <button class="mb" data-a="shop"><span>Geliştirmeler</span></button>
       <button class="mb" data-a="achv"><span>Başarımlar</span></button>
       <button class="mb" data-a="set"><span>Ayarlar</span></button>
@@ -286,8 +285,8 @@
   <h2>DURAKLATILDI</h2>
   <button class="btn" id="bResume">Devam</button>
   <button class="btn" id="bPSet">Ayarlar</button>
-  <button class="btn" id="bPMenu">Ana Menü</button>
-  <p class="keys">Ana menüye dönersen bu dalganın başından devam edebilirsin.</p>
+  <button class="btn" id="bPMenu">Koşuyu Bitir</button>
+  <p class="keys">Oyunda ara kayıt yok: koşuyu bitirirsen ya da sayfayı kapatırsan bu oyun biter.<br>Koşuyu buradan bitirirsen kazandığın Ay Parasını alırsın, sayfayı kapatırsan alamazsın.</p>
 </div>
 
 <div id="lvl" class="panel hidden">
@@ -298,7 +297,7 @@
 </div>
 
 <div id="dead" class="panel hidden">
-  <h2>ERDİLER SENİ YEDİ</h2>
+  <h2 id="deadTitle">ERDİLER SENİ YEDİ</h2>
   <div class="stats" id="deadStats"></div>
   <div id="best"></div>
   <button class="btn" id="bRetry">Tekrar Oyna</button>
@@ -1041,6 +1040,7 @@ function saveRun() {
 }
 function loadRun() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; } }
 const clearRun = () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} };
+clearRun();
 freshRun();
 /* ---------- düşmanlar: 3 boyutlu tek gözlü Erdi (parça başına tek çizim) ---------- */
 const MAXE = 120;
@@ -2393,7 +2393,7 @@ function startWave(n) {
   G2.toSpawn = 6 + n * 4; G2.spawnT = 1.2;
   G2.bossT = n % 5 === 0 ? 4 : 0;
   META.st.maxWave = Math.max(META.st.maxWave, n);
-  saveRun(); checkAch();
+  checkAch();
   SND.wave(); msg(`DALGA ${n}`, n % 5 === 0 ? 'Patron dalgası!' : n === 1 ? 'Erdiler geliyor…' : 'Hazır ol');
 }
 function updateWaves(dt) {
@@ -2571,7 +2571,8 @@ function toMenu() {
   if (document.pointerLockElement) document.exitPointerLock();
   refreshMenu();
 }
-function gameOver() {
+function gameOver(quit = false) {
+  $('deadTitle').textContent = quit ? 'KOŞU BİTTİ' : 'ERDİLER SENİ YEDİ';
   state = 'dead'; firing = false; aiming = false; clearRun(); $('prompt').classList.remove('on');
   if (document.pointerLockElement) document.exitPointerLock();
   const t = Math.floor(G2.time), mm = Math.floor(t / 60), ss = String(t % 60).padStart(2, '0');
@@ -2598,9 +2599,6 @@ function submitScore() {
 const mbs = [...document.querySelectorAll('.mb')];
 let mSel = 0, setFrom = 'menu';
 function refreshMenu() {
-  const sv = loadRun(), cont = mbs[1];
-  cont.disabled = !sv;
-  cont.innerHTML = sv ? `<span>Devam Et<small>Dalga ${sv.wave} · Seviye ${sv.P.level}</small></span>` : '<span>Devam Et</span>';
   $('coinsTop').innerHTML = `🌕 <b>${META.coins}</b> Ay Parası`;
   if (mbs[mSel].disabled) mSel = 0; selMenu(mSel);
 }
@@ -2608,7 +2606,6 @@ function selMenu(i) { mSel = i; mbs.forEach((b, j) => b.classList.toggle('sel', 
 function menuAct(a) {
   initAudio(); SND.pick();
   if (a === 'new') beginPlay(false);
-  else if (a === 'cont' && loadRun()) beginPlay(true);
   else if (a === 'shop') { renderShop(); $('shop').classList.remove('hidden'); }
   else if (a === 'achv') { renderAch(); $('achv').classList.remove('hidden'); }
   else if (a === 'set') { setFrom = 'menu'; $('settings').classList.remove('hidden'); }
@@ -2648,7 +2645,12 @@ $('bAchBack').onclick = () => { $('achv').classList.add('hidden'); refreshMenu()
 $('bSetBack').onclick = () => { $('settings').classList.add('hidden'); if (setFrom === 'pause') $('pause').classList.remove('hidden'); };
 $('bResume').onclick = () => showGame();
 $('bPSet').onclick = () => { setFrom = 'pause'; $('pause').classList.add('hidden'); $('settings').classList.remove('hidden'); };
-$('bPMenu').onclick = () => toMenu();
+let quitArm = 0;
+$('bPMenu').onclick = () => {
+  const b = $('bPMenu');
+  if (performance.now() - quitArm > 4000) { quitArm = performance.now(); b.textContent = 'Emin misin? Tekrar bas'; setTimeout(() => b.textContent = 'Koşuyu Bitir', 4000); return; }
+  b.textContent = 'Koşuyu Bitir'; $('pause').classList.add('hidden'); gameOver(true);
+};
 $('bRetry').onclick = () => beginPlay(false);
 $('bDMenu').onclick = () => toMenu();
 $('sSens').value = SET.sens; $('sVol').value = SET.vol; $('sQ').value = SET.q;
