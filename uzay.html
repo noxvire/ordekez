@@ -3308,8 +3308,9 @@ function finishCase() {
     const r = caseRun.reward; caseRun = null;
     $('case').classList.add('hidden');
     giveReward(r);
+    if (G2.reopenShop && state === 'case' && merchant) { G2.reopenShop = false; state = 'play'; last = performance.now(); openShop(); return; }   // tüccara dön: fareyi kilitleme
+    G2.reopenShop = false;
     if (state === 'case') { state = 'play'; last = performance.now(); if (!document.pointerLockElement) lockPointer(); }
-    if (G2.reopenShop) { G2.reopenShop = false; if (state === 'play' && merchant) { openShop(); return; } }
     if (G2.pendingLv && state === 'play') openLevelUp();
   }, 1100);
 }
@@ -3420,7 +3421,7 @@ function lockPointer() {
   const fail = () => { if (state === 'play' && !document.pointerLockElement) $('clickResume').classList.remove('hidden'); };
   try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => setTimeout(fail, 50)); else setTimeout(fail, 300); } catch (e) { fail(); }
 }
-document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement) $('clickResume').classList.add('hidden'); });
+document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement) { $('clickResume').classList.add('hidden'); if (state !== 'play') document.exitPointerLock(); } });
 document.addEventListener('pointerlockerror', () => { if (state === 'play') $('clickResume').classList.remove('hidden'); });
 
 function collideRocks(p) {
