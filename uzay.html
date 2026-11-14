@@ -142,7 +142,7 @@
   #combo .cbar i{display:block;height:100%;background:#ffd23f}
   #combo.pop b{animation:cpop .25s}
   @keyframes cpop{0%{transform:scale(1.5)}100%{transform:scale(1)}}
-  #skillsHud{left:28px;bottom:84px;display:flex;gap:6px}
+  #skillsHud{left:28px;bottom:80px;display:flex;flex-wrap:wrap-reverse;gap:6px;max-width:260px}
   #skillsHud span{position:relative;width:40px;height:40px;border-radius:8px;border:2px solid;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;font-size:22px}
   #skillsHud i{position:absolute;right:2px;bottom:0;font-size:11px;font-style:normal;font-weight:800}
   #scope{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .1s;background:radial-gradient(circle at center,transparent 0,transparent 31vh,#000 31.3vh)}
@@ -193,11 +193,45 @@
   #best .coin{color:#ffe9a8;font-weight:800;font-size:18px}
   .stats{grid-template-columns:repeat(5,auto)}
   #tR{right:210px;bottom:190px;width:56px;height:56px}
+  #tInv{position:fixed;top:16px;right:72px;width:46px;height:46px;border-radius:10px;font-size:20px}
+  #inv{pointer-events:auto}
+
+  #bubble{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(ellipse at center,transparent 60%,rgba(80,170,255,.22) 85%,rgba(120,200,255,.45) 100%)}
+  #bubble.hit{animation:bhit .5s}
+  @keyframes bhit{0%{filter:brightness(4)}100%{filter:none}}
+  .dmg.blok{color:#9fb6c8;font-size:16px;letter-spacing:.1em}
+  #skillsHud u{position:absolute;left:2px;top:0;font-size:10px;text-decoration:none;color:#9fe3ff;font-weight:800}
+  #inv{z-index:25}
+  .invWrap{display:flex;gap:22px;align-items:flex-start}
+  .invL h4{font-size:12px;letter-spacing:.2em;color:#aab4c0;margin:12px 0 6px}
+  .invL h4 small{letter-spacing:0;opacity:.7}
+  .grid6{display:grid;grid-template-columns:repeat(6,96px);gap:7px}
+  #inv .ic{position:relative;height:82px;border-radius:8px;background:rgba(14,16,22,.92);border:2px solid var(--c,rgba(255,255,255,.12));display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s}
+  #inv .ic:hover{transform:translateY(-2px)}
+  #inv .ic.sel{box-shadow:0 0 0 3px #ffd23f,0 0 18px rgba(255,210,60,.5)}
+  #inv .ic.empty{border-style:dashed;opacity:.5}
+  #inv .ic img{max-width:84px;max-height:40px}
+  #inv .ic b{font-size:10px;margin-top:4px;color:#dfe6ee}
+  #inv .ic .n{position:absolute;left:5px;top:2px;font-size:11px;opacity:.6}
+  #inv .ic .lv{position:absolute;right:5px;top:2px;font-size:11px;font-weight:800;color:#ffcf9a}
+  #inv .ic .cp{position:absolute;bottom:1px;font-size:8px;letter-spacing:2px;color:#ffcf9a}
+  #invSkills{display:flex;flex-wrap:wrap;gap:6px;max-width:620px}
+  #invSkills span{padding:5px 9px;border-radius:7px;border:1px solid;background:rgba(0,0,0,.4);font-size:13px}
+  #invItems{margin-top:10px;font-size:14px;color:#cfd8e2}
+  #invDet{width:250px;min-height:300px;padding:16px;border-radius:12px;background:rgba(14,16,22,.92);border:1px solid rgba(255,255,255,.12);text-align:center}
+  #invDet img{max-width:200px;max-height:90px}
+  #invDet h3{margin-top:8px}
+  #invDet table{width:100%;margin:12px 0;font-size:13px;border-collapse:collapse}
+  #invDet td{padding:4px 2px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left}
+  #invDet td+td{text-align:right;font-weight:700}
+  #invDet .hint,.hint{font-size:13px;opacity:.7;line-height:1.6}
+  .btn.small{min-width:0;padding:10px 16px;font-size:14px}
 </style>
 </head>
 <body>
 <div id="view"></div>
 <div id="scope"></div>
+<div id="bubble"></div>
 <div id="hurt"></div>
 <div id="lowhp"></div>
 
@@ -240,7 +274,7 @@
     <label for="sQ">Grafik kalitesi</label>
     <select id="sQ"><option value="2">Yüksek</option><option value="1">Orta</option><option value="0">Düşük</option></select>
   </div>
-  <div class="keys"><kbd>W A S D</kbd>yürü · <kbd>Fare</kbd>nişan al · <kbd>Sol tık</kbd>ateş · <kbd>Shift</kbd>koş · <kbd>Space</kbd>zıpla<br><kbd>E</kbd>sandık aç · <kbd>Q</kbd>bandaj · <kbd>1-5</kbd> / <kbd>Tekerlek</kbd>silah değiştir · <kbd>Esc</kbd>duraklat</div>
+  <div class="keys"><kbd>W A S D</kbd>yürü · <kbd>Fare</kbd>nişan al · <kbd>Sol tık</kbd>ateş · <kbd>Shift</kbd>koş · <kbd>Space</kbd>zıpla<br><kbd>E</kbd>sandık aç · <kbd>Q</kbd>bandaj · <kbd>R</kbd>şarjör · <kbd>Tab</kbd>envanter · <kbd>Sağ tık</kbd>dürbün · <kbd>1-6</kbd> / <kbd>Tekerlek</kbd>silah değiştir · <kbd>Esc</kbd>duraklat</div>
   <button class="btn" id="bSetBack">← Geri</button>
 </div>
 
@@ -289,6 +323,23 @@
   <button class="btn" id="bAchBack">← Geri</button>
 </div>
 <div id="achT"></div>
+<div id="inv" class="panel hidden">
+  <h2>ENVANTER</h2>
+  <div class="invWrap">
+    <div class="invL">
+      <h4>ELDEKİ SİLAHLAR <small>(1–6 tuşları)</small></h4>
+      <div id="invHot" class="grid6"></div>
+      <h4>ÇANTA</h4>
+      <div id="invBag" class="grid6"></div>
+      <h4>YETENEKLER</h4>
+      <div id="invSkills"></div>
+      <div id="invItems"></div>
+    </div>
+    <div id="invDet"></div>
+  </div>
+  <p class="keys"><kbd>Tab</kbd> / <kbd>I</kbd> kapat · Taşımak için önce silaha sonra yuvaya tıkla</p>
+</div>
+
 
 <div id="touch" class="hidden">
   <div id="joy"><i></i></div>
@@ -298,6 +349,7 @@
   <button class="tb" id="tQ">🩹</button>
   <button class="tb" id="tW">🔫</button>
   <button class="tb" id="tR">R</button>
+  <button class="tb" id="tInv">🎒</button>
   <button id="tMenu">☰</button>
 </div>
 <div id="fade"></div>
@@ -798,7 +850,14 @@ const SND = {
   merge() { [440, 554, 659, 880, 1108].forEach((f, i) => tone(f, f, .3, .16, 'sawtooth', i * .06)); noise(4000, .6, .12, 'highpass', 1, .3); },
   spit() { noise(900, .2, .25, 'bandpass', 3); tone(300, 120, .15, .15, 'sine'); },
   fuse() { tone(400, 1600, .7, .2, 'square'); },
-  grunt() { tone(140 + Math.random() * 40, 90, .2, .09, 'sawtooth'); }
+  grunt() { tone(140 + Math.random() * 40, 90, .2, .09, 'sawtooth'); },
+  block() { tone(2400, 1200, .08, .2, 'square'); noise(5000, .1, .2, 'highpass'); },
+  dig() { noise(200, .8, .6); tone(80, 40, .5, .4); },
+  ice() { noise(6000, .5, .25, 'highpass'); [1800, 2400, 3000].forEach((f, i) => tone(f, f * .8, .3, .06, 'sine', i * .04)); },
+  whoosh() { noise(800, .9, .2, 'bandpass', .6); },
+  hole() { tone(60, 30, 1.5, .5, 'sawtooth'); noise(150, 1.5, .3); },
+  turret() { noise(3000, .04, .12, 'bandpass', 1); },
+  shieldUp() { tone(600, 1200, .3, .1, 'sine'); }
 };
 
 /* ---------- silahlar ---------- */
@@ -854,7 +913,14 @@ const UPG = [
 const SKILLS = {
   ates:    { ad: 'Ateş Çemberi',   ic: '🔥', c: '#ff7a2a', t: l => `Yaklaşan Erdiler yanar · yarıçap ${(3.2 + l * .5).toFixed(1)} m · ${10 + l * 8} hasar/sn` },
   simsek:  { ad: 'Şimşek Gücü',    ic: '⚡', c: '#7ac8ff', t: l => `Her ${Math.max(.7, 3.4 - l * .5).toFixed(1)} sn'de ${l >= 5 ? 3 : l >= 3 ? 2 : 1} Erdi'ye yıldırım · ${45 + l * 25} hasar` },
-  ordekler:{ ad: 'Dönen Ördekler', ic: '🦆', c: '#ffd84a', t: l => `${l + 1} lastik ördek etrafında döner · ${18 + l * 10} hasar` }
+  ordekler:{ ad: 'Dönen Ördekler', ic: '🦆', c: '#ffd84a', t: l => `${l + 1} lastik ördek etrafında döner · ${18 + l * 10} hasar` },
+  buz:     { ad: 'Buz Patlaması', ic: '❄️', c: '#9fe8ff', t: l => `Her ${Math.max(3, 8.5 - l).toFixed(1)} sn'de ${6 + l} m buz dalgası · ${15 + l * 10} hasar + donma` },
+  kasirga: { ad: 'Kasırga', ic: '🌪️', c: '#d8e2ea', t: l => `${l >= 4 ? 2 : 1} hortum etrafında dolaşır · ${20 + l * 12} hasar/sn, Erdileri savurur` },
+  meteor:  { ad: 'Meteor Çağrısı', ic: '☄️', c: '#ff8a3a', t: l => `Her ${Math.max(1.1, 4 - l * .55).toFixed(1)} sn'de meteor düşer · ${50 + l * 30} hasar` },
+  karadelik:{ ad: 'Kara Delik', ic: '🕳️', c: '#b07aff', t: l => `Her ${Math.max(6, 14 - l * 1.6).toFixed(0)} sn'de ${(3 + l * .5).toFixed(1)} sn süren kara delik · Erdileri çekip ezer` },
+  taret:   { ad: 'Robot Ördek Taret', ic: '🤖', c: '#ffd84a', t: l => `${[1, 1, 2, 2, 3][l - 1]} taret yanında ateş eder · ${14 + l * 6} hasar` },
+  hayalet: { ad: 'Hayalet Erdi', ic: '👻', c: '#8fe0ff', t: l => `Öldürdüğün Erdilerin %${10 + l * 6}'si hayalet olup ${8 + l * 2} sn senin için savaşır` },
+  kalkan:  { ad: 'Enerji Kalkanı', ic: '🔰', c: '#58b8ff', t: l => `Her ${Math.max(5, 16 - l * 2.2).toFixed(0)} sn'de bir vuruşu tamamen engeller${l >= 4 ? ' (2 hak)' : ''}` }
 };
 const SKILL_MAX = 5;
 
@@ -913,7 +979,7 @@ const ACH = [
   { id: 'leg', ad: 'Efsane', ic: '🌟', d: 'Efsanevi bir silah bul', r: 80 },
   { id: 'merge', ad: 'Simyacı', ic: '⚗️', d: 'İki silahı birleştirip nadirliğini yükselt', r: 50 },
   { id: 'ch10', ad: 'Kasa Açıcı', ic: '📦', d: 'Toplam 10 sandık aç', r: 40 },
-  { id: 'sk3', ad: 'Büyücü', ic: '🧙', d: 'Tek oyunda 3 yeteneğin hepsini al', r: 70 },
+  { id: 'sk3', ad: 'Büyücü', ic: '🧙', d: 'Tek oyunda 5 farklı yetenek al', r: 70 },
   { id: 'sk5', ad: 'Fırtına', ic: '🌩️', d: 'Bir yeteneği 5. seviyeye çıkar', r: 70 },
   { id: 'lv20', ad: 'Deneyimli', ic: '📈', d: 'Tek oyunda 20. seviyeye ulaş', r: 80 },
   { id: 'head', ad: 'Kafa Avcısı', ic: '🤯', d: 'Toplam 200 kez kafadan vur', r: 60 },
@@ -942,9 +1008,9 @@ function checkAch() {
   if (st.merges >= 1) unlockAch('merge');
   if (G2 && G2.bestCombo >= 20) unlockAch('c20'); if (G2 && G2.bestCombo >= 60) unlockAch('c60');
   if (P && P.level >= 20) unlockAch('lv20');
-  if (P && Object.keys(P.skills).length >= 3) unlockAch('sk3');
+  if (P && Object.keys(P.skills).length >= 5) unlockAch('sk3');
   if (P && Object.values(P.skills).some(l => l >= 5)) unlockAch('sk5');
-  if (G2 && G2.wave >= 8 && P.weapons.every(w => w.id === 'tabanca')) unlockAch('pistol');
+  if (G2 && G2.wave >= 8 && P.weapons.every(w => w.id === 'tabanca') && P.bag.every(w => !w || w.id === 'tabanca')) unlockAch('pistol');
   if (Object.values(META.up).reduce((a, b) => a + b, 0) >= 10) unlockAch('shop');
 }
 
@@ -954,7 +1020,7 @@ function freshRun() {
   const hp = 100 + UL('hp') * 10;
   P = { pos: new THREE.Vector3(0, 0, 9), vel: new THREE.Vector3(), yaw: 0, pitch: 0, ground: true, stam: 1,
         hp, maxHp: hp, shield: 0, bandage: 1 + UL('band'), healT: 0, level: 1, xp: 0, need: xpNeedFor(1),
-        weapons: [{ id: 'tabanca', rar: UL('start'), lv: 0, copies: 0, ammo: WEAPONS.tabanca.mag }], cur: 0, skills: {} };
+        weapons: [{ id: 'tabanca', rar: UL('start'), lv: 0, copies: 0, ammo: WEAPONS.tabanca.mag }], cur: 0, skills: {}, bag: Array(12).fill(null), shieldCh: 0 };
   P.pos.y = heightAt(P.pos.x, P.pos.z) + EYE;
   G2 = { wave: 0, kills: 0, time: 0, toSpawn: 0, spawnT: 0, breakT: 0, inBreak: false, pendingLv: 0, bossAlive: null, bossT: 0,
          combo: 0, comboT: 0, bestCombo: 0, bosses: 0 };
@@ -965,7 +1031,7 @@ const SAVE_KEY = 'ev_kayit', BEST_KEY = 'ev_best';
 function saveRun() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({ S, wave: G2.wave, kills: G2.kills, time: G2.time, bosses: G2.bosses, bestCombo: G2.bestCombo,
-      P: { hp: P.hp, maxHp: P.maxHp, shield: P.shield, bandage: P.bandage, level: P.level, xp: P.xp, need: P.need, weapons: P.weapons, cur: P.cur, skills: P.skills } }));
+      P: { hp: P.hp, maxHp: P.maxHp, shield: P.shield, bandage: P.bandage, level: P.level, xp: P.xp, need: P.need, weapons: P.weapons, cur: P.cur, skills: P.skills, bag: P.bag } }));
   } catch (e) {}
 }
 function loadRun() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; } }
@@ -1027,20 +1093,35 @@ const PARTS = [
   ['farm', capsule(.013, .13), skinMat],
   ['hand', handGeo, skinMat]
 ];
-const PI = {}; // parça adı -> InstancedMesh
-for (const [name, geo, mat] of PARTS) {
-  const cnt = ['thigh', 'shin', 'foot', 'uarm', 'farm', 'hand'].includes(name) ? MAXE * 2 : MAXE;
-  const im = new THREE.InstancedMesh(geo, mat, cnt);
-  im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  im.setColorAt(0, new THREE.Color(1, 1, 1)); im.instanceColor.setUsage(THREE.DynamicDrawUsage);
-  im.count = 0; im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
-  scene.add(im); PI[name] = im;
+// iki çizim katmanı: normal ve saydam (görünmez Erdi + hayalet müttefikler)
+const ghostMat = new THREE.MeshStandardMaterial({ color: 0xbfe8ff, transparent: true, opacity: .22, roughness: .3, emissive: new THREE.Color(.15, .35, .5), depthWrite: false });
+function makeLayer(ghost) {
+  const L = {};
+  for (const [name, geo, mat] of PARTS) {
+    const cnt = ['thigh', 'shin', 'foot', 'uarm', 'farm', 'hand'].includes(name) ? MAXE * 2 : MAXE;
+    const im = new THREE.InstancedMesh(geo, ghost ? ghostMat : mat, cnt);
+    im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    im.setColorAt(0, new THREE.Color(1, 1, 1)); im.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    im.count = 0; im.frustumCulled = false; im.castShadow = !ghost; im.receiveShadow = !ghost;
+    if (ghost) im.renderOrder = 2;
+    scene.add(im); L[name] = im;
+  }
+  L.n = 0; return L;
 }
+const PI = makeLayer(false), PG = makeLayer(true);
+const LAYERS = [PI, PG];
+// aksesuarlar: kalkan, asa
+const propIM = (geo, mat, n = MAXE) => { const im = new THREE.InstancedMesh(geo, mat, n); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.count = 0; im.frustumCulled = false; im.castShadow = true; scene.add(im); return im; };
+const PROP = {
+  shield: propIM(new THREE.BoxGeometry(.24, .34, .025).translate(0, -.06, .05), new THREE.MeshStandardMaterial({ color: 0x8a96a8, metalness: .85, roughness: .3, emissive: 0x101820 })),
+  staff: propIM(new THREE.CylinderGeometry(.008, .008, .5, 6).translate(0, -.1, .02), new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: .7 })),
+  orb: propIM(new THREE.SphereGeometry(.035, 12, 8).translate(0, .16, .02), new THREE.MeshBasicMaterial({ color: new THREE.Color(.6, 2.4, .8), toneMapped: false }))
+};
 
-// yuvarlak gölge lekesi (gölgeler kapalıyken de yere bassınlar)
+// yuvarlak gölge lekesi
 const shGeo = new THREE.InstancedBufferGeometry();
 shGeo.copy(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2));
-const shPos = new THREE.InstancedBufferAttribute(new Float32Array(MAXE * 4), 4); shPos.setUsage(THREE.DynamicDrawUsage);
+const shPos = new THREE.InstancedBufferAttribute(new Float32Array(MAXE * 2 * 4), 4); shPos.setUsage(THREE.DynamicDrawUsage);
 shGeo.setAttribute('iP', shPos); shGeo.instanceCount = 0;
 const shMesh = new THREE.Mesh(shGeo, new THREE.ShaderMaterial({
   vertexShader: `attribute vec4 iP; varying vec2 vUv; void main(){ vUv = uv; vec3 p = vec3(position.x * iP.w, 0., position.z * iP.w) + iP.xyz; gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.); }`,
@@ -1050,42 +1131,57 @@ const shMesh = new THREE.Mesh(shGeo, new THREE.ShaderMaterial({
 shMesh.frustumCulled = false; scene.add(shMesh);
 
 const ETYPE = {
-  normal:    { ad: 'Erdi',            h: 2.5,  hp: 40,   spd: 2.7, dmg: 10, xp: 5,   tint: [1, 1, 1],          drop: .06 },
-  hizli:     { ad: 'Hızlı Erdi',      h: 1.75, hp: 22,   spd: 4.4, dmg: 7,  xp: 4,   tint: [1.12, .82, .78],   drop: .035 },
-  tank:      { ad: 'Tank Erdi',       h: 3.9,  hp: 200,  spd: 1.9, dmg: 22, xp: 22,  tint: [.78, .95, .74],    drop: .22 },
-  ucan:      { ad: 'Uçan Erdi',       h: 1.9,  hp: 28,   spd: 3.0, dmg: 8,  xp: 7,   tint: [.72, .88, 1.3],    drop: .05, fly: true },
-  patlayan:  { ad: 'Patlayan Erdi',   h: 2.0,  hp: 30,   spd: 3.4, dmg: 30, xp: 6,   tint: [1.35, .62, .45],   drop: .05, exp: true },
-  tukurukcu: { ad: 'Tükürükçü Erdi',  h: 2.3,  hp: 35,   spd: 2.4, dmg: 9,  xp: 8,   tint: [.72, 1.18, .62],   drop: .07, spit: true },
-  klon:      { ad: 'Klon Erdi',       h: 2.9,  hp: 80,   spd: 2.5, dmg: 12, xp: 10,  tint: [1.08, .74, 1.3],   drop: .1, split: true },
-  yavru:     { ad: 'Yavru Erdi',      h: 1.25, hp: 15,   spd: 4.0, dmg: 5,  xp: 2,   tint: [1.08, .74, 1.3],   drop: .01 },
-  boss:      { ad: 'Dev Erdi',        h: 8.6,  hp: 1700, spd: 2.4, dmg: 40, xp: 200, tint: [1.15, .74, .7],    drop: 1 }
+  normal:    { ad: 'Erdi',            h: 2.5,  hp: 40,   spd: 2.8, dmg: 11, xp: 5,   tint: [1, 1, 1],          drop: .06 },
+  hizli:     { ad: 'Hızlı Erdi',      h: 1.75, hp: 24,   spd: 4.6, dmg: 8,  xp: 4,   tint: [1.12, .82, .78],   drop: .035 },
+  tank:      { ad: 'Tank Erdi',       h: 3.9,  hp: 220,  spd: 2.0, dmg: 24, xp: 22,  tint: [.78, .95, .74],    drop: .22 },
+  ucan:      { ad: 'Uçan Erdi',       h: 1.9,  hp: 30,   spd: 3.1, dmg: 9,  xp: 7,   tint: [.72, .88, 1.3],    drop: .05, fly: true },
+  patlayan:  { ad: 'Patlayan Erdi',   h: 2.0,  hp: 32,   spd: 3.5, dmg: 32, xp: 6,   tint: [1.35, .62, .45],   drop: .05, exp: true },
+  tukurukcu: { ad: 'Tükürükçü Erdi',  h: 2.3,  hp: 38,   spd: 2.5, dmg: 10, xp: 8,   tint: [.72, 1.18, .62],   drop: .07, spit: true },
+  klon:      { ad: 'Klon Erdi',       h: 2.9,  hp: 85,   spd: 2.6, dmg: 13, xp: 10,  tint: [1.08, .74, 1.3],   drop: .1, split: true },
+  yavru:     { ad: 'Yavru Erdi',      h: 1.25, hp: 16,   spd: 4.2, dmg: 5,  xp: 2,   tint: [1.08, .74, 1.3],   drop: .01 },
+  orumcek:   { ad: 'Örümcek Erdi',    h: 2.2,  hp: 34,   spd: 4.4, dmg: 12, xp: 8,   tint: [.55, .5, .5],      drop: .05, spider: true },
+  gorunmez:  { ad: 'Görünmez Erdi',   h: 2.4,  hp: 36,   spd: 3.2, dmg: 13, xp: 9,   tint: [.9, .95, 1.05],    drop: .06, invis: true },
+  kalkanli:  { ad: 'Kalkanlı Erdi',   h: 2.6,  hp: 70,   spd: 2.4, dmg: 14, xp: 10,  tint: [.85, .85, .95],   drop: .09, shield: true },
+  buyucu:    { ad: 'Büyücü Erdi',     h: 2.5,  hp: 45,   spd: 2.3, dmg: 6,  xp: 14,  tint: [.95, .7, 1.2],     drop: .12, healer: true },
+  kazici:    { ad: 'Kazıcı Erdi',     h: 2.3,  hp: 42,   spd: 4.0, dmg: 14, xp: 9,   tint: [.85, .72, .55],    drop: .06, digger: true },
+  balon:     { ad: 'Balon Erdi',      h: 2.0,  hp: 26,   spd: 3.0, dmg: 14, xp: 9,   tint: [1.15, .9, 1],      drop: .06, balloon: true },
+  boss:      { ad: 'Dev Erdi',        h: 8.6,  hp: 2200, spd: 2.5, dmg: 42, xp: 220, tint: [1.15, .74, .7],    drop: 1 }
 };
 const TYPE_INFO = {
   ucan: 'Havada süzülür, tepeden dalar', patlayan: 'Yanına gelince patlar · uzaktan vur', tukurukcu: 'Uzaktan tükürür · kaç ya da yaklaş',
-  klon: 'Ölünce 3 yavruya bölünür', tank: 'Çok dayanıklı', hizli: 'Çok hızlı ama kırılgan'
+  klon: 'Ölünce 3 yavruya bölünür', tank: 'Çok dayanıklı', hizli: 'Çok hızlı ama kırılgan',
+  orumcek: 'Dört ayak üstünde koşar, üstüne atlar', gorunmez: 'Uzaktayken neredeyse görünmez', kalkanli: 'Önden vurulmaz · kafasına ya da yanından vur',
+  buyucu: 'Diğer Erdileri iyileştirir · önce onu öldür!', kazici: 'Yerin altından gelir · toz izine dikkat', balon: 'Tepende uçup bomba bırakır'
 };
-let enemies = [];
-function spawnEnemy(type, px, pz) {
+const FLAGS = ['fly', 'exp', 'spit', 'split', 'spider', 'invis', 'shield', 'healer', 'digger', 'balloon'];
+let enemies = [], diggers = [], allies = [];
+function spawnEnemy(type, px, pz, opts = {}) {
   const T = ETYPE[type], w = Math.max(1, G2.wave);
   let x = px, z = pz;
   if (x === undefined) {
-    const a = Math.random() * Math.PI * 2, d = rand(36, 52);
+    const a = Math.random() * Math.PI * 2, d = rand(34, 50);
     x = P.pos.x + Math.cos(a) * d; z = P.pos.z + Math.sin(a) * d;
     const r = Math.hypot(x, z); if (r > WALK_R + 10) { x *= (WALK_R + 10) / r; z *= (WALK_R + 10) / r; }
   }
-  const hpMul = 1 + .16 * (w - 1) + (type === 'boss' ? .25 * Math.max(0, Math.floor(w / 5) - 1) : 0);
-  const e = { type, x, z, y: heightAt(x, z), h: T.h * rand(.94, 1.06), hp: T.hp * hpMul, max: T.hp * hpMul,
-    spd: T.spd * Math.min(1.25, 1 + .02 * (w - 1)) * rand(.9, 1.1), dmg: T.dmg * (1 + .07 * (w - 1)), xp: T.xp, tint: T.tint, drop: T.drop,
-    fly: !!T.fly, exp: !!T.exp, spit: !!T.spit, split: !!T.split,
-    ph: Math.random() * 6.28, yaw: 0, flash: 0, cd: rand(.3, 1), dead: 0, kx: 0, kz: 0, atk: 0, wind: 0, age: 0, slow: 0, burnT: 0, alt: T.fly ? 4 : 0, swell: 0, fuse: 0, side: Math.random() < .5 ? -1 : 1, hitBy: null };
-  e.r = e.h * .15; e.by = e.y + e.alt;
-  enemies.push(e); kickDust(x, z, 18, .8);
+  const hpMul = 1 + .2 * (w - 1) + .006 * (w - 1) * (w - 1) + (type === 'boss' ? .3 * Math.max(0, Math.floor(w / 5) - 1) : 0);
+  const elite = !opts.ally && type !== 'boss' && type !== 'yavru' && w >= 4 && Math.random() < Math.min(.18, .04 + w * .008);
+  const e = { type, x, z, y: heightAt(x, z), h: T.h * rand(.94, 1.06) * (elite ? 1.25 : 1), hp: T.hp * hpMul * (elite ? 2.6 : 1), max: 0,
+    spd: T.spd * Math.min(1.3, 1 + .022 * (w - 1)) * rand(.9, 1.1) * (elite ? 1.12 : 1), dmg: T.dmg * (1 + .09 * (w - 1)) * (elite ? 1.4 : 1),
+    xp: T.xp * (elite ? 3 : 1), tint: elite ? [1.45, 1.15, .45] : T.tint, drop: T.drop * (elite ? 3 : 1), elite,
+    ph: Math.random() * 6.28, yaw: 0, flash: 0, cd: rand(.3, 1), dead: 0, kx: 0, kz: 0, atk: 0, wind: 0, age: 0, slow: 0, burnT: 0,
+    alt: T.fly ? 4 : T.balloon ? 7 : 0, vy: 0, swell: 0, fuse: 0, side: Math.random() < .5 ? -1 : 1, leapCd: rand(1, 2.5) };
+  FLAGS.forEach(f => e[f] = !!T[f]);
+  e.max = e.hp; e.r = e.h * .15; e.by = e.y + e.alt;
+  if (opts.ally) { e.ally = true; e.life = opts.life; e.tint = [.6, 1.2, 1.6]; e.dmg = opts.dmg; e.spd = 4.5; allies.push(e); return e; }
+  if (e.digger) { e.dust = 0; diggers.push(e); }
+  else { enemies.push(e); kickDust(x, z, 18, .8); }
   if (type === 'boss') { G2.bossAlive = e; $('boss').classList.remove('hidden'); msg('DEV ERDİ GELİYOR!', 'Kafasına nişan al'); SND.wave(); }
   else if (TYPE_INFO[type] && !G2.seen[type]) { G2.seen[type] = 1; msg('YENİ: ' + T.ad.toUpperCase(), TYPE_INFO[type]); }
+  else if (elite && !G2.seen.elite) { G2.seen.elite = 1; msg('ELİT ERDİ!', 'Altın renkli olanlar çok daha güçlü · bol XP verir'); }
   return e;
 }
 
-// iskelet: her parçanın dünya matrisi = ebeveyn * yerel
+// iskelet
 const M = {}; ['root', 'pelvis', 'chest', 'neck', 'head', 'tmp'].forEach(k => M[k] = new THREE.Matrix4());
 const _T = new THREE.Matrix4(), _R = new THREE.Matrix4(), _Sm = new THREE.Matrix4(), _E = new THREE.Euler(), _col = new THREE.Color();
 function local(out, parent, x, y, z, rx = 0, ry = 0, rz = 0) {
@@ -1093,31 +1189,44 @@ function local(out, parent, x, y, z, rx = 0, ry = 0, rz = 0) {
   return out.multiplyMatrices(parent, _T).multiply(_R);
 }
 const limb = {}; ['hipL', 'kneeL', 'ankleL', 'hipR', 'kneeR', 'ankleR', 'shL', 'elL', 'wrL', 'shR', 'elR', 'wrR'].forEach(k => limb[k] = new THREE.Matrix4());
-function poseEnemy(e, n) {
-  const s = e.h * (1 + e.swell), ph = e.ph, walk = e.fly ? .15 : e.moving ? 1 : .25;
+function poseEnemy(e, L) {
+  const n = L.n++;
+  const s = e.h * (1 + e.swell), ph = e.ph, walk = e.fly || e.balloon ? .15 : e.moving ? 1 : .25;
   const fall = e.dead ? Math.min(1, e.dead) : 0;
-  _T.makeTranslation(e.x, e.by - fall * .1 * s, e.z);
-  _R.makeRotationFromEuler(_E.set(-fall * 1.45 + (e.fly ? .25 : 0), e.yaw, Math.sin(ph * .5) * .03 * walk, 'YXZ')); _Sm.makeScale(s, s, s);
+  const tilt = e.spider ? .95 : e.fly ? .25 : 0;
+  _T.makeTranslation(e.x, e.by - fall * .1 * s - (e.spider ? .12 * s : 0), e.z);
+  _R.makeRotationFromEuler(_E.set(-fall * 1.45 + tilt, e.yaw, Math.sin(ph * .5) * .03 * walk, 'YXZ')); _Sm.makeScale(s, s, s);
   M.root.multiplyMatrices(_T, _R).multiply(_Sm);
   const bob = Math.abs(Math.sin(ph)) * .012 * walk;
   local(M.pelvis, M.root, 0, .42 + bob, 0, .08, Math.sin(ph) * .12 * walk, 0);
   local(M.chest, M.pelvis, 0, .1, 0, -.05 + (e.atk > 0 ? .3 : 0), -Math.sin(ph) * .1 * walk, 0);
-  local(M.neck, M.chest, 0, .1, .005, -.15, 0, 0);
-  local(M.head, M.neck, 0, .225, .02, .12 + Math.sin(ph * 2) * .04 * walk, 0, Math.sin(ph) * .05 * walk);
+  local(M.neck, M.chest, 0, e.balloon ? .16 : .1, .005, e.spider ? -.9 : -.15, 0, 0);
+  local(M.head, M.neck, 0, e.balloon ? .42 : .225, .02, .12 + Math.sin(ph * 2) * .04 * walk, 0, Math.sin(ph) * .05 * walk);
   for (const [sd, k] of [[-1, 'L'], [1, 'R']]) {
     const lp = ph + (sd < 0 ? 0 : Math.PI);
-    const sw = e.fly ? Math.sin(e.age * 3 + sd) * .25 : Math.sin(lp) * .55 * walk, kn = e.fly ? .5 : Math.max(0, Math.cos(lp)) * .9 * walk + .1;
-    local(limb['hip' + k], M.pelvis, sd * .04, -.04, 0, -sw, 0, sd * .06);
-    local(limb['knee' + k], limb['hip' + k], 0, -.19, 0, kn, 0, 0);
-    local(limb['ankle' + k], limb['knee' + k], 0, -.185, 0, sw - kn + .1, sd * -.25, -sd * .06);
+    const air = e.fly || e.balloon;
+    const sw = air ? Math.sin(e.age * 3 + sd) * .25 : Math.sin(lp) * .55 * walk, kn = air ? .5 : Math.max(0, Math.cos(lp)) * .9 * walk + .1;
+    local(limb['hip' + k], M.pelvis, sd * .04, -.04, 0, -sw - (e.spider ? .6 : 0), 0, sd * (e.spider ? .35 : .06));
+    local(limb['knee' + k], limb['hip' + k], 0, -.19, 0, kn + (e.spider ? .6 : 0), 0, 0);
+    local(limb['ankle' + k], limb['knee' + k], 0, -.185, 0, sw - kn + .1 - tilt, sd * -.25, -sd * .06);
   }
   for (const [sd, k] of [[-1, 'L'], [1, 'R']]) {
     const ap = ph + (sd < 0 ? Math.PI : 0);
-    if (e.fly) {   // kanat çırpar gibi
+    if (e.fly) {
       local(limb['sh' + k], M.chest, sd * .05, .075, 0, -.2, 0, sd * (1.5 + Math.sin(e.age * 13) * .55));
       local(limb['el' + k], limb['sh' + k], 0, -.16, 0, 0, 0, sd * .3);
+    } else if (e.spider) {          // kollar ön ayak gibi
+      local(limb['sh' + k], M.chest, sd * .05, .075, 0, -1.2 + Math.sin(ap) * .55 * walk, 0, sd * .35);
+      local(limb['el' + k], limb['sh' + k], 0, -.16, 0, -.25, 0, -sd * .2);
+    } else if (e.shield && sd > 0) { // kalkanı önde tutar
+      local(limb['sh' + k], M.chest, sd * .05, .075, 0, -1.1, 0, sd * .1);
+      local(limb['el' + k], limb['sh' + k], 0, -.16, 0, -.9, 0, -sd * .5);
+    } else if (e.healer && sd > 0) { // asayı kaldırır
+      const lift = e.cast > 0 ? -2.4 : -.6;
+      local(limb['sh' + k], M.chest, sd * .05, .075, 0, lift, 0, sd * .25);
+      local(limb['el' + k], limb['sh' + k], 0, -.16, 0, -.4, 0, 0);
     } else {
-      const reach = e.atk > 0 ? -1.4 : e.spit && e.cd < .5 ? -.8 : 0;
+      const reach = e.atk > 0 ? -1.4 : e.spit && e.cd < .5 ? -.8 : e.balloon ? .2 : 0;
       local(limb['sh' + k], M.chest, sd * .05, .075, 0, Math.sin(ap) * .5 * walk + reach, 0, sd * .28);
       local(limb['el' + k], limb['sh' + k], 0, -.16, 0, -.35 - Math.max(0, Math.sin(ap)) * .3 * walk, 0, -sd * .12);
     }
@@ -1128,35 +1237,50 @@ function poseEnemy(e, n) {
   if (e.burnT > 0) f = Math.max(f, .35);
   _col.setRGB(e.tint[0] + f * 1.6, e.tint[1] * (1 - f * .6), e.tint[2] * (1 - f * .6));
   if (e.slow > 0) _col.setRGB(_col.r * .6, _col.g * .9, _col.b * 1.6);
-  const put = (name, i, mat) => { PI[name].setMatrixAt(i, mat); PI[name].setColorAt(i, _col); };
+  if (e.healGlow > 0) _col.setRGB(_col.r * .7, _col.g + e.healGlow, _col.b * .7);
+  const put = (name, i, mat) => { L[name].setMatrixAt(i, mat); L[name].setColorAt(i, _col); };
   put('belly', n, M.pelvis); put('hips', n, local(M.tmp, M.pelvis, 0, -.045, 0));
   put('neck', n, M.neck);
-  _Sm.makeScale(.145, .2, .165); M.tmp.multiplyMatrices(M.head, _Sm);
+  const hs = e.balloon ? 2.3 : 1;
+  _Sm.makeScale(.145 * hs, .2 * hs, .165 * hs); M.tmp.multiplyMatrices(M.head, _Sm);
   put('headF', n, M.tmp); put('headB', n, M.tmp);
   ['L', 'R'].forEach((k, j) => {
     const i = n * 2 + j;
     put('thigh', i, limb['hip' + k]); put('shin', i, limb['knee' + k]); put('foot', i, limb['ankle' + k]);
     put('uarm', i, limb['sh' + k]); put('farm', i, limb['el' + k]); put('hand', i, limb['wr' + k]);
   });
+  if (L === PI && e.shield) { const im = PROP.shield; im.setMatrixAt(im.count++, local(M.tmp, limb.wrR, 0, -.02, .03, 1.3, 0, 0)); }
+  if (L === PI && e.healer) { const m = local(M.tmp, limb.wrR, 0, -.03, 0, 1.4, 0, 0); PROP.staff.setMatrixAt(PROP.staff.count++, m); PROP.orb.setMatrixAt(PROP.orb.count++, m); }
 }
 
-/* ---------- düşman mermileri (tükürük) ---------- */
+/* ---------- düşman mermileri (tükürük, bomba) ---------- */
 let spits = [];
 const spitGeo = new THREE.IcosahedronGeometry(.22, 1);
 const spitMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(.6, 2.6, .5), toneMapped: false });
+const bombMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: .5, roughness: .4, emissive: 0x330000 });
 function spitAt(e) {
   const m = new THREE.Mesh(spitGeo, spitMat);
   m.position.set(e.x, e.by + e.h * .72, e.z); scene.add(m);
   const tgt = new THREE.Vector3(P.pos.x + P.vel.x * .4, P.pos.y - .4, P.pos.z + P.vel.z * .4);
-  const v = tgt.sub(m.position); const d = v.length(); v.normalize().multiplyScalar(15);
-  v.y += G * (d / 15) * .5;                       // hafif kavis
+  const v = tgt.sub(m.position); const d = v.length(); v.normalize().multiplyScalar(16);
+  v.y += G * (d / 16) * .5;
   spits.push({ m, v, life: 4, dmg: e.dmg }); SND.spit();
+}
+function dropBomb(e) {
+  const m = new THREE.Mesh(spitGeo, bombMat); m.scale.setScalar(1.2);
+  m.position.set(e.x, e.by + .2, e.z); scene.add(m);
+  spits.push({ m, v: new THREE.Vector3(P.vel.x * .3, -1, P.vel.z * .3), life: 6, dmg: e.dmg, bomb: true }); SND.fuse();
 }
 function updateSpits(dt) {
   for (const s of spits) {
-    s.life -= dt; s.v.y -= G * dt; s.m.position.addScaledVector(s.v, dt);
+    s.life -= dt; s.v.y -= G * (s.bomb ? 3 : 1) * dt; s.m.position.addScaledVector(s.v, dt);
     const p = s.m.position;
-    if (Math.hypot(p.x - P.pos.x, p.z - P.pos.z) < .7 && p.y < P.pos.y + .3 && p.y > P.pos.y - EYE) { hurtPlayer(s.dmg); s.done = true; burst(p.x, p.y, p.z, 14, [.4, 1, .3], 2); }
+    if (s.bomb) {
+      if (p.y < heightAt(p.x, p.z) + .15 || s.life <= 0) {
+        s.done = true; blastFx(p.clone(), 2.6);
+        const d = Math.hypot(P.pos.x - p.x, P.pos.z - p.z); if (d < 3) hurtPlayer(s.dmg * (1 - d / 3.6));
+      }
+    } else if (Math.hypot(p.x - P.pos.x, p.z - P.pos.z) < .7 && p.y < P.pos.y + .3 && p.y > P.pos.y - EYE) { hurtPlayer(s.dmg); s.done = true; burst(p.x, p.y, p.z, 14, [.4, 1, .3], 2); }
     else if (p.y < heightAt(p.x, p.z) || s.life <= 0) { s.done = true; burst(p.x, p.y + .1, p.z, 12, [.4, 1, .3], 1.6); }
     if (s.done) scene.remove(s.m);
   }
@@ -1171,15 +1295,50 @@ function enemyBlast(e) {
   for (const o of enemies) if (o !== e && !o.dead) { const d = Math.hypot(o.x - e.x, o.z - e.z); if (d < 4.5) damageEnemy(o, 45 * (1 - d / 5.5), false, false, (o.x - e.x) * 2, (o.z - e.z) * 2, new THREE.Vector3(o.x, o.by + o.h * .5, o.z)); }
   if (!e.dead) { e.dead = .001; e.noReward = true; }
 }
+// kalkan önden gelen mermiyi engeller mi?
+function shieldBlocks(e, dir) {
+  if (!e.shield || e.dead) return false;
+  const fx = Math.sin(e.yaw), fz = Math.cos(e.yaw);
+  return -(dir.x * fx + dir.z * fz) / (Math.hypot(dir.x, dir.z) || 1) > .45;
+}
+function blockFx(p) { burst(p.x, p.y, p.z, 8, [1, .9, .5], 3); dmgText(p, 'BLOK', 'blok'); SND.block(); }
 
+/* ---------- güncelleme ---------- */
+function updateDiggers(dt) {
+  for (const e of diggers) {
+    e.age += dt;
+    let dx = P.pos.x - e.x, dz = P.pos.z - e.z; const d = Math.hypot(dx, dz) || 1;
+    e.x += dx / d * e.spd * 1.15 * dt; e.z += dz / d * e.spd * 1.15 * dt; e.yaw = Math.atan2(dx, dz);
+    e.dust -= dt; if (e.dust <= 0) { e.dust = .08; kickDust(e.x, e.z, 4, .9); }
+    if (d < 2.4 || e.age > 14) {          // fırla!
+      e.emerged = true; e.y = heightAt(e.x, e.z); e.by = e.y; e.cd = .6; e.age = 0;
+      enemies.push(e); kickDust(e.x, e.z, 60, 2.6); burst(e.x, e.y + .5, e.z, 30, [.6, .55, .5], 4); SND.dig();
+    }
+  }
+  diggers = diggers.filter(e => !e.emerged);
+}
+function updateAllies(dt) {
+  for (const a of allies) {
+    a.life -= dt; a.age += dt; if (a.life <= 0) { a.dead = a.dead || .001; }
+    if (a.dead) { a.dead += dt * 1.6; continue; }
+    const t = nearestEnemy(a.x, a.z, 40);
+    let tx = t ? t.x : P.pos.x + Math.sin(a.age) * 3, tz = t ? t.z : P.pos.z + Math.cos(a.age) * 3;
+    let dx = tx - a.x, dz = tz - a.z; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d;
+    a.yaw = Math.atan2(dx, dz); a.moving = false; a.atk -= dt;
+    const reach = t ? t.r + a.r + .5 : 2.5;
+    if (d > reach) { a.x += dx * a.spd * dt; a.z += dz * a.spd * dt; a.ph += dt * a.spd / a.h * 7.5; a.moving = true; }
+    else if (t) { a.cd -= dt; if (a.cd <= 0) { a.cd = .7; a.atk = .25; damageEnemy(t, a.dmg, false, false, dx * 3, dz * 3, new THREE.Vector3(t.x, t.by + t.h * .6, t.z)); } }
+  }
+  allies = allies.filter(a => a.dead < 1.6);
+}
 function updateEnemies(dt) {
   const px = P.pos.x, pz = P.pos.z, active = state === 'play';
   for (const e of enemies) {
     if (e.dead) { e.dead += dt * 1.6; continue; }
     e.age += dt;
     let dx = px - e.x, dz = pz - e.z; const dist = Math.hypot(dx, dz) || 1; dx /= dist; dz /= dist;
-    const ty = Math.atan2(dx, dz); let dy = ty - e.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); e.yaw += dy * Math.min(1, dt * 8);
-    e.slow -= dt;
+    const ty = Math.atan2(dx, dz); let dy = ty - e.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); e.yaw += dy * Math.min(1, dt * (e.shield ? 4 : 8));
+    e.slow -= dt; e.healGlow = Math.max(0, (e.healGlow || 0) - dt * 2); e.cast = (e.cast || 0) - dt;
     const spd = e.spd * (e.slow > 0 ? .45 : 1);
     const reach = e.r + 1.0 + (e.type === 'boss' ? 1.4 : 0);
     const walk = k => { e.x += dx * spd * dt * k; e.z += dz * spd * dt * k; e.ph += dt * spd / e.h * 7.5; e.moving = true; };
@@ -1188,30 +1347,57 @@ function updateEnemies(dt) {
       if (dist > 16) walk(1); else if (dist < 10) walk(-.7);
       else { e.x += -dz * spd * .5 * dt * e.side; e.z += dx * spd * .5 * dt * e.side; e.ph += dt * 3; e.moving = true; if (Math.random() < dt * .3) e.side *= -1; }
       e.cd -= dt;
-      if (active && e.cd <= 0 && dist < 34 && e.age > 1.5) { e.cd = rand(2, 2.8); e.atk = .3; spitAt(e); }
+      if (active && e.cd <= 0 && dist < 34 && e.age > 1.5) { e.cd = rand(1.8, 2.6); e.atk = .3; spitAt(e); }
+    } else if (e.healer) {
+      if (dist > 22) walk(1); else if (dist < 15) walk(-.8);
+      e.cd -= dt;
+      if (e.cd <= 0 && e.age > 2) {
+        e.cd = 3.2; e.cast = .8; let healed = 0;
+        for (const o of enemies) {
+          if (o === e || o.dead || o.hp >= o.max) continue;
+          if (Math.hypot(o.x - e.x, o.z - e.z) < 12) {
+            o.hp = Math.min(o.max, o.hp + o.max * (o.type === 'boss' ? .04 : .3)); o.healGlow = 1; healed++;
+            tracer(new THREE.Vector3(e.x, e.by + e.h * .95, e.z), new THREE.Vector3(o.x, o.by + o.h * .6, o.z), 0x60ff80, .05, .35);
+          }
+        }
+        if (healed) { SND.heal(); burst(e.x, e.by + e.h, e.z, 20, [.4, 1, .5], 2); }
+      }
+    } else if (e.balloon) {
+      const hx = px + Math.cos(e.age * .7 + e.ph) * 2.5, hz = pz + Math.sin(e.age * .7 + e.ph) * 2.5;
+      const bx = hx - e.x, bz = hz - e.z, bd = Math.hypot(bx, bz) || 1;
+      if (bd > .5) { e.x += bx / bd * spd * dt; e.z += bz / bd * spd * dt; }
+      e.alt += (6.5 + Math.sin(e.age * 1.3) * .6 - e.alt) * Math.min(1, dt);
+      e.cd -= dt;
+      if (active && e.cd <= 0 && dist < 6 && e.age > 2) { e.cd = rand(2.2, 3); dropBomb(e); }
     } else if (e.exp) {
       if (e.fuse > 0) { e.fuse -= dt; e.swell = (1 - e.fuse / .75) * .35; if (e.fuse <= 0) { enemyBlast(e); continue; } }
       else if (dist < 2.6 && active) { e.fuse = .75; SND.fuse(); }
       else walk(1);
-    } else if (e.wind > 0) {               // saldırı hazırlığı: kaçmak için kısa süre
+    } else if (e.spider && (e.alt > 0 || e.vy > 0)) {     // havada sıçrıyor
+      e.vy -= G * 3 * dt; e.alt = Math.max(0, e.alt + e.vy * dt);
+      e.x += e.lx * dt; e.z += e.lz * dt;
+      if (e.alt === 0) { e.vy = 0; kickDust(e.x, e.z, 20, 1.2); if (active && dist < reach + 1) hurtPlayer(e.dmg); }
+    } else if (e.wind > 0) {
       e.wind -= dt;
       if (e.wind <= 0) {
         e.atk = .25;
         const vy = Math.abs((P.pos.y - EYE) - e.by);
         if (active && dist < reach + .7 && vy < e.h) hurtPlayer(e.dmg);
-        e.cd = e.type === 'boss' ? 1.6 : 1.1;
+        e.cd = e.type === 'boss' ? 1.5 : 1.0;
       }
-    } else if (dist > reach) walk(1);
-    else { e.cd -= dt; if (e.cd <= 0 && e.age > .8) { e.wind = e.type === 'boss' ? .7 : .45; e.atk = e.wind + .2; SND.grunt(); } }
+    } else if (dist > reach) {
+      walk(1);
+      if (e.spider) { e.leapCd -= dt; if (dist < 9 && e.leapCd <= 0) { e.leapCd = rand(2.5, 3.5); e.vy = 5.5; e.alt = .01; e.lx = dx * dist / 2.2; e.lz = dz * dist / 2.2; SND.grunt(); } }
+    }
+    else { e.cd -= dt; if (e.cd <= 0 && e.age > .8) { e.wind = e.type === 'boss' ? .6 : .4; e.atk = e.wind + .2; SND.grunt(); } }
     if (e.fly) { const tgt = dist < 5 ? 1.1 : 3.4 + Math.sin(e.age * 2 + e.ph) * .6; e.alt += (tgt - e.alt) * Math.min(1, dt * 1.6); }
     e.x += e.kx * dt; e.z += e.kz * dt; const damp = Math.pow(.02, dt); e.kx *= damp; e.kz *= damp;
     e.flash = Math.max(0, e.flash - dt * 6); e.burnT -= dt;
   }
-  // birbirini it
   for (let i = 0; i < enemies.length; i++) {
     const a = enemies[i]; if (a.dead) continue;
     for (let j = i + 1; j < enemies.length; j++) {
-      const b = enemies[j]; if (b.dead || a.fly !== b.fly) continue;
+      const b = enemies[j]; if (b.dead || (a.fly || a.balloon) !== (b.fly || b.balloon)) continue;
       const dx = b.x - a.x, dz = b.z - a.z, min = a.r + b.r + .25;
       if (Math.abs(dx) > min || Math.abs(dz) > min) continue;
       const d = Math.hypot(dx, dz) || .01; if (d >= min) continue;
@@ -1219,24 +1405,29 @@ function updateEnemies(dt) {
       a.x -= dx * k * wa; a.z -= dz * k * wa; b.x += dx * k * (1 - wa); b.z += dz * k * (1 - wa);
     }
   }
-  // oyuncunun içine giremezler
   for (const e of enemies) {
-    if (e.dead) continue;
+    if (e.dead || e.balloon || (e.fly && e.alt > 2) || e.alt > 1) continue;
     const dx = e.x - P.pos.x, dz = e.z - P.pos.z, d = Math.hypot(dx, dz) || .01, min = e.r + .6;
-    if (d < min && !(e.fly && e.alt > 2)) { e.x = P.pos.x + dx / d * min; e.z = P.pos.z + dz / d * min; }
+    if (d < min) { e.x = P.pos.x + dx / d * min; e.z = P.pos.z + dz / d * min; }
   }
   enemies = enemies.filter(e => e.dead < 1.6);
-  let n = 0;
-  for (const e of enemies) {
-    if (n >= MAXE) break;
+  updateDiggers(dt); updateAllies(dt);
+  // çizim
+  PI.n = PG.n = 0; PROP.shield.count = PROP.staff.count = PROP.orb.count = 0;
+  let sh = 0;
+  const draw = (e, L) => {
+    if (L.n >= MAXE) return;
     e.y = heightAt(e.x, e.z); e.by = e.y + e.alt;
-    poseEnemy(e, n);
-    shPos.setXYZW(n, e.x, e.y + .04, e.z, e.h * .32 * (e.fly ? .6 : 1));
-    n++;
-  }
-  for (const k in PI) { const im = PI[k]; im.count = im.instanceMatrix.count > MAXE ? n * 2 : n; im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; }
-  shGeo.instanceCount = n; shPos.needsUpdate = true;
+    poseEnemy(e, L);
+    if (L === PI && sh < MAXE * 2) shPos.setXYZW(sh++, e.x, e.y + .04, e.z, e.h * .32 * (e.fly || e.balloon ? .6 : 1));
+  };
+  for (const e of enemies) draw(e, e.invis && !e.dead && Math.hypot(e.x - px, e.z - pz) > 7 ? PG : PI);
+  for (const a of allies) draw(a, PG);
+  for (const L of LAYERS) for (const k in L) { const im = L[k]; if (!im || !im.isInstancedMesh) continue; im.count = im.instanceMatrix.count > MAXE ? L.n * 2 : L.n; im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; }
+  for (const k in PROP) PROP[k].instanceMatrix.needsUpdate = true;
+  shGeo.instanceCount = sh; shPos.needsUpdate = true;
 }
+
 /* ---------- XP küreleri ---------- */
 const MAXO = 400;
 const orbMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.13, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(.5, 2.4, 3.2), toneMapped: false }), MAXO);
@@ -1376,6 +1567,7 @@ function updateProjectiles(dt) {
       if (e.dead || d.hit.has(e)) continue;
       if (Math.hypot(e.x - p.x, e.z - p.z) < e.r + .3 && p.y > e.by && p.y < e.by + e.h) {
         d.hit.add(e); SND.squeak();
+        if (shieldBlocks(e, d.v)) { blockFx(p.clone()); d.done = true; break; }
         damageEnemy(e, d.dmg, Math.random() < S.crit, false, d.v.x * .1, d.v.z * .1, p.clone());
         d.left--;
         const n = d.left >= 0 ? nearestEnemy(p.x, p.z, 11, d.hit) : null;
@@ -1422,6 +1614,7 @@ function lightning(e, dmg) {
   SND.thunder();
 }
 function updateSkills(dt) {
+  updateSkills2(dt);
   const gy = P.pos.y - EYE;
   // ateş çemberi
   const fl = skillLv('ates');
@@ -1471,6 +1664,236 @@ function updateSkills(dt) {
       }
     });
   }
+}
+
+/* ---------- yeni yetenekler ---------- */
+let buzT = 4, meteorT = 2, holeT = 5, kalkanT = 0;
+let novas = [], meteors = [], holes = [], turrets = [], tornados = [];
+const additive = (c, o = .6) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+const novaGeo = new THREE.RingGeometry(.9, 1, 64).rotateX(-Math.PI / 2);
+const tornGeo = (() => { const g = new THREE.CylinderGeometry(1.3, .25, 4.5, 24, 6, true).translate(0, 2.25, 0); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i), a = y * 1.6; const x = p.getX(i), z = p.getZ(i); p.setXYZ(i, x * Math.cos(a) - z * Math.sin(a) + Math.sin(y * 2) * .15, y, x * Math.sin(a) + z * Math.cos(a)); } return g; })();
+const meteorGeo = new THREE.IcosahedronGeometry(.7, 1);
+const meteorMat = new THREE.MeshStandardMaterial({ color: 0x3a2a20, roughness: .9, emissive: new THREE.Color(1.4, .45, .05) });
+const holeCore = new THREE.SphereGeometry(1, 24, 16), holeDisk = new THREE.RingGeometry(1.1, 3.2, 48, 1).rotateX(-Math.PI / 2);
+
+function iceNova(l) {
+  const R = 6 + l, m = new THREE.Mesh(novaGeo, additive(new THREE.Color(.5, 1.6, 2.4), .8));
+  m.position.set(P.pos.x, P.pos.y - EYE + .1, P.pos.z); scene.add(m); novas.push({ m, t: 0, R });
+  SND.ice();
+  for (const e of enemies) {
+    if (e.dead) continue;
+    const d = Math.hypot(e.x - P.pos.x, e.z - P.pos.z);
+    if (d < R + e.r) { e.slow = Math.max(e.slow, 2 + l * .4); damageEnemy(e, 15 + l * 10, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .6, e.z), true); burst(e.x, e.by + e.h * .5, e.z, 6, [.6, .9, 1], 1.5); }
+  }
+}
+function callMeteor(l) {
+  const pool = enemies.filter(e => !e.dead && Math.hypot(e.x - P.pos.x, e.z - P.pos.z) < 35);
+  let tx, tz;
+  if (pool.length) { const t = pick(pool); tx = t.x + rand(-1, 1); tz = t.z + rand(-1, 1); }
+  else { const a = Math.random() * 6.28, d = rand(8, 20); tx = P.pos.x + Math.cos(a) * d; tz = P.pos.z + Math.sin(a) * d; }
+  const m = new THREE.Mesh(meteorGeo, meteorMat); const ty = heightAt(tx, tz);
+  m.position.set(tx + 18, ty + 45, tz - 10); scene.add(m);
+  meteors.push({ m, from: m.position.clone(), to: new THREE.Vector3(tx, ty, tz), t: 0, dmg: 50 + l * 30, R: 3 + l * .3 });
+  SND.whoosh();
+}
+function openHole(l) {
+  // en kalabalık Erdi grubunun ortası
+  let best = null, bc = 0;
+  for (const e of enemies) { if (e.dead) continue; let c = 0; for (const o of enemies) if (!o.dead && Math.hypot(o.x - e.x, o.z - e.z) < 8) c++; if (c > bc) { bc = c; best = e; } }
+  if (!best) return;
+  const g = new THREE.Group();
+  const core = new THREE.Mesh(holeCore, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+  const disk = new THREE.Mesh(holeDisk, additive(new THREE.Color(1.4, .5, 2.4), .7));
+  const disk2 = new THREE.Mesh(holeDisk, additive(new THREE.Color(.5, .2, 1.2), .4)); disk2.rotation.x = .5;
+  g.add(core, disk, disk2); g.position.set(best.x, heightAt(best.x, best.z) + 1.4, best.z); g.scale.setScalar(.01); scene.add(g);
+  holes.push({ g, disk, disk2, t: 0, life: 3 + l * .5, R: 9 + l, dps: 25 + l * 15, tick: 0 });
+  SND.hole();
+}
+function makeTurret() {
+  const g = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: 0x55606e, metalness: .8, roughness: .35 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(.22, .3, .5, 12), metal); base.position.y = .25;
+  const head = new THREE.Group(); head.position.y = .62;
+  const duck = makeDuck(1.6); head.add(duck);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.035, .035, .45, 8).rotateX(Math.PI / 2), metal); barrel.position.set(0, .05, .3); head.add(barrel);
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(.04, 8, 6), new THREE.MeshBasicMaterial({ color: new THREE.Color(3, .4, .3), toneMapped: false })); eye.position.set(0, .2, .2); head.add(eye);
+  g.add(base, head); g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  scene.add(g); return { g, head, cd: 0 };
+}
+function syncTurrets() {
+  const l = skillLv('taret'), want = l ? [1, 1, 2, 2, 3][l - 1] : 0;
+  while (turrets.length < want) turrets.push(makeTurret());
+  while (turrets.length > want) scene.remove(turrets.pop().g);
+}
+function syncTornados() {
+  const l = skillLv('kasirga'), want = l ? (l >= 4 ? 2 : 1) : 0;
+  while (tornados.length < want) { const m = new THREE.Mesh(tornGeo, additive(new THREE.Color(.75, .8, .85), .28)); scene.add(m); tornados.push({ m, tick: 0 }); }
+  while (tornados.length > want) scene.remove(tornados.pop().m);
+}
+function syncSkills() { syncOrbitDucks(); syncTurrets(); syncTornados(); }
+
+function updateSkills2(dt) {
+  const gy = P.pos.y - EYE;
+  // buz patlaması
+  const bl = skillLv('buz');
+  if (bl) { buzT -= dt; if (buzT <= 0) { buzT = Math.max(3, 8.5 - bl); iceNova(bl); } }
+  for (const n of novas) { n.t += dt; n.m.scale.setScalar(.5 + n.R * Math.min(1, n.t * 3)); n.m.material.opacity = Math.max(0, .8 - n.t * 1.4); if (n.t > .6) { scene.remove(n.m); n.done = true; } }
+  novas = novas.filter(n => !n.done);
+  // kasırga
+  const kl = skillLv('kasirga');
+  tornados.forEach((t, i) => {
+    const a = G2.time * .8 + i * Math.PI, R = 5.5 + Math.sin(G2.time * .6 + i) * 1.5;
+    const x = P.pos.x + Math.cos(a) * R, z = P.pos.z + Math.sin(a) * R;
+    t.m.position.set(x, heightAt(x, z), z); t.m.rotation.y -= dt * 9; t.m.scale.setScalar(.9 + kl * .08);
+    kickDust(x + rand(-.6, .6), z + rand(-.6, .6), 2, 1.4);
+    t.tick -= dt;
+    if (t.tick <= 0) {
+      t.tick = .2; const rad = 1.8 + kl * .15;
+      for (const e of enemies) {
+        if (e.dead || e.type === 'boss') { if (e.type === 'boss' && Math.hypot(e.x - x, e.z - z) < rad + e.r) damageEnemy(e, (20 + kl * 12) * .2, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .5, e.z), true); continue; }
+        const dx = e.x - x, dz = e.z - z, d = Math.hypot(dx, dz) || .1;
+        if (d < rad + e.r) { e.kx += (-dz / d * 6 + dx / d * 4); e.kz += (dx / d * 6 + dz / d * 4); damageEnemy(e, (20 + kl * 12) * .2, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .5, e.z), true); }
+      }
+    }
+  });
+  // meteor
+  const ml = skillLv('meteor');
+  if (ml) { meteorT -= dt; if (meteorT <= 0) { meteorT = Math.max(1.1, 4 - ml * .55); callMeteor(ml); } }
+  for (const m of meteors) {
+    m.t += dt / .9; m.m.position.lerpVectors(m.from, m.to, Math.min(1, m.t)); m.m.rotation.x += dt * 5;
+    burst(m.m.position.x, m.m.position.y, m.m.position.z, 2, [1, .5, .1], .6);
+    if (m.t >= 1) {
+      m.done = true; scene.remove(m.m);
+      const p = m.to.clone(); p.y += .5; blastFx(p, m.R, [3, 1.6, .6]);
+      for (const e of enemies) { if (e.dead) continue; const d = Math.hypot(e.x - p.x, e.z - p.z) - e.r; if (d < m.R) damageEnemy(e, m.dmg * (1 - Math.max(0, d) / m.R * .5), false, false, (e.x - p.x) * 2, (e.z - p.z) * 2, new THREE.Vector3(e.x, e.by + e.h * .5, e.z)); }
+    }
+  }
+  meteors = meteors.filter(m => !m.done);
+  // kara delik
+  const hl = skillLv('karadelik');
+  if (hl) { holeT -= dt; if (holeT <= 0) { holeT = Math.max(6, 14 - hl * 1.6); openHole(hl); } }
+  for (const h of holes) {
+    h.t += dt;
+    const grow = Math.min(1, h.t * 3) * (h.t > h.life ? Math.max(0, 1 - (h.t - h.life) * 3) : 1);
+    h.g.scale.setScalar(Math.max(.01, grow)); h.disk.rotation.y += dt * 4; h.disk2.rotation.y -= dt * 3;
+    if (h.t > h.life + .35) { scene.remove(h.g); h.done = true; continue; }
+    const c = h.g.position; h.tick -= dt; const tick = h.tick <= 0; if (tick) h.tick = .25;
+    for (const e of enemies) {
+      if (e.dead || e.type === 'boss') continue;
+      const dx = c.x - e.x, dz = c.z - e.z, d = Math.hypot(dx, dz) || .1;
+      if (d < h.R) {
+        const pull = (2 + 7 * (1 - d / h.R)) * dt; e.x += dx / d * Math.min(pull, d); e.z += dz / d * Math.min(pull, d);
+        if (d < 2.4 && tick) damageEnemy(e, h.dps * .25, false, false, 0, 0, new THREE.Vector3(e.x, e.by + e.h * .5, e.z), true);
+      }
+    }
+    if (Math.random() < .6) { const a = Math.random() * 6.28, r = rand(2, h.R * .7); burst(c.x + Math.cos(a) * r, c.y, c.z + Math.sin(a) * r, 1, [.7, .4, 1], .3); }
+  }
+  holes = holes.filter(h => !h.done);
+  // taretler
+  const tl = skillLv('taret');
+  turrets.forEach((t, i) => {
+    const a = P.yaw + (i - (turrets.length - 1) / 2) * 1.1;
+    const tx = P.pos.x + Math.sin(a) * 2.8, tz = P.pos.z + Math.cos(a) * 2.8;
+    t.g.position.x += (tx - t.g.position.x) * Math.min(1, dt * 4); t.g.position.z += (tz - t.g.position.z) * Math.min(1, dt * 4);
+    t.g.position.y = heightAt(t.g.position.x, t.g.position.z);
+    const tgt = nearestEnemy(t.g.position.x, t.g.position.z, 26);
+    if (tgt) {
+      t.head.rotation.y = Math.atan2(tgt.x - t.g.position.x, tgt.z - t.g.position.z);
+      t.cd -= dt;
+      if (t.cd <= 0) {
+        t.cd = 1 / (2 + tl * .4);
+        const from = t.g.position.clone(); from.y += .7;
+        const to = new THREE.Vector3(tgt.x, tgt.by + tgt.h * .6, tgt.z);
+        tracer(from, to, 0xffd84a, .025, .06); SND.turret();
+        damageEnemy(tgt, 14 + tl * 6, Math.random() < S.crit, false, 0, 0, to);
+      }
+    }
+  });
+  // enerji kalkanı
+  const kal = skillLv('kalkan');
+  if (kal) {
+    const maxCh = kal >= 4 ? 2 : 1;
+    if (P.shieldCh < maxCh) { kalkanT -= dt; if (kalkanT <= 0) { P.shieldCh++; kalkanT = Math.max(5, 16 - kal * 2.2); SND.shieldUp(); } }
+    $('bubble').style.opacity = P.shieldCh > 0 ? .55 : 0;
+  } else $('bubble').style.opacity = 0;
+}
+function clearSkills2() {
+  novas.forEach(n => scene.remove(n.m)); meteors.forEach(m => scene.remove(m.m)); holes.forEach(h => scene.remove(h.g));
+  novas = []; meteors = []; holes = [];
+  buzT = 4; meteorT = 2; holeT = 5; kalkanT = 0;
+}
+
+/* ---------- envanter ---------- */
+const MAX_BAG = 12;
+let invSel = null;
+function openInv() {
+  if (state !== 'play') return;
+  state = 'inv'; firing = false; aiming = false; invSel = null;
+  if (document.pointerLockElement) document.exitPointerLock();
+  renderInv(); $('inv').classList.remove('hidden');
+}
+function closeInv() {
+  if (state !== 'inv') return;
+  $('inv').classList.add('hidden'); state = 'play'; last = performance.now();
+  if (G2.pendingLv) openLevelUp(); else lockPointer();
+}
+function cellHtml(w, where, i) {
+  const sel = invSel && invSel.where === where && invSel.i === i ? ' sel' : '';
+  if (!w) return `<div class="ic empty${sel}" data-w="${where}" data-i="${i}">${where === 'h' ? `<span class="n">${i + 1}</span>` : ''}</div>`;
+  const dots = `<span class="cp">${'●'.repeat(w.copies + 1)}${'○'.repeat(2 - w.copies)}</span>`;
+  return `<div class="ic${sel}" data-w="${where}" data-i="${i}" style="--c:${RAR[w.rar].c}">${where === 'h' ? `<span class="n">${i + 1}</span>` : ''}<img src="${GUN_ICON[w.id] || ''}" alt=""><b>${WEAPONS[w.id].ad}</b>${w.lv ? `<span class="lv">+${w.lv}</span>` : ''}${dots}</div>`;
+}
+function renderInv() {
+  const hb = []; for (let i = 0; i < MAX_W; i++) hb.push(cellHtml(P.weapons[i], 'h', i));
+  $('invHot').innerHTML = hb.join('');
+  $('invBag').innerHTML = P.bag.map((w, i) => cellHtml(w, 'b', i)).join('');
+  // ayrıntı
+  const w = invSel ? (invSel.where === 'h' ? P.weapons[invSel.i] : P.bag[invSel.i]) : null;
+  const det = $('invDet');
+  if (!w) det.innerHTML = '<p class="hint">Bir silaha tıkla, sonra taşımak istediğin yuvaya tıkla.<br>Aynı silahtan 3 tane olunca otomatik birleşir.</p>';
+  else {
+    const st = wStats(w);
+    det.innerHTML = `<img src="${GUN_ICON[w.id]}" alt=""><h3 style="color:${RAR[w.rar].c}">${WEAPONS[w.id].ad}${w.lv ? ' +' + w.lv : ''}</h3><small style="color:${RAR[w.rar].c}">${RAR[w.rar].ad} · ${w.copies + 1}/3 kopya</small>
+      <table><tr><td>Hasar</td><td>${Math.round(st.dmg)}${st.pellets > 1 ? ' × ' + st.pellets : ''}</td></tr><tr><td>Atış hızı</td><td>${st.rate.toFixed(1)} / sn</td></tr>
+      <tr><td>Şarjör</td><td>${st.mag}</td></tr><tr><td>Şarjör değiştirme</td><td>${st.reload.toFixed(1)} sn</td></tr></table>
+      <button class="btn small" id="bScrap">Parçala (+${scrapXp(w)} XP)</button>`;
+    $('bScrap').onclick = () => scrap();
+  }
+  $('invSkills').innerHTML = Object.keys(P.skills).length ? Object.entries(P.skills).map(([id, l]) => `<span style="border-color:${SKILLS[id].c}">${SKILLS[id].ic} ${SKILLS[id].ad} <b>${l}</b></span>`).join('') : '<span class="hint">Henüz yetenek yok</span>';
+  $('invItems').innerHTML = `🩹 Bandaj: <b>${P.bandage}</b> &nbsp; 🛡️ Kalkan: <b>${Math.ceil(P.shield)}</b> &nbsp; ❤️ ${Math.ceil(P.hp)}/${P.maxHp}`;
+  document.querySelectorAll('#inv .ic').forEach(c => c.onclick = () => invClick(c.dataset.w, +c.dataset.i));
+}
+const scrapXp = w => Math.round(12 * (w.rar + 1) * (1 + w.lv * .5) + w.copies * 8);
+function invGet(where, i) { return where === 'h' ? P.weapons[i] : P.bag[i]; }
+function invClick(where, i) {
+  const item = invGet(where, i);
+  if (!invSel) { if (item) { invSel = { where, i }; SND.pick(); } renderInv(); return; }
+  if (invSel.where === where && invSel.i === i) { invSel = null; renderInv(); return; }
+  const a = invSel, wa = invGet(a.where, a.i), wb = item;
+  const curWeapon = curW();
+  if (a.where === 'h' && where === 'h') { if (wb) { P.weapons[a.i] = wb; P.weapons[i] = wa; } else { P.weapons.splice(a.i, 1); P.weapons.push(wa); } }
+  else if (a.where === 'b' && where === 'b') { P.bag[a.i] = wb || null; P.bag[i] = wa; }
+  else if (a.where === 'h' && where === 'b') {
+    if (wb) { P.weapons[a.i] = wb; P.bag[i] = wa; }
+    else if (P.weapons.length > 1) { P.bag[i] = wa; P.weapons.splice(a.i, 1); }
+    else { msg('', 'Elinde en az bir silah olmalı'); }
+  } else { // çantadan elde
+    if (wb) { P.bag[a.i] = wb; P.weapons[i] = wa; }
+    else if (P.weapons.length < MAX_W) { P.weapons.push(wa); P.bag[a.i] = null; }
+  }
+  invSel = null; SND.reloadEnd();
+  let ci = P.weapons.indexOf(curWeapon); if (ci < 0) ci = Math.min(P.cur, P.weapons.length - 1);
+  P.cur = ci; buildGun(curW().id, curW().rar); reloadT = 0; hbKey = '';
+  renderInv();
+}
+function scrap() {
+  if (!invSel) return;
+  const w = invGet(invSel.where, invSel.i); if (!w) return;
+  if (invSel.where === 'h') { if (P.weapons.length <= 1) { msg('', 'Elinde en az bir silah olmalı'); return; } P.weapons.splice(invSel.i, 1); P.cur = Math.min(P.cur, P.weapons.length - 1); buildGun(curW().id, curW().rar); }
+  else P.bag[invSel.i] = null;
+  const xp = scrapXp(w); invSel = null; SND.buy(); hbKey = '';
+  gainXp(xp); renderInv();
+  loot('PARÇALANDI', WEAPONS[w.id].ad, `+${xp} XP`, RAR[w.rar].c);
 }
 
 /* ---------- kombo ---------- */
@@ -1624,6 +2047,7 @@ function hitscan(o, dir, st, tip) {
     if (left <= 0) break;
     const crit = Math.random() < S.crit, head = h.rel > .58;
     const p = o.clone().addScaledVector(dir, h.t);
+    if (!head && shieldBlocks(h.e, dir)) { blockFx(p); left = 0; end = h.t; break; }
     if (st.freeze) h.e.slow = Math.max(h.e.slow, 1.8);
     damageEnemy(h.e, st.dmg * (crit ? 2 : 1) * (head ? (st.head || 1.6) : 1), crit, head, dir.x * 2.5, dir.z * 2.5, p);
     left--; end = h.t;
@@ -1656,6 +2080,8 @@ function killEnemy(e) {
   if (e.type !== 'boss' && (Math.random() < e.drop * (1 + S.luck * .1) || dropPity >= 28)) { dropPity = 0; spawnChest(e.x, e.z, false, true); }
   if (S.steal) P.hp = Math.min(P.maxHp, P.hp + S.steal);
   if (e.exp) enemyBlast(e);
+  const gl = skillLv('hayalet');
+  if (gl && e.type !== 'boss' && Math.random() < .1 + gl * .06) { const a = spawnEnemy('normal', e.x, e.z, { ally: true, life: 8 + gl * 2, dmg: 15 + gl * 8 }); a.h = Math.min(3, e.h); a.r = a.h * .15; burst(e.x, e.by + 1, e.z, 20, [.6, .9, 1], 2); }
   if (e.split) for (let i = 0; i < 3; i++) { const a = i / 3 * 6.283; const c = spawnEnemy('yavru', e.x + Math.cos(a) * 1.2, e.z + Math.sin(a) * 1.2); c.kx = Math.cos(a) * 5; c.kz = Math.sin(a) * 5; c.age = .3; }
   if (e === G2.bossAlive) {
     G2.bossAlive = null; G2.bosses++; META.st.boss++; $('boss').classList.add('hidden');
@@ -1793,12 +2219,14 @@ function giveReward(r) {
 }
 function newWeapon(id, rar) { const w = { id, rar, lv: 0, copies: 0, ammo: 0 }; w.ammo = wStats(w).mag; return w; }
 function giveWeapon(id, rar) {
-  const ad = WEAPONS[id].ad, have = P.weapons.find(w => w.id === id);
+  const ad = WEAPONS[id].ad, have = P.weapons.find(w => w.id === id) || P.bag.find(w => w && w.id === id);
   if (rar === 3) unlockAch('leg');
   if (!have) {
     const nw = newWeapon(id, rar);
     if (P.weapons.length < MAX_W) { P.weapons.push(nw); loot('YENİ SİLAH', ad, `${RAR[rar].ad} · ${P.weapons.length} tuşuyla seç`, RAR[rar].c); switchWeapon(P.weapons.length - 1); }
-    else { const old = curW(); P.weapons[P.cur] = nw; loot('SİLAH DEĞİŞTİ', ad, `${WEAPONS[old.id].ad} bırakıldı (yuvalar dolu)`, RAR[rar].c); switchWeapon(P.cur); }
+    else { const bi = P.bag.indexOf(null);
+      if (bi >= 0) { P.bag[bi] = nw; loot('ÇANTAYA EKLENDİ', ad, `${RAR[rar].ad} · Tab ile envanteri aç`, RAR[rar].c); }
+      else { const xp = scrapXp(nw); gainXp(xp); loot('ÇANTA DOLU', ad, `Parçalandı: +${xp} XP`, RAR[rar].c); } }
     return;
   }
   if (rar > have.rar) { have.rar = rar; have.copies = 0; loot('SİLAH YÜKSELDİ', ad, `Yeni nadirlik: ${RAR[rar].ad}`, RAR[rar].c); }
@@ -1833,6 +2261,7 @@ const touchMove = { x: 0, y: 0 };
 let stepDist = 0, bob = 0, hurtT = 0;
 function hurtPlayer(d) {
   if (state !== 'play') return;
+  if (P.shieldCh > 0) { P.shieldCh--; SND.block(); $('bubble').classList.remove('hit'); void $('bubble').offsetWidth; $('bubble').classList.add('hit'); return; }
   d *= (1 - S.armor);
   if (P.shield > 0) { const s = Math.min(P.shield, d); P.shield -= s; d -= s; }
   P.hp -= d; SND.hurt(); $('hurt').style.opacity = 1; hurtT = .25;
@@ -1849,9 +2278,11 @@ addEventListener('keydown', e => {
     if (e.code === 'KeyE') interact();
     if (e.code === 'KeyQ') useBandage();
     if (e.code === 'KeyR') startReload();
+    if (e.code === 'Tab' || e.code === 'KeyI') openInv();
     if (/^Digit[1-6]$/.test(e.code)) switchWeapon(+e.code.slice(5) - 1);
   } else if (state === 'case' && (e.code === 'KeyE' || e.code === 'Space' || e.code === 'Enter')) skipCase();
   else if (state === 'levelup' && /^Digit[1-3]$/.test(e.code)) chooseCard(+e.code.slice(5) - 1);
+  else if (state === 'inv' && (e.code === 'Tab' || e.code === 'KeyI' || e.code === 'Escape')) closeInv();
   else if (state === 'menu') menuKey(e);
   if (e.code === 'Space' || e.code === 'Tab') e.preventDefault();
 });
@@ -1945,7 +2376,8 @@ function updatePlayer(dt) {
 
 /* ---------- dalgalar ---------- */
 const WAVE_POOL = [ // [tür, ilk dalga, ağırlık]
-  ['normal', 1, 10], ['hizli', 2, 5], ['ucan', 3, 3], ['tank', 3, 2], ['tukurukcu', 4, 3], ['patlayan', 5, 3], ['klon', 6, 2]
+  ['normal', 1, 10], ['hizli', 2, 5], ['ucan', 3, 3], ['tank', 3, 2], ['tukurukcu', 4, 3], ['orumcek', 4, 3], ['patlayan', 5, 3],
+  ['gorunmez', 5, 2], ['kalkanli', 5, 2.5], ['klon', 6, 2], ['buyucu', 6, 1.2], ['kazici', 7, 2], ['balon', 7, 2]
 ];
 function pickType(w) {
   const pool = WAVE_POOL.filter(p => w >= p[1]); const tot = pool.reduce((a, p) => a + p[2], 0);
@@ -1953,7 +2385,7 @@ function pickType(w) {
 }
 function startWave(n) {
   G2.wave = n; G2.inBreak = false;
-  G2.toSpawn = 5 + n * 3; G2.spawnT = 1.5;
+  G2.toSpawn = 6 + n * 4; G2.spawnT = 1.2;
   G2.bossT = n % 5 === 0 ? 4 : 0;
   META.st.maxWave = Math.max(META.st.maxWave, n);
   saveRun(); checkAch();
@@ -1962,18 +2394,18 @@ function startWave(n) {
 function updateWaves(dt) {
   if (G2.inBreak) { G2.breakT -= dt; if (G2.breakT <= 0) startWave(G2.wave + 1); return; }
   if (G2.bossT > 0) { G2.bossT -= dt; if (G2.bossT <= 0) spawnEnemy('boss'); }
-  const alive = enemies.filter(e => !e.dead).length;
+  const alive = enemies.filter(e => !e.dead).length + diggers.length;
   if (G2.toSpawn > 0) {
     G2.spawnT -= dt;
-    if (G2.spawnT <= 0 && alive < 40) {
+    if (G2.spawnT <= 0 && alive < 48) {
       const w = G2.wave;
       spawnEnemy(pickType(w)); G2.toSpawn--;
-      G2.spawnT = Math.max(.35, 1.4 - w * .06) * rand(.6, 1.3);
-      if (Math.random() < .25 && G2.toSpawn > 0 && w > 3) { spawnEnemy(pickType(w)); G2.toSpawn--; }
+      G2.spawnT = Math.max(.25, 1.2 - w * .06) * rand(.6, 1.3);
+      if (Math.random() < .3 && G2.toSpawn > 0 && w > 2) { spawnEnemy(pickType(w)); G2.toSpawn--; }
     }
   } else if (alive === 0 && !G2.bossAlive && G2.bossT <= 0) {
-    G2.inBreak = true; G2.breakT = 7;
-    msg(`DALGA ${G2.wave} TAMAMLANDI`, 'Yeni dalga 7 saniye sonra');
+    G2.inBreak = true; G2.breakT = 5;
+    msg(`DALGA ${G2.wave} TAMAMLANDI`, 'Yeni dalga 5 saniye sonra · Tab: envanter');
   }
 }
 
@@ -1998,7 +2430,7 @@ function openLevelUp() {
   // yetenek kartı (varsa) — yaklaşık yarı ihtimalle
   const skillOpts = Object.keys(SKILLS).filter(id => skillLv(id) < SKILL_MAX);
   const wantSkill = skillOpts.length && (Math.random() < .6 || P.level === 2 || P.level === 5);
-  if (wantSkill) { const id = pick(skillOpts); cardChoices.push({ skill: id }); }
+  if (wantSkill) { const id = pick(skillOpts); cardChoices.push({ skill: id }); const rest = skillOpts.filter(x => x !== id); if (rest.length && Math.random() < .3) cardChoices.push({ skill: pick(rest) }); }
   const pool = UPG.slice();
   while (cardChoices.length < 3 && pool.length) {
     const u = pool.splice((Math.random() * pool.length) | 0, 1)[0];
@@ -2019,7 +2451,7 @@ function openLevelUp() {
 }
 function chooseCard(i) {
   const c = cardChoices[i]; if (!c || state !== 'levelup') return;
-  if (c.skill) { P.skills[c.skill] = skillLv(c.skill) + 1; syncOrbitDucks(); msg(SKILLS[c.skill].ad.toUpperCase(), `Seviye ${P.skills[c.skill]}`); }
+  if (c.skill) { P.skills[c.skill] = skillLv(c.skill) + 1; syncSkills(); msg(SKILLS[c.skill].ad.toUpperCase(), `Seviye ${P.skills[c.skill]}`); }
   else { c.u.f(c.u.v[c.r]); S.taken[c.u.id] = (S.taken[c.u.id] || 0) + 1; }
   G2.pendingLv--; $('lvl').classList.add('hidden'); SND.pick(); hbKey = ''; checkAch();
   state = 'play';
@@ -2051,9 +2483,9 @@ function updateHud() {
   $('lvlTxt').textContent = `SEVİYE ${P.level}`;
   const alive = enemies.filter(e => !e.dead).length;
   $('wave').querySelector('b').textContent = `DALGA ${G2.wave}`;
-  $('waveInfo').textContent = G2.inBreak ? `Sonraki dalga: ${Math.ceil(G2.breakT)} sn` : `Kalan Erdi: ${alive + G2.toSpawn + (G2.bossT > 0 ? 1 : 0)}  ·  Öldürülen: ${G2.kills}`;
+  $('waveInfo').textContent = G2.inBreak ? `Sonraki dalga: ${Math.ceil(G2.breakT)} sn` : `Kalan Erdi: ${alive + diggers.length + G2.toSpawn + (G2.bossT > 0 ? 1 : 0)}  ·  Öldürülen: ${G2.kills}`;
   $('items').innerHTML = P.healT > 0 ? '<span>🩹 iyileşiyor…</span>' : '';
-  $('skillsHud').innerHTML = Object.entries(P.skills).map(([id, l]) => `<span style="border-color:${SKILLS[id].c}" title="${SKILLS[id].ad}">${SKILLS[id].ic}<i>${l}</i></span>`).join('');
+  $('skillsHud').innerHTML = Object.entries(P.skills).map(([id, l]) => `<span style="border-color:${SKILLS[id].c}" title="${SKILLS[id].ad}">${SKILLS[id].ic}<i>${l}</i>${id === 'kalkan' ? `<u>${P.shieldCh}</u>` : ''}</span>`).join('');
   drawHotbar();
   if (G2.bossAlive) $('boss').querySelector('i').style.width = Math.max(0, G2.bossAlive.hp / G2.bossAlive.max * 100) + '%';
   const sp = 6 + st.spread * 220 * (1 - zoom) + recoil * 8;
@@ -2084,8 +2516,9 @@ function clearWorld() {
   enemies = []; orbs = [];
   rockets.forEach(r => scene.remove(r.m)); rockets = []; ducksP.forEach(d => scene.remove(d.m)); ducksP = []; spits.forEach(s => scene.remove(s.m)); spits = [];
   chests.forEach(c => scene.remove(c.g)); chests = []; if (G2) G2.bossAlive = null; $('boss').classList.add('hidden');
-  for (const k in PI) PI[k].count = 0; shGeo.instanceCount = 0; orbMesh.count = 0; dropPity = 0;
-  if (P) { P.skills = {}; } syncOrbitDucks(); fireRing.visible = fireRing2.visible = false;
+  shGeo.instanceCount = 0; orbMesh.count = 0; dropPity = 0;
+  if (P) { P.skills = {}; } syncSkills(); clearSkills2(); fireRing.visible = fireRing2.visible = false;
+  diggers = []; allies = []; PI.n = PG.n = 0; for (const L of LAYERS) for (const k in L) if (L[k] && L[k].isInstancedMesh) L[k].count = 0; for (const k in PROP) PROP[k].count = 0;
   caseRun = null; $('case').classList.add('hidden'); reloadT = 0; aiming = false; zoom = 0; camera.fov = 72; camera.updateProjectionMatrix(); $('scope').style.opacity = 0;
 }
 function beginPlay(fromSave) {
@@ -2094,7 +2527,7 @@ function beginPlay(fromSave) {
   if (fromSave) {
     const sv = loadRun();
     if (sv) {
-      Object.assign(S, sv.S); Object.assign(P, sv.P); P.skills = sv.P.skills || {};
+      Object.assign(S, sv.S); Object.assign(P, sv.P); P.skills = sv.P.skills || {}; P.bag = (sv.P.bag || []).concat(Array(12).fill(null)).slice(0, 12); P.shieldCh = 0;
       P.weapons.forEach(w => { w.copies = w.copies || 0; if (w.ammo === undefined) w.ammo = wStats(w).mag; });
       G2.kills = sv.kills; G2.time = sv.time; G2.bosses = sv.bosses || 0; G2.bestCombo = sv.bestCombo || 0; wave = sv.wave;
     }
@@ -2103,7 +2536,7 @@ function beginPlay(fromSave) {
   META.st.runs++; saveMeta();
   P.pos.set(0, 0, 9); P.pos.y = heightAt(0, 9) + EYE; P.vel.set(0, 0, 0); P.yaw = 0; P.pitch = 0;
   camera.rotation.set(0, 0, 0);
-  buildGun(curW().id, curW().rar); hbKey = ''; syncOrbitDucks();
+  buildGun(curW().id, curW().rar); hbKey = ''; syncSkills();
   showGame();
   startWave(wave);
 }
@@ -2241,6 +2674,7 @@ if (isTouch) {
   hold('tQ', () => useBandage());
   hold('tW', () => switchWeapon((P.cur + 1) % P.weapons.length));
   hold('tR', () => startReload());
+  hold('tInv', () => state === 'inv' ? closeInv() : openInv());
   hold('tMenu', () => pause());
 }
 
@@ -2311,7 +2745,7 @@ setTimeout(() => { $('fade').style.opacity = 0; }, 150);
 addEventListener('pagehide', () => { if (state === 'play') saveMeta(); });
 window.__ev = { get P() { return P; }, get S() { return S; }, get G2() { return G2; }, get state() { return state; }, get enemies() { return enemies; }, get META() { return META; },
   heightAt, spawnEnemy, beginPlay, shoot, gainXp, chooseCard, get chests() { return chests; }, openChest, spawnChest, giveWeapon, camera, renderer, startReload,
-  killAll: () => enemies.forEach(e => !e.dead && killEnemy(e)), skill: (id, l) => { P.skills[id] = l; syncOrbitDucks(); } };
+  killAll: () => enemies.forEach(e => !e.dead && killEnemy(e)), skill: (id, l) => { P.skills[id] = l; syncSkills(); }, openInv };
 </script>
 </body>
 </html>
