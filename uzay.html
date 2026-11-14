@@ -37,11 +37,24 @@
   .hpbar em{position:absolute;inset:0;text-align:center;font:700 13px/20px "Segoe UI";font-style:normal;color:#fff}
   #items{margin-top:8px;font-size:15px;font-weight:600;display:flex;gap:16px}
   #items small{opacity:.7;font-size:12px}
-  #xpw{left:50%;bottom:18px;transform:translateX(-50%);width:min(560px,60vw);text-align:center}
+  #xpw{left:50%;bottom:104px;transform:translateX(-50%);width:min(560px,60vw);text-align:center}
   #xpw b{font-size:14px;letter-spacing:.1em;color:#9fe3ff}
   .xpbar{height:8px;margin-top:4px;border-radius:4px;background:rgba(0,0,0,.55);border:1px solid rgba(159,227,255,.35);overflow:hidden}
   .xpbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3fb6ff,#b6f0ff);box-shadow:0 0 8px #3fb6ff;transition:width .2s}
-  #weap{right:28px;bottom:28px;text-align:right}
+  #hotbar{left:50%;bottom:16px;transform:translateX(-50%);text-align:center}
+  #wname{font-size:17px;font-weight:800;margin-bottom:6px;letter-spacing:.04em;opacity:0;transition:opacity .3s}
+  #wname.on{opacity:1}
+  #hotbar .bar{display:flex;gap:6px;align-items:flex-end}
+  .slot{position:relative;width:78px;height:62px;border-radius:8px;background:rgba(8,10,14,.62);border:2px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;transition:transform .12s}
+  .slot img{max-width:70px;max-height:42px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+  .slot .n{position:absolute;left:5px;top:2px;font-size:11px;font-weight:700;opacity:.7}
+  .slot .c{position:absolute;right:5px;bottom:2px;font-size:13px;font-weight:800}
+  .slot .ic{font-size:30px}
+  .slot.on{transform:translateY(-6px);background:rgba(40,28,16,.8);box-shadow:0 0 14px rgba(255,138,42,.45)}
+  .slot.empty{opacity:.35}
+  .slot.item{margin-left:10px;width:62px}
+  .slot.item.zero{opacity:.35}
+  #weap{display:none}
   #weap b{display:block;font-size:22px;font-weight:800}
   #weap .slots{margin-top:6px;display:flex;gap:6px;justify-content:flex-end}
   #weap .slots span{min-width:34px;padding:3px 6px;border-radius:5px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);font-size:12px;text-align:center}
@@ -127,7 +140,7 @@
   <div id="boss" class="hud hidden"><b>DEV ERDİ</b><div class="hpbar"><i></i></div></div>
   <div id="vitals" class="hud"><div class="hpbar" id="hpbar"><i></i><u></u><em></em></div><div id="items"></div></div>
   <div id="xpw" class="hud"><b id="lvlTxt">SEVİYE 1</b><div class="xpbar"><i id="xpFill"></i></div></div>
-  <div id="weap" class="hud"><b></b><div class="slots"></div></div>
+  <div id="hotbar" class="hud"><div id="wname"></div><div class="bar"></div></div>
 </div>
 <div id="dmgs"></div>
 <div id="prompt"></div>
@@ -734,66 +747,89 @@ function saveRun() {
 function loadRun() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; } }
 const clearRun = () => { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} };
 
-/* ---------- düşmanlar (tek çizimde, kameraya dönük sprite) ---------- */
-const enemyTex = new THREE.TextureLoader().load('erdi_dusman.webp');
-enemyTex.colorSpace = THREE.SRGBColorSpace; enemyTex.anisotropy = 4;
-const FRAMES = 66, ASPECT = 200 / 446;
-const MAXE = 160;
-const eGeo = new THREE.InstancedBufferGeometry();
-eGeo.copy(new THREE.PlaneGeometry(1, 1).translate(0, .5, 0));
-const ePos = new THREE.InstancedBufferAttribute(new Float32Array(MAXE * 3), 3);
-const eDat = new THREE.InstancedBufferAttribute(new Float32Array(MAXE * 4), 4);
-const eTint = new THREE.InstancedBufferAttribute(new Float32Array(MAXE * 3), 3);
-ePos.setUsage(THREE.DynamicDrawUsage); eDat.setUsage(THREE.DynamicDrawUsage); eTint.setUsage(THREE.DynamicDrawUsage);
-eGeo.setAttribute('iPos', ePos); eGeo.setAttribute('iDat', eDat); eGeo.setAttribute('iTint', eTint);
-eGeo.instanceCount = 0;
-const eMat = new THREE.ShaderMaterial({
-  uniforms: { map: { value: enemyTex }, uCam: { value: new THREE.Vector3() }, uSun: { value: SUN_DIR } },
-  vertexShader: `
-    attribute vec3 iPos; attribute vec4 iDat; attribute vec3 iTint;
-    uniform vec3 uCam; uniform vec3 uSun;
-    varying vec2 vUv; varying float vFlash; varying vec3 vTint; varying float vLit;
-    void main(){
-      vec3 tc = uCam - iPos; tc.y = 0.; vec3 f = normalize(tc + vec3(1e-4, 0., 0.)); vec3 r = vec3(f.z, 0., -f.x);
-      float fall = iDat.y < 0. ? -iDat.y : 0.;
-      vec3 up = normalize(mix(vec3(0., 1., 0.), -f, fall * .95));
-      vec3 wp = iPos + r * position.x * iDat.z + up * position.y * iDat.w;
-      float fr = floor(iDat.x); float col = mod(fr, 10.); float row = floor(fr / 10.);
-      vUv = vec2((col + uv.x) / 10., 1. - (row + 1. - uv.y) / 7.);
-      vFlash = max(iDat.y, 0.); vTint = iTint;
-      vLit = .75 + .35 * max(dot(f, normalize(vec3(uSun.x, 0., uSun.z))), 0.);
-      gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.);
-    }`,
-  fragmentShader: `
-    uniform sampler2D map; varying vec2 vUv; varying float vFlash; varying vec3 vTint; varying float vLit;
-    void main(){
-      vec4 t = texture2D(map, vUv); if (t.a < .5) discard;
-      vec3 c = t.rgb * vTint * vLit * 1.25;
-      c = mix(c, vec3(1., .25, .2), vFlash * .75);
-      gl_FragColor = vec4(c, 1.);
-      #include <tonemapping_fragment>
-      #include <colorspace_fragment>
-    }`,
-  side: THREE.DoubleSide
-});
-const eMesh = new THREE.Mesh(eGeo, eMat); eMesh.frustumCulled = false; scene.add(eMesh);
+/* ---------- düşmanlar: 3 boyutlu tek gözlü Erdi (parça başına tek çizim) ---------- */
+const MAXE = 120;
+const faceTex = new THREE.TextureLoader().load('erdi_yuz3d.jpg'); faceTex.colorSpace = THREE.SRGBColorSpace; faceTex.anisotropy = 4;
+const SKIN = 0xe2bba0;
+const skinMat = new THREE.MeshStandardMaterial({ color: SKIN, roughness: .55, metalness: 0, emissive: 0x24140c });
+const faceMat = new THREE.MeshStandardMaterial({ map: faceTex, roughness: .6 });
+const backMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: .75 });
 
+// kafa: ön yarıküre yüz dokusu (düz izdüşüm), arka yarıküre saç/ten
+function hemi(front) {
+  const g = new THREE.SphereGeometry(1, 40, 28, front ? 0 : Math.PI, Math.PI, 0, Math.PI);
+  const p = g.attributes.position, uv = g.attributes.uv, col = new Float32Array(p.count * 3);
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i);
+    if (front) uv.setXY(i, .5 + x * .5, .5 + y * .5);
+    const hair = THREE.MathUtils.smoothstep(y, -.35, -.05);
+    const c = new THREE.Color(SKIN).lerp(new THREE.Color(0x15130f), hair);
+    col.set([c.r, c.g, c.b], i * 3);
+  }
+  if (!front) g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return g;
+}
+// basit birleştirme (indekssiz)
+function merge(list) {
+  const geos = list.map(g => g.index ? g.toNonIndexed() : g);
+  const n = geos.reduce((s, g) => s + g.attributes.position.count, 0);
+  const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3); let o = 0;
+  for (const g of geos) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); o += g.attributes.position.count; }
+  const m = new THREE.BufferGeometry(); m.setAttribute('position', new THREE.BufferAttribute(pos, 3)); m.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); return m;
+}
+const capsule = (r, l) => new THREE.CapsuleGeometry(r, l, 4, 10).translate(0, -l / 2 - r * .5, 0); // üstten asılı
+// ayak: yassı taban + 3 uzun parmak (+z ileri)
+const footGeo = merge([
+  new THREE.SphereGeometry(1, 14, 8).scale(.045, .018, .05).translate(0, .012, .01),
+  ...[-.6, 0, .6].map(a => new THREE.CapsuleGeometry(.014, .07, 3, 8).rotateX(Math.PI / 2).rotateY(a * .5).translate(Math.sin(a * .5) * .05, .01, .06 + Math.cos(a * .5) * .04)),
+  new THREE.CapsuleGeometry(.012, .04, 3, 8).rotateX(Math.PI / 2).rotateY(-1.3).translate(-.05, .01, .0)
+]);
+// el: avuç + 3 uzun parmak (aşağı sarkık)
+const handGeo = merge([
+  new THREE.SphereGeometry(1, 10, 8).scale(.022, .03, .014).translate(0, -.02, 0),
+  ...[-.35, 0, .35].map(a => new THREE.CapsuleGeometry(.007, .05, 3, 6).translate(0, -.035, 0).rotateZ(a).translate(0, -.04, 0))
+]);
+// parça tanımları: [ad, geometri, malzeme, ebeveyn]
+const PARTS = [
+  ['belly', new THREE.LatheGeometry([[0, -.06], [.04, -.055], [.062, -.02], [.074, .04], [.066, .1], [.05, .135], [.052, .16], [.05, .18], [.035, .195], [.018, .205], [0, .21]].map(p => new THREE.Vector2(p[0], p[1])), 20).scale(1, 1, .9), skinMat],
+  ['hips', new THREE.SphereGeometry(1, 12, 8).scale(.045, .03, .04), skinMat],
+  ['neck', new THREE.CylinderGeometry(.016, .02, .08, 8).translate(0, .04, 0), skinMat],
+  ['headF', hemi(true), faceMat],
+  ['headB', hemi(false), backMat],
+  ['thigh', capsule(.022, .15), skinMat],
+  ['shin', capsule(.018, .15), skinMat],
+  ['foot', footGeo, skinMat],
+  ['uarm', capsule(.016, .13), skinMat],
+  ['farm', capsule(.013, .13), skinMat],
+  ['hand', handGeo, skinMat]
+];
+const PI = {}; // parça adı -> InstancedMesh
+for (const [name, geo, mat] of PARTS) {
+  const cnt = ['thigh', 'shin', 'foot', 'uarm', 'farm', 'hand'].includes(name) ? MAXE * 2 : MAXE;
+  const im = new THREE.InstancedMesh(geo, mat, cnt);
+  im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  im.setColorAt(0, new THREE.Color(1, 1, 1)); im.instanceColor.setUsage(THREE.DynamicDrawUsage);
+  im.count = 0; im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
+  scene.add(im); PI[name] = im;
+}
+
+// yuvarlak gölge lekesi (gölgeler kapalıyken de yere bassınlar)
 const shGeo = new THREE.InstancedBufferGeometry();
 shGeo.copy(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2));
 const shPos = new THREE.InstancedBufferAttribute(new Float32Array(MAXE * 4), 4); shPos.setUsage(THREE.DynamicDrawUsage);
 shGeo.setAttribute('iP', shPos); shGeo.instanceCount = 0;
 const shMesh = new THREE.Mesh(shGeo, new THREE.ShaderMaterial({
-  vertexShader: `attribute vec4 iP; varying vec2 vUv; void main(){ vUv = uv; vec3 p = vec3(position.x * iP.w, 0., position.z * iP.w * .6) + iP.xyz; gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.); }`,
-  fragmentShader: `varying vec2 vUv; void main(){ float d = length(vUv - .5) * 2.; gl_FragColor = vec4(0., 0., 0., smoothstep(1., .2, d) * .55); }`,
+  vertexShader: `attribute vec4 iP; varying vec2 vUv; void main(){ vUv = uv; vec3 p = vec3(position.x * iP.w, 0., position.z * iP.w) + iP.xyz; gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.); }`,
+  fragmentShader: `varying vec2 vUv; void main(){ float d = length(vUv - .5) * 2.; gl_FragColor = vec4(0., 0., 0., smoothstep(1., .2, d) * .45); }`,
   transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4
 }));
 shMesh.frustumCulled = false; scene.add(shMesh);
 
 const ETYPE = {
-  normal: { h: 2.5, hp: 40, spd: 3.3, dmg: 10, xp: 5, tint: [1, 1, 1] },
-  hizli: { h: 1.75, hp: 22, spd: 5.7, dmg: 7, xp: 4, tint: [1.08, .86, .82] },
-  tank: { h: 3.9, hp: 200, spd: 2.15, dmg: 22, xp: 22, tint: [.82, .95, .8] },
-  boss: { h: 8.6, hp: 1700, spd: 2.7, dmg: 40, xp: 200, tint: [1.15, .78, .74] }
+  normal: { h: 2.5, hp: 40, spd: 3.3, dmg: 10, xp: 5, tint: [1, 1, 1], drop: .06 },
+  hizli: { h: 1.75, hp: 22, spd: 5.7, dmg: 7, xp: 4, tint: [1.12, .82, .78], drop: .035 },
+  tank: { h: 3.9, hp: 200, spd: 2.15, dmg: 22, xp: 22, tint: [.78, .95, .74], drop: .22 },
+  boss: { h: 8.6, hp: 1700, spd: 2.7, dmg: 40, xp: 200, tint: [1.15, .74, .7], drop: 1 }
 };
 let enemies = [];
 function spawnEnemy(type) {
@@ -803,24 +839,79 @@ function spawnEnemy(type) {
   const r = Math.hypot(x, z); if (r > WALK_R + 10) { x *= (WALK_R + 10) / r; z *= (WALK_R + 10) / r; }
   const hpMul = 1 + .16 * (w - 1) + (type === 'boss' ? .25 * Math.max(0, Math.floor(w / 5) - 1) : 0);
   const e = { type, x, z, y: heightAt(x, z), h: T.h * rand(.94, 1.06), hp: T.hp * hpMul, max: T.hp * hpMul,
-    spd: T.spd * Math.min(1.35, 1 + .025 * (w - 1)) * rand(.9, 1.1), dmg: T.dmg * (1 + .07 * (w - 1)), xp: T.xp, tint: T.tint,
-    frame: Math.random() * FRAMES, flash: 0, cd: 0, dead: 0, kx: 0, kz: 0 };
-  e.w = e.h * ASPECT; e.r = e.w * .32;
+    spd: T.spd * Math.min(1.35, 1 + .025 * (w - 1)) * rand(.9, 1.1), dmg: T.dmg * (1 + .07 * (w - 1)), xp: T.xp, tint: T.tint, drop: T.drop,
+    ph: Math.random() * 6.28, yaw: 0, flash: 0, cd: 0, dead: 0, kx: 0, kz: 0, atk: 0 };
+  e.r = e.h * .15;
   enemies.push(e); kickDust(x, z, 18, .8);
   if (type === 'boss') { G2.bossAlive = e; $('boss').classList.remove('hidden'); msg('DEV ERDİ GELİYOR!', 'Kafasına nişan al'); SND.wave(); }
   return e;
 }
+
+// iskelet: her parçanın dünya matrisi = ebeveyn * yerel
+const M = {}; ['root', 'pelvis', 'chest', 'neck', 'head', 'tmp'].forEach(k => M[k] = new THREE.Matrix4());
+const _T = new THREE.Matrix4(), _R = new THREE.Matrix4(), _Sm = new THREE.Matrix4(), _E = new THREE.Euler(), _col = new THREE.Color();
+function local(out, parent, x, y, z, rx = 0, ry = 0, rz = 0) {
+  _T.makeTranslation(x, y, z); _R.makeRotationFromEuler(_E.set(rx, ry, rz, 'YXZ'));
+  return out.multiplyMatrices(parent, _T).multiply(_R);
+}
+const limb = { hipL: new THREE.Matrix4(), kneeL: new THREE.Matrix4(), ankleL: new THREE.Matrix4(), hipR: new THREE.Matrix4(), kneeR: new THREE.Matrix4(), ankleR: new THREE.Matrix4(),
+  shL: new THREE.Matrix4(), elL: new THREE.Matrix4(), wrL: new THREE.Matrix4(), shR: new THREE.Matrix4(), elR: new THREE.Matrix4(), wrR: new THREE.Matrix4() };
+function poseEnemy(e, n) {
+  const s = e.h, ph = e.ph, walk = e.moving ? 1 : .25;
+  const fall = e.dead ? Math.min(1, e.dead) : 0;
+  // kök: konum, yön, ölçek, ölümde geriye devrilme
+  _T.makeTranslation(e.x, e.y - fall * .1 * s, e.z); _R.makeRotationFromEuler(_E.set(-fall * 1.45, e.yaw, Math.sin(ph * .5) * .03 * walk, 'YXZ')); _Sm.makeScale(s, s, s);
+  M.root.multiplyMatrices(_T, _R).multiply(_Sm);
+  const bob = Math.abs(Math.sin(ph)) * .012 * walk;
+  local(M.pelvis, M.root, 0, .42 + bob, 0, .08, Math.sin(ph) * .12 * walk, 0);
+  local(M.chest, M.pelvis, 0, .1, 0, -.05 + (e.atk > 0 ? .3 : 0), -Math.sin(ph) * .1 * walk, 0);
+  local(M.neck, M.chest, 0, .1, .005, -.15, 0, 0);
+  local(M.head, M.neck, 0, .225, .02, .12 + Math.sin(ph * 2) * .04 * walk, 0, Math.sin(ph) * .05 * walk);
+  // bacaklar
+  for (const [sd, k] of [[-1, 'L'], [1, 'R']]) {
+    const lp = ph + (sd < 0 ? 0 : Math.PI);
+    const sw = Math.sin(lp) * .55 * walk, kn = Math.max(0, Math.cos(lp)) * .9 * walk + .1;
+    local(limb['hip' + k], M.pelvis, sd * .04, -.04, 0, -sw, 0, sd * .06);
+    local(limb['knee' + k], limb['hip' + k], 0, -.19, 0, kn, 0, 0);
+    local(limb['ankle' + k], limb['knee' + k], 0, -.185, 0, sw - kn + .1, sd * -.25, -sd * .06);
+  }
+  // kollar (uzun, sallanan)
+  for (const [sd, k] of [[-1, 'L'], [1, 'R']]) {
+    const ap = ph + (sd < 0 ? Math.PI : 0);
+    const reach = e.atk > 0 ? -1.4 : 0;
+    local(limb['sh' + k], M.chest, sd * .05, .075, 0, Math.sin(ap) * .5 * walk + reach, 0, sd * .28);
+    local(limb['el' + k], limb['sh' + k], 0, -.16, 0, -.35 - Math.max(0, Math.sin(ap)) * .3 * walk, 0, -sd * .12);
+    local(limb['wr' + k], limb['el' + k], 0, -.155, 0, -.15, 0, 0);
+  }
+  // renk: tür tonu + vurulma parlaması
+  const f = e.flash;
+  _col.setRGB(e.tint[0] + f * 1.6, e.tint[1] * (1 - f * .6), e.tint[2] * (1 - f * .6));
+  const put = (name, i, mat) => { PI[name].setMatrixAt(i, mat); PI[name].setColorAt(i, _col); };
+  put('belly', n, M.pelvis); put('hips', n, local(M.tmp, M.pelvis, 0, -.045, 0));
+  put('neck', n, M.neck);
+  _Sm.makeScale(.145, .2, .165); M.tmp.multiplyMatrices(M.head, _Sm);
+  put('headF', n, M.tmp); put('headB', n, M.tmp);
+  ['L', 'R'].forEach((k, j) => {
+    const i = n * 2 + j;
+    put('thigh', i, limb['hip' + k]); put('shin', i, limb['knee' + k]); put('foot', i, limb['ankle' + k]);
+    put('uarm', i, limb['sh' + k]); put('farm', i, limb['el' + k]); put('hand', i, limb['wr' + k]);
+  });
+}
+
 function updateEnemies(dt) {
   const px = P.pos.x, pz = P.pos.z, active = state === 'play';
   for (const e of enemies) {
-    if (e.dead) { e.dead += dt * 2.2; continue; }
+    if (e.dead) { e.dead += dt * 1.6; continue; }
     let dx = px - e.x, dz = pz - e.z; const dist = Math.hypot(dx, dz) || 1; dx /= dist; dz /= dist;
     const reach = .8 + e.r + (e.type === 'boss' ? 1.2 : 0);
-    if (dist > reach) { e.x += dx * e.spd * dt; e.z += dz * e.spd * dt; e.frame += dt * 11 * (e.spd / 3.3); }
+    // oyuncuya dön
+    const ty = Math.atan2(dx, dz); let dy = ty - e.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); e.yaw += dy * Math.min(1, dt * 8);
+    if (dist > reach) { e.x += dx * e.spd * dt; e.z += dz * e.spd * dt; e.ph += dt * e.spd / e.h * 7.5; e.moving = true; }
     else {
-      e.frame += dt * 6; e.cd -= dt;
-      if (active && e.cd <= 0 && Math.abs(P.pos.y - EYE - e.y) < e.h) { e.cd = e.type === 'boss' ? 1.4 : 1.0; hurtPlayer(e.dmg); }
+      e.moving = false; e.ph += dt * 2; e.cd -= dt;
+      if (active && e.cd <= 0 && Math.abs(P.pos.y - EYE - e.y) < e.h) { e.cd = e.type === 'boss' ? 1.4 : 1.0; e.atk = .3; hurtPlayer(e.dmg); }
     }
+    e.atk -= dt;
     e.x += e.kx * dt; e.z += e.kz * dt; const damp = Math.pow(.02, dt); e.kx *= damp; e.kz *= damp;
     e.flash = Math.max(0, e.flash - dt * 6);
   }
@@ -835,19 +926,17 @@ function updateEnemies(dt) {
       a.x -= dx * k * wa; a.z -= dz * k * wa; b.x += dx * k * (1 - wa); b.z += dz * k * (1 - wa);
     }
   }
-  enemies = enemies.filter(e => e.dead < 1);
+  enemies = enemies.filter(e => e.dead < 1.6);
   let n = 0;
   for (const e of enemies) {
+    if (n >= MAXE) break;
     e.y = heightAt(e.x, e.z);
-    ePos.setXYZ(n, e.x, e.y - .05, e.z);
-    eDat.setXYZW(n, Math.floor(e.frame) % FRAMES, e.dead ? -Math.min(1, e.dead) : e.flash, e.w, e.h);
-    eTint.setXYZ(n, e.tint[0], e.tint[1], e.tint[2]);
-    shPos.setXYZW(n, e.x, e.y + .04, e.z, e.w * 1.2);
+    poseEnemy(e, n);
+    shPos.setXYZW(n, e.x, e.y + .04, e.z, e.h * .32);
     n++;
   }
-  eGeo.instanceCount = shGeo.instanceCount = n;
-  ePos.needsUpdate = eDat.needsUpdate = eTint.needsUpdate = shPos.needsUpdate = true;
-  eMat.uniforms.uCam.value.copy(camera.position);
+  for (const k in PI) { const im = PI[k]; im.count = im.count = (im.instanceMatrix.count > MAXE ? n * 2 : n); im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true; }
+  shGeo.instanceCount = n; shPos.needsUpdate = true;
 }
 
 /* ---------- XP küreleri ---------- */
@@ -967,6 +1056,11 @@ muzzle.visible = false;
 const muzzleLight = new THREE.PointLight(0xffb060, 0, 9, 2); camera.add(muzzleLight); muzzleLight.position.set(.25, -.15, -1);
 function buildGun(id, rar) {
   vm.clear();
+  const tip = makeGun(id, rar, vm);
+  muzzle.position.copy(tip); muzzle.scale.setScalar(id === 'pompali' || id === 'roket' ? .5 : .3); vm.add(muzzle);
+  vm.userData.tip = tip;
+}
+function makeGun(id, rar, vm) {
   const dark = new THREE.MeshStandardMaterial({ color: 0x23262b, metalness: .7, roughness: .38 });
   const mid = new THREE.MeshStandardMaterial({ color: 0x4a4f57, metalness: .8, roughness: .3 });
   const wood = new THREE.MeshStandardMaterial({ color: 0x6b3f22, roughness: .6 });
@@ -995,9 +1089,28 @@ function buildGun(id, rar) {
     cyl(.095, .08, dark, 0, .06, -.63); cyl(.095, .08, dark, 0, .06, .22); box(.05, .13, .07, dark, 0, -.07, 0).rotation.x = .3;
     box(.06, .1, .12, dark, -.09, .1, -.15); box(.1, .012, .5, acc, 0, .15, -.2); tip = new THREE.Vector3(0, .06, -.68);
   }
-  muzzle.position.copy(tip); muzzle.scale.setScalar(id === 'pompali' || id === 'roket' ? .5 : .3); vm.add(muzzle);
-  vm.userData.tip = tip;
+  return tip;
 }
+// eşya çubuğu için silah simgeleri (ayrı küçük çizici ile bir kez)
+const GUN_ICON = {};
+(function makeIcons() {
+  try {
+    const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+    r.setSize(180, 100); r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping;
+    const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x445566, 2.2));
+    const dl = new THREE.DirectionalLight(0xffffff, 2.5); dl.position.set(3, 4, 2); sc.add(dl);
+    const cam = new THREE.PerspectiveCamera(30, 1.8, .01, 10);
+    for (const id of Object.keys(WEAPONS)) {
+      const g = new THREE.Group(); makeGun(id, 0, g); sc.add(g);
+      const box = new THREE.Box3().setFromObject(g), c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+      const d = Math.max(sz.z / 1.8, sz.y) / (2 * Math.tan(15 * Math.PI / 180)) * 1.15;
+      cam.position.set(c.x + d, c.y + d * .12, c.z); cam.lookAt(c);
+      r.render(sc, cam); GUN_ICON[id] = r.domElement.toDataURL();
+      sc.remove(g);
+    }
+    r.dispose(); r.forceContextLoss();
+  } catch (e) { console.warn(e); }
+})();
 const VM_BASE = new THREE.Vector3(.2, -.2, -.4); vm.scale.setScalar(.72);
 let recoil = 0, swayT = 0;
 
@@ -1063,6 +1176,8 @@ function killEnemy(e) {
   e.dead = .001; G2.kills++; SND.kill();
   burst(e.x, e.y + e.h * .55, e.z, e.type === 'boss' ? 120 : 30, [.9, .65, .5], e.type === 'boss' ? 6 : 3.5);
   dropXp(e.x, e.z, e.xp);
+  dropPity++;
+  if (e.type !== 'boss' && (Math.random() < e.drop || dropPity >= 28)) { dropPity = 0; spawnChest(e.x, e.z, false, true); }
   if (S.steal) P.hp = Math.min(P.maxHp, P.hp + S.steal);
   if (e === G2.bossAlive) { G2.bossAlive = null; $('boss').classList.add('hidden'); msg('DEV ERDİ DEVRİLDİ!', 'Özel sandık düştü'); spawnChest(e.x + 3, e.z, true); }
 }
@@ -1085,11 +1200,11 @@ let hmT = 0;
 function hitMark(kill) { const h = $('hitm'); h.className = kill ? 'kill' : ''; h.style.opacity = 1; hmT = kill ? .25 : .12; }
 
 /* ---------- sandıklar ---------- */
-let chests = [];
+let chests = [], dropPity = 0;
 const chestMatA = new THREE.MeshStandardMaterial({ color: 0x2c3440, metalness: .7, roughness: .35 });
 const chestMatB = new THREE.MeshStandardMaterial({ color: 0xc8953e, metalness: 1, roughness: .35 });
 const chestBox = new THREE.BoxGeometry(1.1, .55, .7), chestTrim = new THREE.BoxGeometry(1.14, .08, .74), chestLid = new THREE.BoxGeometry(1.1, .22, .7);
-function spawnChest(x, z, special = false) {
+function spawnChest(x, z, special = false, dropped = false) {
   if (x === undefined) {
     for (let k = 0; k < 30; k++) {
       const a = Math.random() * 6.283, d = rand(18, WALK_R - 15); x = Math.cos(a) * d; z = Math.sin(a) * d;
@@ -1109,7 +1224,8 @@ function spawnChest(x, z, special = false) {
   [base, trim, lidM].forEach(o => { o.castShadow = true; o.receiveShadow = true; });
   g.position.set(x, heightAt(x, z) - .05, z); g.rotation.y = Math.random() * 6.28;
   scene.add(g);
-  const c = { g, lid, beam, x, z, open: false, t: 0, special };
+  const c = { g, lid, beam, x, z, open: false, t: 0, special, fy: dropped || special ? 3 : 0, vy: 0, life: 0 };
+  if (c.fy) g.position.y += c.fy;
   chests.push(c); return c;
 }
 let chestRespawn = [];
@@ -1137,12 +1253,13 @@ function openChest(c) {
   } else {
     loot('EŞYA', '✨ XP Paketi', 'Büyük deneyim', '#9fe3ff'); gainXp(P.need * .6);
   }
-  if (!c.special) chestRespawn.push(40);
 }
 function updateChests(dt) {
   const now = performance.now();
   for (const c of chests) {
-    if (!c.open) { const dd = Math.hypot(P.pos.x - c.x, P.pos.z - c.z); c.beam.material.opacity = (.45 + Math.sin(now / 300) * .15) * clamp((dd - 2) / 8, .08, 1); continue; }
+    if (c.fy > 0) { c.vy -= G * 3 * dt; c.fy = Math.max(0, c.fy + c.vy * dt); c.g.position.y = heightAt(c.x, c.z) - .05 + c.fy; if (c.fy === 0) { kickDust(c.x, c.z, 25, 1.2); SND.land(); } }
+    if (!c.open) { c.life += dt; if (c.life > 75 && !c.special) c.fade = true;
+      const dd = Math.hypot(P.pos.x - c.x, P.pos.z - c.z); c.beam.material.opacity = (.45 + Math.sin(now / 300) * .15) * clamp((dd - 2) / 8, .08, 1); continue; }
     c.t += dt; c.lid.rotation.x = -Math.min(1.9, c.t * 6); c.beam.material.opacity = Math.max(0, .5 - c.t);
     if (c.t > 12) c.fade = true;
   }
@@ -1160,7 +1277,7 @@ function loot(title, name, desc, col) {
 /* ---------- silah değiştirme ---------- */
 function switchWeapon(i) {
   if (i < 0 || i >= P.weapons.length) return;
-  P.cur = i; const w = curW(); buildGun(w.id, w.rar); recoil = 1; SND.pick(); fireCd = .25;
+  P.cur = i; const w = curW(); buildGun(w.id, w.rar); recoil = 1; SND.pick(); fireCd = .25; showWName(); hbKey = '';
 }
 
 /* ---------- oyuncu ---------- */
@@ -1284,8 +1401,7 @@ function updateWaves(dt) {
     }
   } else if (alive === 0 && !G2.bossAlive && G2.bossT <= 0) {
     G2.inBreak = true; G2.breakT = 7;
-    msg(`DALGA ${G2.wave} TAMAMLANDI`, 'Sandıkları topla · yeni dalga 7 saniye sonra');
-    if (chests.filter(c => !c.open).length < 6) spawnChest();
+    msg(`DALGA ${G2.wave} TAMAMLANDI`, 'Yeni dalga 7 saniye sonra');
   }
 }
 
@@ -1343,20 +1459,38 @@ function updateHud() {
   const alive = enemies.filter(e => !e.dead).length;
   $('wave').querySelector('b').textContent = `DALGA ${G2.wave}`;
   $('waveInfo').textContent = G2.inBreak ? `Sonraki dalga: ${Math.ceil(G2.breakT)} sn` : `Kalan Erdi: ${alive + G2.toSpawn + (G2.bossT > 0 ? 1 : 0)}  ·  Öldürülen: ${G2.kills}`;
-  $('items').innerHTML = `<span>🩹 ${P.bandage} <small>(Q)</small></span>${P.healT > 0 ? '<span>iyileşiyor…</span>' : ''}`;
+  $('items').innerHTML = P.healT > 0 ? '<span>🩹 iyileşiyor…</span>' : '';
+  drawHotbar();
   const w = curW();
-  const wb = $('weap').querySelector('b'); wb.textContent = WEAPONS[w.id].ad + (w.lv ? ` +${w.lv}` : ''); wb.style.color = RAR[w.rar].c;
-  $('weap').querySelector('.slots').innerHTML = P.weapons.map((x, i) => `<span class="${i === P.cur ? 'on' : ''}" style="color:${RAR[x.rar].c}">${i + 1}</span>`).join('');
   if (G2.bossAlive) $('boss').querySelector('i').style.width = Math.max(0, G2.bossAlive.hp / G2.bossAlive.max * 100) + '%';
   const sp = 6 + wStats(w).spread * 220 + recoil * 8;
   const c = $('cross'); c.querySelector('.t').style.top = -(sp + 8) + 'px'; c.querySelector('.b').style.top = sp + 'px'; c.querySelector('.l').style.left = -(sp + 8) + 'px'; c.querySelector('.r').style.left = sp + 'px';
+}
+
+let hbKey = '';
+function drawHotbar() {
+  const key = P.weapons.map(w => w.id + w.rar + w.lv).join() + '|' + P.cur + '|' + P.bandage;
+  if (key === hbKey) return; hbKey = key;
+  let h = '';
+  for (let i = 0; i < 5; i++) {
+    const w = P.weapons[i];
+    if (!w) { h += `<div class="slot empty"><span class="n">${i + 1}</span></div>`; continue; }
+    h += `<div class="slot${i === P.cur ? ' on' : ''}" style="border-color:${RAR[w.rar].c}"><span class="n">${i + 1}</span><img src="${GUN_ICON[w.id] || ''}" alt="${WEAPONS[w.id].ad}">${w.lv ? `<span class="c">+${w.lv}</span>` : ''}</div>`;
+  }
+  h += `<div class="slot item${P.bandage ? '' : ' zero'}"><span class="n">Q</span><span class="ic">🩹</span><span class="c">${P.bandage}</span></div>`;
+  $('hotbar').querySelector('.bar').innerHTML = h;
+}
+let wnT = 0;
+function showWName() {
+  const w = curW(), el = $('wname'); el.textContent = WEAPONS[w.id].ad + (w.lv ? ` +${w.lv}` : '') + ' · ' + RAR[w.rar].ad; el.style.color = RAR[w.rar].c;
+  el.classList.add('on'); clearTimeout(wnT); wnT = setTimeout(() => el.classList.remove('on'), 1600);
 }
 
 /* ---------- oyun akışı ---------- */
 function clearWorld() {
   enemies = []; orbs = []; rockets.forEach(r => scene.remove(r.m)); rockets = []; chestRespawn = [];
   chests.forEach(c => scene.remove(c.g)); chests = []; if (G2) G2.bossAlive = null; $('boss').classList.add('hidden');
-  eGeo.instanceCount = shGeo.instanceCount = 0; orbMesh.count = 0;
+  for (const k in PI) PI[k].count = 0; shGeo.instanceCount = 0; orbMesh.count = 0; dropPity = 0;
 }
 function beginPlay(fromSave) {
   initAudio(); clearWorld(); freshRun();
@@ -1367,8 +1501,7 @@ function beginPlay(fromSave) {
   }
   P.pos.set(0, 0, 9); P.pos.y = heightAt(0, 9) + EYE; P.vel.set(0, 0, 0); P.yaw = 0; P.pitch = 0;
   camera.rotation.set(0, 0, 0);
-  buildGun(curW().id, curW().rar);
-  for (let i = 0; i < 5; i++) spawnChest();
+  buildGun(curW().id, curW().rar); hbKey = '';
   showGame();
   startWave(wave);
 }
