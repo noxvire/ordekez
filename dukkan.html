@@ -420,8 +420,9 @@ function renderMirror(dt) {
     const p = selfP[k]; p.g.visible = (k === 'fake') === showFake;
     p.g.position.set(P.pos.x, 0, P.pos.z);
     camera.getWorldDirection(_md);
-    p.mat.map = _md.x > 0 ? p.texF : p.texB;     // aynaya dönüksen önün, değilse arkan görünür
-    p.mat.color.setScalar(N && N.power && !tubes.every(t => t.off) ? .9 : flashOn ? .5 : .1);
+    setView(p, _md.x <= 0, dt);     // aynaya dönüksen önün, değilse arkan görünür
+    const lv = N && N.power && !tubes.every(t => t.off) ? .9 : flashOn ? .5 : .1; if (Math.abs(p.lit - lv) > .01) setLit(p, lv);
+    const mv = (keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD) && state === 'play' && !dlg; if (mv) p.ph += dt * 7; animRig(p, mv, dt);
     p.g.rotation.y = 0; p.sprite.position.y = 0; p.sprite.rotation.z = 0;
     faceTo(p, mirCam.position);
   }
@@ -527,14 +528,16 @@ function drawFace(cv, def, fake) {
 }
 const CH = {
   erdi:  { ad: 'Erdi', photo: 'dk_erdi.png', skin: '#d8a888', hair: '#121012', shirt: '#1c1a1c', pants: '#211d22', shoes: '#cfcac4', print: 'erdi', eyes: [[25, 30], [49, 30]], mouth: [37, 50], h: 1.04,
-           sprite: { on: 'dk_erdi_on.png', arka: 'dk_erdi_arka.png', h: 1.8, eyes: [[77, 40], [97, 40]], mouth: [87, 54] } },
+           sprite: { on: 'dk_erdi_on.png', arka: 'dk_erdi_arka.png', h: 1.8, eyes: [[77, 40], [97, 40]], mouth: [87, 54],
+             rigF: { armL: [0, 33, 92, 262], armR: [133, 166, 92, 262], hip: 238, split: 83 }, rigB: { armL: [0, 31, 92, 264], armR: [122, 153, 92, 264], hip: 240, split: 76 } } },
   cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#e0a020', pants: '#3050a0', h: .78 },
   teyze: { ad: 'Teyze', skin: '#d8a888', hair: '#8a8580', shirt: '#6a3a6a', pants: '#3a2a3a', old: true, glasses: true, longHair: true },
   adam:  { ad: 'Takım Elbiseli Adam', skin: '#cfc2b0', hair: '#111', shirt: '#151518', pants: '#151518', h: 1.06, eyeC: '#111' },
   ogr:   { ad: 'Üniversiteli', skin: '#c99878', hair: '#3a2010', shirt: '#2a6a5a', pants: '#3a3a40', glasses: true, beard: true },
   kurye: { ad: 'Kurye', skin: '#b88868', hair: '#1a1a1a', shirt: '#c03020', pants: '#222', beanie: '#c03020' },
   zeynep:{ ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f', shoes: '#e8e4dc', print: 'cat', longHair: true, eyes: [[21, 32], [46, 32]], mouth: [35, 52],
-           sprite: { on: 'dk_zeynep_on.png', arka: 'dk_zeynep_arka.png', h: 1.7, eyes: [[76, 46], [96, 46]], mouth: [85, 63] } },
+           sprite: { on: 'dk_zeynep_on.png', arka: 'dk_zeynep_arka.png', h: 1.7, eyes: [[76, 46], [96, 46]], mouth: [85, 63],
+             rigF: { armR: [117, 153, 95, 268], hip: 246, split: 78 }, rigB: { armL: [0, 33, 104, 276], armR: [140, 177, 104, 276], hip: 248, split: 88 } } },
 };
 // çizimlerden gelen karakterler: düz resim (her zaman sana dönük), arkası ayrı resim
 for (const k in CH) if (CH[k].sprite) { loadImg(CH[k].sprite.on, () => {}); loadImg(CH[k].sprite.arka, () => {}); }
@@ -548,22 +551,80 @@ const BILL_GEO = new THREE.PlaneGeometry(1, 1).translate(0, .5, 0);
 const _wp = new THREE.Vector3();
 function faceTo(p, pos) { p.g.getWorldPosition(_wp); p.sprite.rotation.y = Math.atan2(pos.x - _wp.x, pos.z - _wp.z) - p.g.rotation.y; }
 function makeSpritePerson(id, def, fake, cv) {
-  const sp = def.sprite, g = new THREE.Group();
+  const sp = def.sprite, g = new THREE.Group(), mats = [];
   const corrupt = (q, w, h) => {
     const d = q.getImageData(0, 0, w, h);
     for (let i = 0; i < d.data.length; i += 4) { if (!d.data[i + 3]) continue; const v = (d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3; d.data[i] = v * .78 + 14; d.data[i + 1] = v * .72 + 6; d.data[i + 2] = v * .76 + 14; }
     q.putImageData(d, 0, 0);
-    if (sp.eyes) { q.fillStyle = '#000'; for (const [x, y] of sp.eyes) { q.beginPath(); q.ellipse(x, y, 4.5, 3.5, 0, 0, 7); q.fill(); } q.fillStyle = '#ff2a1a'; for (const [x, y] of sp.eyes) q.fillRect(x, y, 1, 1);
-      const [mx, my] = sp.mouth; q.fillStyle = '#120808'; q.fillRect(mx - 9, my, 18, 2); q.fillRect(mx - 10, my - 2, 2, 2); q.fillRect(mx + 8, my - 2, 2, 2); }
+    q.fillStyle = '#000'; for (const [x, y] of sp.eyes) { q.beginPath(); q.ellipse(x, y, 4.5, 3.5, 0, 0, 7); q.fill(); } q.fillStyle = '#ff2a1a'; for (const [x, y] of sp.eyes) q.fillRect(x, y, 1, 1);
+    const [mx, my] = sp.mouth; q.fillStyle = '#120808'; q.fillRect(mx - 9, my, 18, 2); q.fillRect(mx - 10, my - 2, 2, 2); q.fillRect(mx + 8, my - 2, 2, 2);
   };
-  const texF = spriteTex(sp.on, fake ? corrupt : null), texB = spriteTex(sp.arka, fake ? corrupt : null);
-  const mat = new THREE.MeshBasicMaterial({ map: texF, alphaTest: .5, side: THREE.DoubleSide, fog: true });
-  const s = new THREE.Mesh(BILL_GEO, mat); g.add(s);   // dik duran resim: sadece sağa sola döner
-  const fit = () => { const im = imgCache[sp.on]; const a = im && im.width ? im.width / im.height : .33; s.scale.set(sp.h * a, sp.h, 1); };
-  fit(); loadImg(sp.on, fit);
-  s.userData = { kind: 'cust' };
+  const bill = new THREE.Group(); g.add(bill);         // sana dönen taşıyıcı
+  const flip = new THREE.Group(); bill.add(flip);      // kâğıt dönüşü (scale.x)
+  const mkRig = (src, rig, back) => {
+    const R = { g: new THREE.Group(), parts: {} }; flip.add(R.g); R.g.visible = !back;
+    loadImg(src, im => {
+      const W = im.width, Hh = im.height, k = sp.h / Hh;
+      const base = document.createElement('canvas'); base.width = W; base.height = Hh; const bq = base.getContext('2d'); bq.drawImage(im, 0, 0);
+      if (fake && !back) corrupt(bq, W, Hh); else if (fake) { const d = bq.getImageData(0, 0, W, Hh); for (let i = 0; i < d.data.length; i += 4) { d.data[i] *= .7; d.data[i + 1] *= .65; d.data[i + 2] *= .7; } bq.putImageData(d, 0, 0); }
+      const part = (rect, pivot, z, name) => {   // rect: [x0,x1,y0,y1] piksel; pivot: piksel
+        const [x0, x1, y0, y1] = rect, w = x1 - x0, h = y1 - y0;
+        const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(base, x0, y0, w, h, 0, 0, w, h);
+        const t = new THREE.CanvasTexture(c); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;
+        const m = new THREE.MeshBasicMaterial({ map: t, alphaTest: .5, side: THREE.DoubleSide, fog: true }); mats.push(m);
+        const geo = new THREE.PlaneGeometry(w * k, h * k).translate(((x0 + x1) / 2 - pivot[0]) * k, -((y0 + y1) / 2 - pivot[1]) * k, 0);
+        const mesh = new THREE.Mesh(geo, m); mesh.userData = { kind: 'cust' };
+        const piv = new THREE.Group(); piv.position.set((pivot[0] - W / 2) * k, (Hh - pivot[1]) * k, z); piv.add(mesh); R.g.add(piv); R.parts[name] = piv;
+        return c;
+      };
+      // gövde: kollar ve bacaklar silinmiş hâli
+      const body = document.createElement('canvas'); body.width = W; body.height = Hh; const q = body.getContext('2d'); q.drawImage(base, 0, 0);
+      for (const a of ['armL', 'armR']) if (rig[a]) { const [x0, x1, y0, y1] = rig[a]; q.clearRect(x0, y0, x1 - x0, y1 - y0); }
+      q.clearRect(0, rig.hip, W, Hh - rig.hip);
+      const bt = new THREE.CanvasTexture(body); bt.magFilter = bt.minFilter = THREE.NearestFilter; bt.generateMipmaps = false; bt.colorSpace = THREE.SRGBColorSpace;
+      const bm = new THREE.MeshBasicMaterial({ map: bt, alphaTest: .5, side: THREE.DoubleSide, fog: true }); mats.push(bm);
+      const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(W * k, Hh * k).translate(0, Hh * k / 2, 0), bm); bmesh.userData = { kind: 'cust' };
+      const bp = new THREE.Group(); bp.add(bmesh); R.g.add(bp); R.parts.body = bp;
+      // bacaklar (gövdenin biraz arkasında, kalçadan biraz yukarıdan başlar)
+      part([0, rig.split, rig.hip - 6, Hh], [rig.split * .55, rig.hip], -.004, 'legL');
+      part([rig.split, W, rig.hip - 6, Hh], [rig.split + (W - rig.split) * .45, rig.hip], -.003, 'legR');
+      // gövdeden ayrılmış bacak üst kısımlarını gövdeye geri boya (dikiş görünmesin)
+      q.drawImage(base, 0, rig.hip - 6, W, 6, 0, rig.hip - 6, W, 6); bt.needsUpdate = true;
+      for (const a of ['armL', 'armR']) if (rig[a]) { const r = rig[a]; part(r, [(r[0] + r[1]) / 2, r[2] + 10], .004, a); }
+      setLit(P_, P_.lit); R.ready = true;
+    });
+    return R;
+  };
+  const P_ = { g, sprite: bill, flip, mats, cv, ph: 0, isSprite: true, lit: .9, back: false, flipT: 0 };
+  P_.F = mkRig(sp.on, sp.rigF, false); P_.B = mkRig(sp.arka, sp.rigB, true);
   const dummy = () => { const d = new THREE.Group(); g.add(d); return d; };
-  return { g, sprite: s, texF, texB, mat, head: dummy(), armL: dummy(), armR: dummy(), legL: dummy(), legR: dummy(), cv, ph: 0, isSprite: true };
+  Object.assign(P_, { head: dummy(), armL: dummy(), armR: dummy(), legL: dummy(), legR: dummy() });
+  return P_;
+}
+function setLit(p, v) { p.lit = v; for (const m of p.mats) m.color.setScalar(v); }
+// önden arkaya geçerken kâğıt gibi döner
+function setView(p, back, dt) {
+  if (p.back !== back && p.flipT <= 0) { p.flipT = .28; p.pendingBack = back; }
+  if (p.flipT > 0) {
+    p.flipT -= dt; const t = clamp(1 - p.flipT / .28, 0, 1);
+    if (t >= .5 && p.back !== p.pendingBack) { p.back = p.pendingBack; p.F.g.visible = !p.back; p.B.g.visible = p.back; }
+    p.flip.scale.x = Math.max(.04, Math.abs(Math.cos(t * Math.PI)));
+  } else p.flip.scale.x = 1;
+}
+function animRig(p, moving, dt) {
+  const R = p.back ? p.B : p.F; if (!R.ready) return; const P2 = R.parts, s = Math.sin(p.ph), c = Math.cos(p.ph);
+  if (moving) {
+    if (P2.legL) { P2.legL.rotation.z = s * .07; P2.legL.position.y = (P2.legL.userData.y0 ??= P2.legL.position.y) + Math.max(0, s) * .045; }
+    if (P2.legR) { P2.legR.rotation.z = s * .07; P2.legR.position.y = (P2.legR.userData.y0 ??= P2.legR.position.y) + Math.max(0, -s) * .045; }
+    if (P2.armL) P2.armL.rotation.z = -.04 + s * .16;
+    if (P2.armR) P2.armR.rotation.z = .04 + s * .16;
+    P2.body.rotation.z = s * .02; P2.body.position.y = Math.abs(c) * .02;
+  } else {
+    const br = Math.sin(performance.now() / 700) * .006;
+    for (const n of ['legL', 'legR']) if (P2[n]) { P2[n].rotation.z *= .8; if (P2[n].userData.y0 !== undefined) P2[n].position.y += (P2[n].userData.y0 - P2[n].position.y) * .2; }
+    if (P2.armL) P2.armL.rotation.z = P2.armL.rotation.z * .85 - .01; if (P2.armR) P2.armR.rotation.z = P2.armR.rotation.z * .85 + .01;
+    P2.body.rotation.z *= .8; P2.body.position.y = br;
+  }
 }
 function makePerson(id, fake) {
   const def = CH[id], s = def.h || 1, g = new THREE.Group();
@@ -665,10 +726,10 @@ const RULES = `<h3>DÜKKÂN KURALLARI</h3><ol>
 // gece senaryoları: m = 22:00'den sonraki dakika
 const NIGHTS = {
   1: { title: 'GECE 1', sub: 'Hoş geldin', visits: [
-      { m: 8, who: 'cocuk', want: ['sberdi'], pay: 200,
-        hi: 'Abla iyi akşamlar! Süper Erdi Bros. var mı? Harçlığımı biriktirdim!',
-        thanks: 'Yaşasın! Annem uyumadan eve koşmam lazım!',
-        chat: { q: 'Abla bu oyunda prenses kurtarılıyor mu?', o: [['Hayır, prensesi Erdi kurtarıyor.', 1, 5, 'Erdi mi? O kim ya? Neyse, sağ ol abla!'], ['Prenses kendi kendini kurtarıyor.', 2, 15, 'Vay be! Prenses güçlüymüş! Al abla, bahşiş!'], ['Oyna da gör.', 0, 0, 'Peki...']] } },
+      { m: 4, who: 'erdi', want: ['ordekavi'], pay: 200,
+        hi: 'ZEYNEP! Duydun mu, Ördek Avcısı 2 çıkmış!!',
+        thanks: 'Bu gece uyumuyorum! Ördekler beni bekler!',
+        chat: { q: 'Ya bu oyunda ördekleri vuruyor muyuz? Ben ördekleri severim ama...', o: [['Merak etme, sonunda ördekler kazanıyor.', 2, 10, 'Biliyordum! Ördekler her zaman kazanır!'], ['Evet, hepsini vuruyorsun.', -1, 0, '...Hepsini mi? Ben yine de alayım ama içim burkuldu.'], ['Al şunu, git.', 0, 0, 'Bugün pek neşeli değilsin Zeynep.']] } },
       { m: 40, who: 'ogr', want: ['erdikart'], pay: 250,
         hi: 'Selam! Burası yeniden mi açıldı? Hayırlı olsun!',
         ask: 'Erdi Kart 64 lazım. Yurtta turnuva var, rezil olmayayım.',
@@ -678,10 +739,10 @@ const NIGHTS = {
         hi: 'Kızım iyi akşamlar. Torunuma şu atari mi neyse, ondan alacağım. PlayKutu mu ne...',
         thanks: 'Allah razı olsun kızım. Gece gece burada tek başına durma, olur mu?',
         chat: { q: 'Necmi Bey\'in yeğeni sen misin? O da hep gece açardı burayı... Hep birini beklerdi.', o: [['Kimi beklerdi?', 0, 0, '...Bilmem kızım. Gece gelenleri. Hadi hayırlı işler.'], ['Evet, dayımın yerine ben baktım.', 1, 20, 'Aferin kızım. Al, şeker al kendine.']] } },
-      { m: 140, who: 'erdi', want: ['ordekavi'], pay: 200,
-        hi: 'ZEYNEP! Duydun mu, Ördek Avcısı 2 çıkmış!!',
-        thanks: 'Bu gece uyumuyorum! Ördekler beni bekler!',
-        chat: { q: 'Ya bu oyunda ördekleri vuruyor muyuz? Ben ördekleri severim ama...', o: [['Merak etme, sonunda ördekler kazanıyor.', 2, 10, 'Biliyordum! Ördekler her zaman kazanır!'], ['Evet, hepsini vuruyorsun.', -1, 0, '...Hepsini mi? Ben yine de alayım ama içim burkuldu.'], ['Al şunu, git.', 0, 0, 'Bugün pek neşeli değilsin Zeynep.']] } },
+      { m: 140, who: 'cocuk', want: ['sberdi'], pay: 200,
+        hi: 'Abla iyi akşamlar! Süper Erdi Bros. var mı? Harçlığımı biriktirdim!',
+        thanks: 'Yaşasın! Annem uyumadan eve koşmam lazım!',
+        chat: { q: 'Abla bu oyunda prenses kurtarılıyor mu?', o: [['Hayır, prensesi Erdi kurtarıyor.', 1, 5, 'Erdi mi? O kim ya? Neyse, sağ ol abla!'], ['Prenses kendi kendini kurtarıyor.', 2, 15, 'Vay be! Prenses güçlüymüş! Al abla, bahşiş!'], ['Oyna da gör.', 0, 0, 'Peki...']] } },
     ], events: [{ m: 285, f: 'ghostBell' }] },
   2: { title: 'GECE 2', sub: 'Bir şeyler yerinden oynuyor', visits: [
       { m: 6, who: 'kurye', want: ['hafiza', 'kol'], pay: 400,
@@ -876,13 +937,12 @@ function walk(c, dt) {
 function spriteFacing(p, dt, moving) {
   const g = p.g, toC = Math.atan2(camera.position.x - g.position.x, camera.position.z - g.position.z);
   const away = Math.cos(g.rotation.y - toC) < -.1;
-  p.mat.map = away ? p.texB : p.texF;
-  p.sprite.position.y = moving ? Math.abs(Math.sin(p.ph)) * .035 : 0;
-  p.sprite.rotation.z = moving ? Math.sin(p.ph) * .025 : p.sprite.rotation.z * .9;
+  setView(p, away, dt || .016); animRig(p, moving, dt);
+  p.sprite.rotation.z = moving ? Math.sin(p.ph) * .015 : p.sprite.rotation.z * .9;
   faceTo(p, camera.position);
   // ışığa göre parlaklık (sprite ışık almaz)
   const lit = N && N.power && !tubes.every(t => t.off) ? .92 : flashOn ? .55 : .12;
-  p.mat.color.setScalar(lit);
+  if (Math.abs(p.lit - lit) > .01) setLit(p, lit);
 }
 function idlePose(c, now) {
   const p = c.p;
