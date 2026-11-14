@@ -2800,7 +2800,7 @@ const SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
 const TOK = 'ordekez_token', USR = 'ordekez_user';
 const ls = window.localStorage;
 const rawSet = Storage.prototype.setItem, rawRemove = Storage.prototype.removeItem;
-const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_'));
+const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_'));
 
 async function rpc(fn, args){
   const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) });
@@ -2821,6 +2821,8 @@ function better(k, a, b){              // a: sunucu, b: yerel
   if (k === 'br_ach'){ try { return JSON.stringify(Object.assign({}, JSON.parse(b || '{}'), JSON.parse(a || '{}'))); } catch(e){ return a; } }
   if (k === 'br_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); return (B.level || 1) > (A.level || 1) || ((B.pages||[]).length > (A.pages||[]).length) ? b : a; } catch(e){ return a; } }
   if (k === 'br_secret') return '1';
+  if (k === 'ev_meta'){ try { return (JSON.parse(b).life || 0) > (JSON.parse(a).life || 0) ? b : a; } catch(e){ return a; } }
+  if (k === 'ev_best' || k === 'ev_kayit'){ try { return (JSON.parse(b).wave || 0) > (JSON.parse(a).wave || 0) ? b : a; } catch(e){ return a; } }
   return a;
 }
 function merge(server){
