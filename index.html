@@ -3291,7 +3291,10 @@ function better(k, a, b){              // a: sunucu, b: yerel
   if (k === 'br_ach'){ try { return JSON.stringify(Object.assign({}, JSON.parse(b || '{}'), JSON.parse(a || '{}'))); } catch(e){ return a; } }
   if (k === 'br_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); return (B.level || 1) > (A.level || 1) || ((B.pages||[]).length > (A.pages||[]).length) ? b : a; } catch(e){ return a; } }
   if (k === 'br_secret') return '1';
-  if (k === 'ev_meta'){ try { return (JSON.parse(b).life || 0) > (JSON.parse(a).life || 0) ? b : a; } catch(e){ return a; } }
+  if (k === 'ev_meta'){ try { const A = JSON.parse(a), B = JSON.parse(b), base = (B.life || 0) > (A.life || 0) ? B : A;
+    base.cls = Object.assign({}, B.cls || {}, A.cls || {}); base.clsStart = Object.assign({}, B.clsStart || {}, A.clsStart || {});
+    base.clsXp = {}; for (const k2 of new Set([...Object.keys(A.clsXp || {}), ...Object.keys(B.clsXp || {})])) base.clsXp[k2] = Math.max((A.clsXp || {})[k2] || 0, (B.clsXp || {})[k2] || 0);
+    base.clsFix = A.clsFix || B.clsFix; return JSON.stringify(base); } catch(e){ return a; } }
   if (k === 'ev_best' || k === 'ev_kayit'){ try { return (JSON.parse(b).wave || 0) > (JSON.parse(a).wave || 0) ? b : a; } catch(e){ return a; } }
   return a;
 }

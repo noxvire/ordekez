@@ -1096,8 +1096,12 @@ const META_KEY = 'ev_meta';
 function loadMeta() {
   let m = null; try { m = JSON.parse(localStorage.getItem(META_KEY)); } catch (e) {}
   m = m || {};
-  return { coins: m.coins || 0, life: m.life || 0, up: m.up || {}, ach: m.ach || {},
-    st: Object.assign({ kills: 0, boss: 0, runs: 0, chests: 0, bestCombo: 0, merges: 0, maxWave: 0, heads: 0 }, m.st || {}) };
+  const out = Object.assign({}, m, { coins: m.coins || 0, life: m.life || 0, up: m.up || {}, ach: m.ach || {},
+    cls: m.cls || {}, clsXp: m.clsXp || {}, clsStart: m.clsStart || {},
+    st: Object.assign({ kills: 0, boss: 0, runs: 0, chests: 0, bestCombo: 0, merges: 0, maxWave: 0, heads: 0 }, m.st || {}) });
+  // eski sürüm açılan sınıfları kaydetmiyordu: kaybolan alım için bir kerelik iade
+  if (!out.clsFix){ out.clsFix = 1; if (!Object.keys(out.cls).length && out.life >= 400){ out.coins += 400; out.clsRefund = 1; } try { localStorage.setItem(META_KEY, JSON.stringify(out)); } catch (e) {} }
+  return out;
 }
 let META = loadMeta();
 let metaPushT = 0;
