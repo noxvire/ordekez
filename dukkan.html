@@ -947,6 +947,9 @@ function renderDlg() {
   const el = $('dlg'), ln = dlg.lines[dlg.i];
   el.querySelector('.tx').textContent = ln.slice(0, dlg.shown);
   const last = dlg.i === dlg.lines.length - 1, ch = el.querySelector('.ch');
+  const choosing = last && dlg.full && dlg.choices, sc = $('selfCam');
+  if (choosing && sc.classList.contains('hidden')) { sc.classList.remove('hidden', 'on'); void sc.offsetWidth; sc.classList.add('on'); el.classList.add('me'); }
+  else if (!choosing && dlg.who !== 'self' && !sc.classList.contains('hidden')) { sc.classList.add('hidden'); el.classList.remove('me'); }
   if (last && dlg.full && dlg.choices) {
     ch.innerHTML = dlg.choices.map((c, i) => `<button data-i="${i}" class="${i === dlg.sel ? 'sel' : ''}">${i + 1}. ${c}</button>`).join('');
     ch.querySelectorAll('button').forEach(b => b.onclick = e => { e.stopPropagation(); chooseDlg(+b.dataset.i); });
@@ -970,8 +973,7 @@ function advanceDlg() {
 }
 function chooseDlg(i) {
   if (!dlg || !dlg.choices || !dlg.full || dlg.i !== dlg.lines.length - 1) return; SND.click();
-  const txt = dlg.choices[i], cb = dlg.cb; dlg = null;
-  say('self', txt, null, () => { if (cb) cb(i); });
+  closeDlg(i);
 }
 function closeDlg(i) { const cb = dlg.cb; dlg = null; $('dlg').classList.add('hidden'); $('selfCam').classList.add('hidden'); if (cb) cb(i); if (!dlg) { dlgLastWho = null; if (state === 'play') lockPointer(); } }
 $('dlg').addEventListener('click', () => { if (dlg && !(dlg.choices && dlg.full && dlg.i === dlg.lines.length - 1)) advanceDlg(); });
