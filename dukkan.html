@@ -885,6 +885,7 @@ function refreshShelves() {
   for (const id in shelfBoxes) shelfBoxes[id].forEach((b, k) => { b.visible = k < (N ? N.stock[id] : S.stock[id]); });
 }
 function startNight() {
+  tut = null; tutArrow.visible = false;
   if (N && N.cust) scene.remove(N.cust.p.g);
   if (dlg) { dlg = null; $('dlg').classList.add('hidden'); }
   const def = NIGHTS[S.night];
@@ -1008,9 +1009,33 @@ function startTalk(c) {
   const v = c.v;
   say(v.who, askLines(v), ['Hemen getiriyorum.', 'Kusura bakma, kapattık.'], i => i === 1 ? refuse(c) : accept(c), v.fake);
 }
+/* ---------- eğitim (ilk müşteri) ---------- */
+let tut = null;
+const tutArrow = new THREE.Mesh(new THREE.ConeGeometry(.08, .2, 4).rotateX(Math.PI), new THREE.MeshBasicMaterial({ color: 0xffd23a, depthTest: false, fog: false }));
+tutArrow.renderOrder = 20; tutArrow.visible = false; scene.add(tutArrow);
+const TUT_TXT = {
+  shelf: g => `1/4 · Rafa git: <b>${GAMES[g].ad}</b> "${GAMES[g].cat.toUpperCase()}" rafında. Kutuya bak ve E bas.`,
+  counter: () => '2/4 · Oyunu tezgâha koy: tezgâhın üstüne bak ve E bas.',
+  till: () => '3/4 · Kasaya bak ve E bas.',
+  pay: () => '4/4 · Ekranda yazan para üstünü butonlarla ver, sonra "Para üstünü ver".',
+};
+function tutSet(step) {
+  if (!tut) return; tut.step = step;
+  if (!step) { tut = null; tutArrow.visible = false; $('hint').classList.add('hidden'); hintT = 0; S.flags.tutDone = true; toast('Harika! Artık dükkânı tek başına işletebilirsin.', 3.5); return; }
+  const h = $('hint'); h.innerHTML = TUT_TXT[step](tut.game); h.classList.remove('hidden'); hintT = 9999;
+}
+function tutUpdate(t) {
+  if (!tut) { tutArrow.visible = false; return; }
+  let p = null;
+  if (tut.step === 'shelf') { const bx = shelfBoxes[tut.game][Math.max(0, N.stock[tut.game] - 1)]; if (bx) { p = new THREE.Vector3(); bx.getWorldPosition(p); p.y += .3; } }
+  else if (tut.step === 'counter') p = new THREE.Vector3(.95, 1.4, counterZ + .05);
+  else if (tut.step === 'till') p = new THREE.Vector3(reg.position.x, reg.position.y + .75, reg.position.z);
+  tutArrow.visible = !!p && tut.step !== 'pay';
+  if (p) { tutArrow.position.copy(p); tutArrow.position.y += Math.sin(t * 4) * .05; tutArrow.rotation.y = t * 2; }
+}
 function accept(c) {
   c.st = 'wait'; $('order').classList.remove('hidden'); $('order').querySelector('span').textContent = `${CH[c.v.who].ad}: ${wantText(c.v)}`;
-  if (S.night === 1 && N.served === 0) hint('Rafta oyunu bul, E ile al, tezgâha koy. Sonra kasaya bak ve E bas.', 9);
+  if (S.night === 1 && !S.flags.tutDone && !tut && Array.isArray(c.v.want)) { tut = { game: c.v.want[0] }; tutSet(held === tut.game ? 'counter' : 'shelf'); }
   lockPointer();
 }
 function refuse(c) {
@@ -1052,16 +1077,18 @@ function openTill() {
   till = { tot, pay, change: pay - tot, given: 0 };
   state = 'till'; unlockPointer(); SND.drawer();
   $('till').classList.remove('hidden'); renderTill();
+  if (tut && tut.step === 'till') tutSet('pay');
 }
 function renderTill(msg) {
   const t = till;
   $('till').querySelector('.scr').innerHTML = counterItems.map(c => `<div class="row"><span>${GAMES[c.id].ad}</span><span>${GAMES[c.id].p} ₺</span></div>`).join('') +
     `<div class="row" style="border-top:1px dashed #3a5a2a;margin-top:4px;padding-top:4px"><span>TOPLAM</span><span>${t.tot} ₺</span></div>` +
     `<div class="row"><span>Müşteri verdi</span><span>${t.pay} ₺${N.cust.v.fake ? ' <small style="color:#a88">(ıslak, eski paralar)</small>' : ''}</span></div>` +
-    `<div class="row big"><span>Verilecek para üstü</span><span>${t.given} ₺</span></div>`;
+    `<div class="row big" style="color:#ffe27a"><span>PARA ÜSTÜ</span><span>${t.change} ₺</span></div>` +
+    `<div class="row big"><span>Senin verdiğin</span><span style="color:${t.given === t.change ? '#7aff5a' : t.given > t.change ? '#ff8a5a' : '#d4ff9a'}">${t.given} ₺${t.given === t.change ? ' ✓' : ''}</span></div>`;
   $('till').querySelector('.bills').innerHTML = BILLS.map(b => `<button data-b="${b}">+${b} ₺</button>`).join('');
   $('till').querySelectorAll('.bills button').forEach(b => b.onclick = () => { till.given += +b.dataset.b; SND.coin(); renderTill(); });
-  $('till').querySelector('.msg').textContent = msg || 'Para üstünü hesapla ve ver.';
+  $('till').querySelector('.msg').textContent = msg || (t.change === 0 ? 'Para üstü yok, direkt onayla.' : t.given < t.change ? `${t.change - t.given} ₺ daha ver.` : t.given > t.change ? `${t.given - t.change} ₺ fazla veriyorsun!` : 'Tamam! "Para üstünü ver" bas.');
 }
 $('tClr').onclick = () => { till.given = 0; SND.click(); renderTill(); };
 $('tCancel').onclick = () => closeTill();
@@ -1073,6 +1100,7 @@ $('tOk').onclick = () => {
   for (const it of counterItems) scene.remove(it.mesh); counterItems = [];
   SND.drawer(); SND.beep();
   if (d > 0) toast(`${d} ₺ fazla verdin...`);
+  if (tut) tutSet(null);
   $('order').classList.add('hidden');
   if (c.v.fake) return fakeServed(c, t.pay - t.given);
   const v = c.v;
@@ -1119,15 +1147,17 @@ function takeFromShelf(id) {
   if (held) { if (held === id) { returnHeld(); return; } toast('Elin dolu. (Q: rafa geri koy)'); return; }
   if (N.stock[id] <= 0) { toast('Bu üründen kalmamış.'); return; }
   N.stock[id]--; refreshShelves(); setHeld(id); SND.pick();
+  if (tut && tut.step === 'shelf') { if (id === tut.game) tutSet('counter'); else toast(`Bu ${GAMES[id].ad}. Müşteri ${GAMES[tut.game].ad} istedi (Q ile geri koy).`, 3); }
 }
-function returnHeld() { if (!held) return; N.stock[held]++; refreshShelves(); setHeld(null); SND.put(); }
+function returnHeld() { if (!held) return; const was = held; N.stock[held]++; refreshShelves(); setHeld(null); SND.put(); if (tut && tut.step === 'counter' && was === tut.game) tutSet('shelf'); }
 function placeOnCounter() {
   if (!held) return;
   if (counterItems.length >= counterSlots.length) { toast('Tezgâh dolu.'); return; }
   const [x, z] = counterSlots[counterItems.length], m = boxMesh(held);
   m.position.set(x, 1.06, counterZ + z - .5); m.rotation.set(-Math.PI / 2, 0, rand(-.3, .3)); m.position.y = 1.075; scene.add(m);
   m.userData = { kind: 'cItem' }; inter.push(m);
-  counterItems.push({ id: held, mesh: m }); setHeld(null); SND.put();
+  counterItems.push({ id: held, mesh: m }); const was = held; setHeld(null); SND.put();
+  if (tut && tut.step === 'counter' && was === tut.game) tutSet('till');
 }
 function takeFromCounter(mesh) {
   if (held) { toast('Elin dolu.'); return; }
@@ -1578,6 +1608,7 @@ function frame(now) {
   if (hintT > 0) { hintT -= dt; if (hintT <= 0) $('hint').classList.add('hidden'); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('on'); }
   if (N && N.tvT > 0) { N.tvT -= dt; if (N.tvT <= 0 && N.tvMode === 'name') N.tvMode = 'demo'; }
+  if (N) tutUpdate(t);
   drawCRT(dt, t);
   glitch = Math.max(0, glitch - dt * 1.5);
   postMat.uniforms.time.value = t; postMat.uniforms.glitch.value = glitch; postMat.uniforms.red.value = 0;
@@ -1590,7 +1621,7 @@ function frame(now) {
 }
 showMenu();
 requestAnimationFrame(frame);
-window.__dk = { endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
+window.__dk = { takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
 </script>
 </body>
 </html>
