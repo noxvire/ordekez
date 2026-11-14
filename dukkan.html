@@ -30,6 +30,13 @@
   #dlg canvas{width:132px;height:157px;border:2px solid #555;flex:none;background:#111;transform-origin:50% 60%}
   #dlg canvas.zin{animation:zin .45s cubic-bezier(.2,.8,.3,1)}
   @keyframes zin{from{transform:scale(.55);opacity:.2}to{transform:scale(1);opacity:1}}
+  #selfCam{position:fixed;left:50%;bottom:150px;height:min(calc(100vh - 170px),78vw);aspect-ratio:1290/954;transform:translateX(-50%);z-index:4;border:3px solid #9f8cff;border-bottom:none;box-shadow:0 0 0 3px #000,0 0 50px rgba(0,0,0,.8);overflow:hidden;background:#100c18}
+  #selfCam img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:auto}
+  #selfCam::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0 1px,transparent 1px 3px);pointer-events:none}
+  #selfCam.on img{animation:zcam .6s cubic-bezier(.2,.8,.3,1)}
+  @keyframes zcam{from{transform:scale(1.25);filter:brightness(.4)}to{transform:scale(1);filter:none}}
+  #selfCam.on{animation:fadein .35s}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
   #dlg.me{border-color:#c8bcff}
   #dlg.me .nm{color:#c8bcff}
   #dlg .t{flex:1;display:flex;flex-direction:column;gap:6px}
@@ -121,6 +128,7 @@
   <div id="toast"></div>
 </div>
 
+<div id="selfCam" class="hidden"><img src="dk_zeynep_konus.jpg" alt=""></div>
 <div id="dlg" class="hidden">
   <canvas width="64" height="76" class="px"></canvas>
   <div class="t"><div class="nm"></div><div class="tx"></div><div class="ch"></div><div class="more">E / tıkla ▶</div></div>
@@ -617,7 +625,7 @@ function makeSpritePerson(id, def, fake, cv) {
       const part = (rect, pivot, z, name) => {   // rect: [x0,x1,y0,y1] piksel; pivot: piksel
         const [x0, x1, y0, y1] = rect, w = x1 - x0, h = y1 - y0;
         const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(base, x0, y0, w, h, 0, 0, w, h);
-        const t = new THREE.CanvasTexture(c); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;
+        const t = new THREE.CanvasTexture(c); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.anisotropy = 4; t.colorSpace = THREE.SRGBColorSpace;
         const m = new THREE.MeshBasicMaterial({ map: t, alphaTest: .5, side: THREE.DoubleSide, fog: true }); mats.push(m);
         const geo = new THREE.PlaneGeometry(w * k, h * k).translate(((x0 + x1) / 2 - pivot[0]) * k, -((y0 + y1) / 2 - pivot[1]) * k, 0);
         const mesh = new THREE.Mesh(geo, m); mesh.userData = { kind: 'cust' };
@@ -628,7 +636,7 @@ function makeSpritePerson(id, def, fake, cv) {
       const body = document.createElement('canvas'); body.width = W; body.height = Hh; const q = body.getContext('2d'); q.drawImage(base, 0, 0);
       for (const a of ['armL', 'armR']) if (rig[a]) { const [x0, x1, y0, y1] = rig[a]; q.clearRect(x0, y0, x1 - x0, y1 - y0); }
       q.clearRect(0, rig.hip, W, Hh - rig.hip);
-      const bt = new THREE.CanvasTexture(body); bt.magFilter = bt.minFilter = THREE.NearestFilter; bt.generateMipmaps = false; bt.colorSpace = THREE.SRGBColorSpace;
+      const bt = new THREE.CanvasTexture(body); bt.magFilter = THREE.LinearFilter; bt.minFilter = THREE.LinearMipmapLinearFilter; bt.generateMipmaps = true; bt.anisotropy = 4; bt.colorSpace = THREE.SRGBColorSpace;
       const bm = new THREE.MeshBasicMaterial({ map: bt, alphaTest: .5, side: THREE.DoubleSide, fog: true }); mats.push(bm);
       const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(W * k, Hh * k).translate(0, Hh * k / 2, 0), bm); bmesh.userData = { kind: 'cust' };
       const bp = new THREE.Group(); bp.add(bmesh); R.g.add(bp); R.parts.body = bp;
@@ -927,8 +935,11 @@ function say(who, lines, choices, cb, fake) {
   else pc.style.visibility = 'hidden';
   if (dlgLastWho !== who) { pc.classList.remove('zin'); void pc.offsetWidth; pc.classList.add('zin'); dlgLastWho = who; }
   el.classList.toggle('me', who === 'self');
+  const sc = $('selfCam');
+  if (who === 'self') { if (sc.classList.contains('hidden')) { sc.classList.remove('hidden', 'on'); void sc.offsetWidth; sc.classList.add('on'); } pc.style.display = 'none'; }
+  else { sc.classList.add('hidden'); pc.style.display = ''; }
   // konuşurken imleç görünsün
-  if (document.pointerLockElement) { lockGrace = performance.now() + 700; unlockPointer(); }
+  if (document.pointerLockElement) unlockPointer();
   el.querySelector('.nm').textContent = def ? def.ad.toUpperCase() : (who || '');
   renderDlg();
 }
@@ -962,7 +973,7 @@ function chooseDlg(i) {
   const txt = dlg.choices[i], cb = dlg.cb; dlg = null;
   say('self', txt, null, () => { if (cb) cb(i); });
 }
-function closeDlg(i) { const cb = dlg.cb; dlg = null; $('dlg').classList.add('hidden'); if (cb) cb(i); if (!dlg) { dlgLastWho = null; if (state === 'play') lockPointer(); } }
+function closeDlg(i) { const cb = dlg.cb; dlg = null; $('dlg').classList.add('hidden'); $('selfCam').classList.add('hidden'); if (cb) cb(i); if (!dlg) { dlgLastWho = null; if (state === 'play') lockPointer(); } }
 $('dlg').addEventListener('click', () => { if (dlg && !(dlg.choices && dlg.full && dlg.i === dlg.lines.length - 1)) advanceDlg(); });
 
 function showPaper(html) { $('paper').innerHTML = html; $('paper').classList.remove('hidden'); SND.pick(); }
@@ -1543,13 +1554,13 @@ function menuGo(k) {
 }
 function showMenu() {
   state = 'menu'; unlockPointer(); ambStop();
-  ['sum', 'pause', 'till', 'paper', 'dlg', 'hud'].forEach(id => $(id).classList.add('hidden')); dlg = null;
+  ['sum', 'pause', 'till', 'paper', 'dlg', 'hud', 'selfCam'].forEach(id => $(id).classList.add('hidden')); dlg = null;
   if (N && N.cust) { scene.remove(N.cust.p.g); } if (depoGhost) { scene.remove(depoGhost.p.g); depoGhost = null; } if (ghost) { scene.remove(ghost.g); ghost = null; }
   N = null; $('menu').classList.remove('hidden'); $('mPanel').classList.add('hidden'); $('mItems').classList.remove('hidden'); mSel = 0; renderMenu();
   P.pos.set(-1.5, 0, 2.5); P.yaw = -2.4; P.pitch = -.08;
 }
-function pause() { if (state !== 'play') return; state = 'pause'; $('pause').classList.remove('hidden'); $('dlg').classList.add('hidden'); unlockPointer(); }
-function resume() { $('pause').classList.add('hidden'); state = 'play'; if (dlg) $('dlg').classList.remove('hidden'); lockPointer(); }
+function pause() { if (state !== 'play') return; state = 'pause'; $('pause').classList.remove('hidden'); $('dlg').classList.add('hidden'); $('selfCam').classList.add('hidden'); unlockPointer(); }
+function resume() { $('pause').classList.add('hidden'); state = 'play'; if (dlg) { $('dlg').classList.remove('hidden'); if (dlg.who === 'self') $('selfCam').classList.remove('hidden'); } lockPointer(); }
 document.querySelectorAll('[data-p]').forEach(b => b.onclick = () => {
   SND.click(); const p = b.dataset.p;
   if (p === 'go') resume(); else if (p === 'menu') { if (N && S) writeSave(); showMenu(); }
@@ -1559,11 +1570,17 @@ $('vol').value = SET.vol; $('sens').value = SET.sens;
 $('vol').oninput = e => { SET.vol = +e.target.value; if (master) master.gain.value = SET.vol; localStorage.setItem('dk_set', JSON.stringify(SET)); };
 $('sens').oninput = e => { SET.sens = +e.target.value; localStorage.setItem('dk_set', JSON.stringify(SET)); };
 
-function lockPointer() { if (state !== 'play' || dlg) return; try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
-function unlockPointer() { if (document.pointerLockElement) document.exitPointerLock(); }
+let lockPending = 0, isLocked = false;
+function lockPointer() { if (state !== 'play' || dlg || document.pointerLockElement || performance.now() < lockPending) return; lockPending = performance.now() + 600; try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+let selfUnlock = false;   // fareyi oyunun kendisi bıraktıysa duraklatma menüsü açılmaz
+function unlockPointer() { if (document.pointerLockElement) { selfUnlock = true; document.exitPointerLock(); } }
 let lockGrace = 0;
 document.addEventListener('pointerlockchange', () => {
-  if (document.pointerLockElement) { if (state !== 'play' || dlg) unlockPointer(); return; }
+  lockPending = 0;
+  if (document.pointerLockElement) { isLocked = true; selfUnlock = false; if (state !== 'play' || dlg || !$('paper').classList.contains('hidden') || !$('till').classList.contains('hidden')) unlockPointer(); return; }
+  const was = isLocked; isLocked = false;
+  if (!was) return;   // hiç kilitlenmemişti (reddedilen istek): menü açma
+  if (selfUnlock) { selfUnlock = false; return; }
   if (state === 'play' && $('paper').classList.contains('hidden') && performance.now() > lockGrace) pause();
 });
 renderer.domElement.addEventListener('click', () => { if (state === 'play' && !dlg && !document.pointerLockElement) lockPointer(); });
@@ -1612,7 +1629,7 @@ addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
    ===================================================================== */
 function resize() {
   const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false);
-  LH = 240; LW = Math.round(LH * w / h); rt.setSize(LW, LH); postMat.uniforms.res.value.set(LW, LH);
+  LH = 300; LW = Math.round(LH * w / h); rt.setSize(LW, LH); postMat.uniforms.res.value.set(LW, LH);
   SNAP.set(LW / 2.2, LH / 2.2); camera.aspect = w / h; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize); resize();
