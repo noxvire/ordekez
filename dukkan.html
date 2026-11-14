@@ -355,8 +355,8 @@ let flashOn = false;
 /* ---------- tezgâh, kasa, TV, not ---------- */
 const counterX0 = 0, counterX1 = 3, counterZ = .6;
 box(3, 1, .7, lam(TX.wood), 1.5, .5, counterZ); box(3.1, .06, .8, lam(TX.woodD), 1.5, 1.02, counterZ); solid(-.05, 3.05, .2, 1.0);
-const counterTop = box(2.0, .02, .5, new THREE.MeshBasicMaterial({ visible: false }), 1.15, 1.06, counterZ); counterTop.userData = { kind: 'counter' }; inter.push(counterTop);
-const counterSlots = [[.5, .55], [.95, .55], [1.4, .55], [.75, .75]];
+const counterTop = box(1.7, .02, .6, new THREE.MeshBasicMaterial({ visible: false }), 1.2, 1.06, counterZ); counterTop.userData = { kind: 'counter' }; inter.push(counterTop);
+const counterSlots = [[1.2, .5], [.82, .5], [1.58, .5], [1.2, .72]];   // ilki tezgâhın tam ortası
 // kasa makinesi
 const reg = new THREE.Group(); reg.position.set(2.45, 1.05, counterZ - .05); scene.add(reg);
 box(.5, .22, .42, lam(0x2c2e30), 0, .11, 0, reg); box(.46, .06, .3, lam(0x1a1a1a), 0, .25, .02, reg);
@@ -1042,7 +1042,7 @@ function tutUpdate(t) {
   if (!tut) { tutArrow.visible = false; return; }
   let p = null;
   if (tut.step === 'shelf') { const bx = shelfBoxes[tut.game][Math.max(0, N.stock[tut.game] - 1)]; if (bx) { p = new THREE.Vector3(); bx.getWorldPosition(p); p.y += .3; } }
-  else if (tut.step === 'counter') p = new THREE.Vector3(.95, 1.4, counterZ + .05);
+  else if (tut.step === 'counter') p = new THREE.Vector3(1.2, 1.4, counterZ);
   else if (tut.step === 'till') p = new THREE.Vector3(reg.position.x, reg.position.y + .75, reg.position.z);
   tutArrow.visible = !!p && tut.step !== 'pay';
   if (p) { tutArrow.position.copy(p); tutArrow.position.y += Math.sin(t * 4) * .05; tutArrow.rotation.y = t * 2; }
@@ -1168,7 +1168,7 @@ function placeOnCounter() {
   if (!held) return;
   if (counterItems.length >= counterSlots.length) { toast('Tezgâh dolu.'); return; }
   const [x, z] = counterSlots[counterItems.length], m = boxMesh(held);
-  m.position.set(x, 1.06, counterZ + z - .5); m.rotation.set(-Math.PI / 2, 0, rand(-.3, .3)); m.position.y = 1.075; scene.add(m);
+  m.position.set(x, 1.06, counterZ + z - .5); m.rotation.set(-Math.PI / 2, 0, 0); m.position.y = 1.075; scene.add(m);
   m.userData = { kind: 'cItem' }; inter.push(m);
   counterItems.push({ id: held, mesh: m }); const was = held; setHeld(null); SND.put();
   if (tut && tut.step === 'counter' && was === tut.game) tutSet('till');
