@@ -677,9 +677,9 @@ function glowTex(stops) {
 }
 const sunTex = new THREE.TextureLoader().load('gunes_erdi.webp'); sunTex.colorSpace = THREE.SRGBColorSpace;
 const sunCore = new THREE.Sprite(new THREE.SpriteMaterial({ map: sunTex, color: new THREE.Color(1.5, 1.4, 1.25), toneMapped: false, depthWrite: false, transparent: true }));
-sunCore.scale.set(1100, 1268, 1);
+sunCore.scale.set(2100, 2420, 1);
 const sunHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex([[0, 'rgba(255,240,215,.5)'], [.3, 'rgba(255,220,180,.08)'], [1, 'rgba(0,0,0,0)']]), depthWrite: false, transparent: true, blending: THREE.AdditiveBlending }));
-sunHalo.scale.setScalar(2600);
+sunHalo.scale.setScalar(4600);
 const sunGroup = new THREE.Group(); sunGroup.add(sunHalo, sunCore); scene.add(sunGroup);
 
 /* ---------- dünya ---------- */

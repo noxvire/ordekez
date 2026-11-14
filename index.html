@@ -1784,7 +1784,7 @@ function bgmStop(){
   try{ b.g.gain.cancelScheduledValues(ac().currentTime); b.g.gain.setTargetAtTime(0, ac().currentTime, .4); setTimeout(() => { try{ b.s.stop(); }catch(e){} }, 1800); }catch(e){}
 }
 function bgmDuck(on){ if (bgm) try{ bgm.g.gain.setTargetAtTime(on ? .07 : .2, ac().currentTime, .6); }catch(e){} }
-function gameAmbStart(){ humStop(); bgmStart(); if (!ambT) ambT = { door: rnd(10, 22), lamp: rnd(6, 16), scratch: rnd(18, 32), scream: rnd(45, 80) }; }
+function gameAmbStart(){ humStop(); bgmStart(); if (!ambT) ambT = { door: rnd(25, 40), lamp: rnd(35, 50), scratch: rnd(45, 60), scream: rnd(80, 120) }; }
 function gameAmbStop(){ bgmStop(); ambT = null; }
 // koridor yankısı
 function fxOut(pan){
@@ -1859,10 +1859,10 @@ function sfxScream(){
 function ambTick(dt){
   if (!ambT || state !== 'play') return;
   ambT.door -= dt; ambT.lamp -= dt; ambT.scratch -= dt; ambT.scream -= dt;
-  if (ambT.door <= 0){ ambT.door = rnd(18, 40); sfxDoor(); }
-  if (ambT.lamp <= 0){ ambT.lamp = rnd(16, 38); sfxLamp(); }
-  if (ambT.scratch <= 0){ ambT.scratch = rnd(26, 55); sfxScratch(); }
-  if (ambT.scream <= 0){ ambT.scream = rnd(60, 130); if (!chase) sfxScream(); }
+  if (ambT.door <= 0){ ambT.door = rnd(42, 55); sfxDoor(); }
+  if (ambT.lamp <= 0){ ambT.lamp = rnd(45, 60); sfxLamp(); }
+  if (ambT.scratch <= 0){ ambT.scratch = rnd(50, 70); sfxScratch(); }
+  if (ambT.scream <= 0){ ambT.scream = rnd(100, 160); if (!chase) sfxScream(); }
 }
 function demonLevel(){
   const ep = ent.sp.position, dx = ep.x - pos.x, dz = ep.z - pos.z, d = Math.hypot(dx, dz) || 1;
