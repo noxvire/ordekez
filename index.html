@@ -508,8 +508,7 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
-  .ic-moon{font-size:46px;line-height:1;filter:drop-shadow(0 0 12px rgba(200,220,255,.6))}
-  .card b.moon{color:#9fe3ff;letter-spacing:.12em}
+  .card b.vur{color:#ff8a2a}
 </style>
 </head>
 <body>
@@ -539,7 +538,7 @@
   <section class="screen menu hidden" id="leader" aria-hidden="true">
     <h2>Skor Tablosu</h2>
     <div class="lb">
-      <div class="lb-tabs"><button data-g="flappy">Flappy Erdy</button><button data-g="atessu">Ateş &amp; Su</button><button data-g="backrooms">Backrooms</button></div>
+      <div class="lb-tabs"><button data-g="flappy">Flappy Erdy</button><button data-g="atessu">Ateş &amp; Su</button><button data-g="backrooms">Backrooms</button><button data-g="erdivur">Erdiyi Vur</button></div>
       <p class="hint">Skorunun burada görünmesi için sağ üstten <b>giriş yap</b>.</p>
       <div class="list"></div>
     </div>
@@ -552,7 +551,7 @@
       <button class="card" id="playDuck"><img class="ic-img" src="karakter.png" alt="">Flappy Erdy</button>
       <button class="card" id="playFW"><span class="ic-duo"><img src="ates.png" alt=""><img src="su.png" alt=""></span>Ateşli Erdi ve Zeynepsu</button>
       <button class="card" id="playBR"><img class="ic-img mon" src="zeynep_canavar.png" alt=""><span>Backrooms: <b class="red">Zeynep</b></span></button>
-      <button class="card" id="playAY" onclick="location.href='uzay.html'"><span class="ic-moon">🌕</span><span>Ördekez: <b class="moon">AY</b></span></button>
+      <button class="card" id="playAY" onclick="location.href='uzay.html'"><img class="ic-img" src="erdivur_ikon.webp" alt="" style="image-rendering:auto;border-radius:50%"><span>Erdiyi <b class="vur">Vur</b></span></button>
     </div>
     <button class="back" data-go="menu">← Geri</button>
   </section>
@@ -2929,8 +2928,8 @@ async function loadBoard(oyun){
     if (!rows || !rows.length){ list.innerHTML = '<p class="muted">Henüz skor yok. İlk sen ol! 🦆</p>'; return; }
     const me = (user() || '').toLowerCase();
     list.innerHTML = rows.map((r, i) => {
-      const v = oyun === 'backrooms' ? fmtTime(r.deger) : oyun === 'atessu' ? `Bölüm ${r.deger}` : `${r.deger} puan`;
-      const tag = oyun === 'backrooms' ? `<i>${DIFFN[r.detay && r.detay.zorluk] || ''}${r.detay && r.detay.gizli ? ' · 👻' : ''}</i>` : '';
+      const v = oyun === 'backrooms' ? fmtTime(r.deger) : oyun === 'atessu' ? `Bölüm ${r.deger}` : oyun === 'erdivur' ? `Dalga ${r.deger}` : `${r.deger} puan`;
+      const tag = oyun === 'erdivur' ? `<i>${(r.detay && r.detay.oldurme) || 0} öldürme</i>` : oyun === 'backrooms' ? `<i>${DIFFN[r.detay && r.detay.zorluk] || ''}${r.detay && r.detay.gizli ? ' · 👻' : ''}</i>` : '';
       return `<div class="row${r.kullanici_adi.toLowerCase() === me ? ' me' : ''}"><span class="rk">${['🥇','🥈','🥉'][i] || (i+1)}</span><b>${r.kullanici_adi}</b>${tag}<span class="v">${v}</span></div>`;
     }).join('');
   } catch(e){ list.innerHTML = '<p class="muted">Skorlar yüklenemedi. İnternet bağlantını kontrol et.</p>'; }
