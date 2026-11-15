@@ -21,7 +21,7 @@
   #money{position:absolute;left:18px;top:14px;font-size:20px;font-weight:700;color:#9ee870;text-shadow:2px 2px 0 #000}
   #order{position:absolute;left:18px;top:48px;max-width:300px;background:#efe6c8;color:#2a2010;padding:10px 12px;font-size:14px;line-height:1.35;transform:rotate(-1.5deg);box-shadow:3px 3px 0 rgba(0,0,0,.6)}
   #order b{display:block;font-size:11px;letter-spacing:2px;opacity:.6;margin-bottom:3px}
-  #held{position:absolute;right:18px;bottom:18px;font-size:14px;text-shadow:2px 2px 0 #000;opacity:.9}
+  #held{position:absolute;right:18px;bottom:78px;font-size:14px;text-shadow:2px 2px 0 #000;opacity:.9}
   #hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:14px;background:rgba(0,0,0,.55);padding:6px 12px;border:1px solid rgba(255,255,255,.2);white-space:nowrap}
   #toast{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:18px;font-weight:700;text-shadow:2px 2px 0 #000;opacity:0;transition:opacity .4s;text-align:center;white-space:nowrap}
   #toast.on{opacity:1}
@@ -381,7 +381,13 @@ const SIGN = { open: signTex('AÇIK', '#e8e2d0', '#a01818', 36, 20), closed: sig
 const doorSign = box(.36, .2, .03, basic({ map: SIGN.open }), .6, 1.55, -.05, doorPivot);
 doorSign.userData = { kind: 'sign' }; inter.push(doorSign);
 function setShopOpen(open) { doorSign.material.map = open ? SIGN.open : SIGN.closed; doorSign.material.needsUpdate = true; winSign.material.map = open ? SIGN.wOpen : SIGN.wClosed; winSign.material.needsUpdate = true; }
-let doorOpen = 0, doorTarget = 0;
+let doorOpen = 0, doorTarget = 0, doorUser = 0, doorCust = 0;
+const shopDoorSolid = [2.4, 3.6, 3.93, 4.17]; solids.push(shopDoorSolid);
+// kapı: oyuncu E ile açar/kapatır; müşteri gelince kendiliğinden açılır
+doorPivot.children.forEach(m => { if (!m.userData.kind) { m.userData = { kind: 'shopDoor' }; inter.push(m); } });
+// tabela artık sağdaki vitrin camında (kapıdaki sadece görüntü)
+doorSign.userData = { kind: 'shopDoor' };
+winSign.userData = { kind: 'sign' }; inter.push(winSign);
 solid(3.6, 5, 3.95, 4.15); solid(1.5, 2.4, 3.95, 4.15);
 // dışarısı: kaldırım, yol, karşı kaldırım (oyuncu çıkabilir)
 { const asp = ctex(64, 32, (g, w, h) => { noiseFill(g, w, h, '#1c1b20', .18, 200); g.fillStyle = '#b8a860'; for (let x = 2; x < w; x += 16) g.fillRect(x, h / 2 - 1, 8, 2); }, [6, 1]);
@@ -540,6 +546,7 @@ function makeShelf(x, z, ry, cat, ids) {
   box(2.4, 2.1, .06, wm, 0, 1.05, -.22, g); box(.06, 2.1, .5, wm, -1.18, 1.05, 0, g); box(.06, 2.1, .5, wm, 1.18, 1.05, 0, g);
   for (let i = 0; i < 4; i++) box(2.36, .04, .48, wm, 0, .15 + i * .55, 0, g);
   const sg = box(1.6, .26, .03, basic({ map: signTex(cat, '#1a1410', '#ffd870', 80, 14) }), 0, 2.3, -.1, g);
+  g.children.forEach(m => { if (m.isMesh) { m.userData = { kind: 'rack' }; inter.push(m); } });   // rafın gövdesi: koli buraya açılır
   ids.forEach((id, row) => {
     const tex = coverTex(id), fm = lam({ map: tex }), sm = lam(GAMES[id].c);
     shelfBoxes[id] = [];
@@ -1257,7 +1264,7 @@ function refreshShelves() {
   for (const id in shelfBoxes) shelfBoxes[id].forEach((b, k) => { b.visible = k < (N ? N.stock[id] : S.stock[id]); });
 }
 function startNight() {
-  $('hint').classList.add('hidden'); hintT = 0;   // önceki günün ipucu kalmasın
+  $('hint').classList.add('hidden'); hintT = 0; doorUser = 0;   // önceki günün ipucu kalmasın
   S.koli = S.koli || {}; setCarryKoli(false);
   setShopOpen(false);
   S.flags = S.flags || {}; if (!S.flags.testCash) { S.flags.testCash = 1; S.money += 5000; }   // TEST: deneme parası (sonra kaldırılacak)
@@ -1279,7 +1286,7 @@ function startNight() {
   state = 'play'; ambStart(); lockPointer();
   showTitle('GÜN ' + S.night, def.sub);
   if (got) setTimeout(() => toast(`📦 Siparişlerin geldi: ${got} ürün raflara dizildi.`, 4), 3600);
-  setTimeout(() => { if (state === 'play' && hintT < 100) hint('Uyandın. Dükkâna geç ve kapıdaki tabelayı çevirip dükkânı aç.', 9999); }, 2500);
+  setTimeout(() => { if (state === 'play' && hintT < 100) hint('Uyandın. Dükkâna geç ve vitrin camındaki AÇIK tabelasını yakıp dükkânı aç.', 9999); }, 2500);
   updateHud(true);
 }
 
@@ -1385,7 +1392,7 @@ function walk(c, dt) {
   const tgt = c.path[0]; if (!tgt) return true;
   const g = c.p.g, dx = tgt.x - g.position.x, dz = tgt.z - g.position.z, d = Math.hypot(dx, dz), sp = c.v.fake ? 1.0 : 1.35;
   // kapı
-  if (!c.bellDone && g.position.z < 4.9 && g.position.z > 3) { c.bellDone = true; doorTarget = 1; if (!c.v.noBell) SND.bell(); setTimeout(() => { doorTarget = 0; }, 1600); }
+  if (!c.bellDone && g.position.z < 4.9 && g.position.z > 3) { c.bellDone = true; doorCust = 1; if (!c.v.noBell) SND.bell(); setTimeout(() => { doorCust = 0; }, 1600); }
   if (d < .05) { c.path.shift(); return c.path.length === 0; }
   const s = Math.min(d, sp * dt); g.position.x += dx / d * s; g.position.z += dz / d * s;
   if (c.p.isSprite || c.p.isModel || c.p.isFrames) turnTo(g, Math.atan2(dx, dz), .2); else g.rotation.y = Math.atan2(dx, dz);
@@ -1599,7 +1606,7 @@ function takeFromCounter(mesh) {
    ===================================================================== */
 let glitch = 0, darkness = 0, ghost = null;
 const EV = {
-  ghostBell() { doorTarget = 1; SND.bell(); setTimeout(() => { doorTarget = 0; }, 1400); setTimeout(() => toast('...Kimse yok. Rüzgâr olmalı.'), 1500); },
+  ghostBell() { doorCust = 1; SND.bell(); setTimeout(() => { doorCust = 0; }, 1400); setTimeout(() => toast('...Kimse yok. Rüzgâr olmalı.'), 1500); },
   boxFall() {
     const ids = Object.keys(shelfBoxes).filter(id => N.stock[id] > 0), id = pick(ids), b = shelfBoxes[id][N.stock[id] - 1];
     const wp = new THREE.Vector3(); b.getWorldPosition(wp);
@@ -1708,6 +1715,8 @@ function promptFor(f) {
     case 'bed': return N && N.canSleep ? 'Uyu (günü bitir)' : 'Yatak';
     case 'cat': return "Odin'i sev";
     case 'pc': return 'Bilgisayarı kullan';
+    case 'rack': return carryKoli ? 'Koliyi aç, raflara diz' : '';
+    case 'shopDoor': return doorUser ? 'Kapıyı kapat' : 'Kapıyı aç';
     case 'sign': return !N ? '' : !N.opened ? 'Dükkânı aç (tabelayı çevir: AÇIK)' : N.allDone && !N.shopClosed ? 'Dükkânı kapat (tabelayı çevir: KAPALI)' : N.shopClosed ? '' : 'Tabela: AÇIK';
     case 'fall': return handsFull() ? '' : 'Yerden al';
   }
@@ -1730,7 +1739,9 @@ function interact() {
     case 'breaker': if (!N.power) restorePower(); break;
     case 'depoDoor': depoTarget = depoTarget ? 0 : 1; SND.drawer(); { const i = solids.indexOf(depoSolid); if (depoTarget && i >= 0) solids.splice(i, 1); else if (!depoTarget && i < 0) solids.push(depoSolid); } break;
     case 'bedDoor': bedDoorTarget = bedDoorTarget ? 0 : 1; SND.drawer(); { const i = solids.indexOf(bedDoorSolid); if (bedDoorTarget && i >= 0) solids.splice(i, 1); else if (!bedDoorTarget && i < 0) solids.push(bedDoorSolid); } break;
-    case 'bed': if (N.canSleep) goSleep(); else toast(N.allDone && !N.shopClosed ? 'Önce dükkânı kapat (kapıdaki tabela).' : N.shopClosed ? 'Bir şey daha olacak gibi...' : 'Daha müşteriler gelecek. Dükkâna dön.'); break;
+    case 'bed': if (N.canSleep) goSleep(); else toast(N.allDone && !N.shopClosed ? 'Önce dükkânı kapat (vitrin camındaki tabela).' : N.shopClosed ? 'Bir şey daha olacak gibi...' : 'Daha müşteriler gelecek. Dükkâna dön.'); break;
+    case 'rack': if (carryKoli) unpackKoli(); break;
+    case 'shopDoor': doorUser = doorUser ? 0 : 1; SND.drawer(); if (doorUser) SND.bell(); break;
     case 'sign':
       if (!N.opened) { N.opened = true; N.gap = 3; setShopOpen(true); SND.click(); SND.bell(); toast('Dükkân açıldı. Müşteriler gelecek.', 2.5); $('hint').classList.add('hidden'); hintT = 0; if (S.night === 1) setTimeout(() => { if (hintT < 100) hint('Kasanın yanındaki notu oku (E). Müşteri gelince ona bak ve E bas.', 9); }, 1500); updateHud(true); }
       else if (N.allDone && !N.shopClosed) { N.shopClosed = true; N.closedAt = performance.now(); setShopOpen(false); SND.click(); SND.drawer(); toast('Dükkân kapandı.', 2.5); $('hint').classList.add('hidden'); hintT = 0; }
@@ -2126,6 +2137,7 @@ function frame(now) {
   else { updatePlayer(dt); if (N && state !== 'pause' && state !== 'sum' && state !== 'pc' && state !== 'cam') { updateNight(dt, t); } }
   updateDlg(dt);
   // kapılar
+  doorTarget = Math.max(doorUser, doorCust); { const i = solids.indexOf(shopDoorSolid); if (doorTarget && i >= 0) solids.splice(i, 1); else if (!doorTarget && i < 0 && !(P.pos.x > 2.1 && P.pos.x < 3.9 && P.pos.z > 3.6 && P.pos.z < 4.5)) solids.push(shopDoorSolid); }
   doorOpen += (doorTarget - doorOpen) * Math.min(1, dt * 5); doorPivot.rotation.y = -doorOpen * 1.3;
   depoOpen += (depoTarget - depoOpen) * Math.min(1, dt * 4); depoPivot.rotation.y = depoOpen * 1.6;
   bedDoorOpen += (bedDoorTarget - bedDoorOpen) * Math.min(1, dt * 4); bedDoorPivot.rotation.y = bedDoorOpen * 1.6;
