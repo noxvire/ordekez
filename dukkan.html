@@ -524,8 +524,8 @@ function makeShelf(x, z, ry, cat, ids) {
   const cx = [x + ox * 1.25 + ax * .3, x - ox * 1.25 + ax * .3, x + ox * 1.25 - ax * .3, x - ox * 1.25 - ax * .3], cz = [z + oz * 1.25 + az * .3, z - oz * 1.25 + az * .3, z + oz * 1.25 - az * .3, z - oz * 1.25 - az * .3];
   solid(Math.min(...cx), Math.max(...cx), Math.min(...cz), Math.max(...cz));
 }
-makeShelf(-.6, -3.7, 0, 'AKSİYON', ['ordekavi', 'aysavas', 'sberdi']);
-makeShelf(2.8, -3.7, 0, 'KORKU · DÖVÜŞ', ['bkr64', 'sessiz', 'zkombat']);
+makeShelf(-1.0, -3.7, 0, 'AKSİYON', ['ordekavi', 'aysavas', 'sberdi']);
+makeShelf(3.25, -3.7, 0, 'KORKU · DÖVÜŞ', ['bkr64', 'sessiz', 'zkombat']);
 makeShelf(-4.7, -1.4, Math.PI / 2, 'YARIŞ · SPOR · AİLE', ['erdikart', 'futbol', 'ciftlik']);
 makeShelf(-4.7, 1.6, Math.PI / 2, 'DONANIM', ['konsol', 'kol', 'hafiza']);
 // posterler
@@ -1852,7 +1852,7 @@ function frame(now) {
 }
 showMenu();
 requestAnimationFrame(frame);
-window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, spawnCustomer, get CAMERA() { return camera; }, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
+window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, spawnCustomer, solids, get CAMERA() { return camera; }, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
 </script>
 </body>
 </html>
