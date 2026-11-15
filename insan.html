@@ -599,7 +599,7 @@ function introNews() {
   sayMany([
     ['TV', 'SON DAKİKA. Güneş fırtınası sürüyor. Gün ışığında dışarıda kalmak ölümcül.'],
     ['TV', 'Geceleri kapınızı çalanların hepsi insan değil. Yetkililer onlara "Ziyaretçi" diyor.'],
-    ['TV', 'Tanıdığınız için kimseyi içeri almayın. Konuşun. Bakın. Emin olun.'],
+    ['TV', 'Gece kapıyı yalnızca konuşarak açın. Sabah olunca içeri aldıklarınızı tek tek kontrol edin: gözler, dişler, tırnaklar.'],
     ['TV', 'İLK İŞARET: ' + SIGNS.dis.tv],
     ['', 'İşaretleri her an N tuşuyla (sağ üstteki 📓 İşaretler) açabilirsin.'],
   ], () => { tvMode = 'off'; G.known = ['dis']; G.phase = 'night'; G.vi = 0; save(); hud(); nightStep(); });
@@ -612,7 +612,7 @@ function nightStep() {
   if (G.vi >= NIGHTS[G.night].length) { objective('Bu gece başka gelen olmayacak gibi. Yatak odasına git ve uyu.'); return; }
   objective('Bekle... Gece sessiz.');
   const id = NIGHTS[G.night][G.vi];
-  visitorP = { id, near: 0, smile: 0 }; figureFor(id, () => {});
+  visitorP = { id, near: 0, smile: 0 }; figureFor(id, () => {}); peepImg(id);
   nightTimer = setTimeout(() => { if (!G || G.phase !== 'night' || !visitorP) return; knocked = true; SND.knock(); toast('🚪 Kapı çalınıyor...', 2.5); objective('Kapıya git, gözetleme deliğine yaklaş ve bak (E).');
     nightTimer = setTimeout(function again() { if (knocked && !peepOn && state === 'play') { SND.knock(); nightTimer = setTimeout(again, 9000); } }, 9000); }, 3000);
 }
@@ -645,12 +645,14 @@ const peepBg = (() => { const c = document.createElement('canvas'); c.width = 12
   const lg = g.createRadialGradient(600, 560, 20, 600, 560, 520); lg.addColorStop(0, 'rgba(255,255,255,.16)'); lg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = lg; g.fillRect(0, 0, W, Hh);
   return c; })();
 const peepPhotos = {};
+function peepImg(id) { const c = CHARS[id]; if (!c || !c.peep) return null; let im = peepPhotos[id]; if (!im) { im = peepPhotos[id] = new Image(); im.decoding = 'sync'; im.src = c.peep; } return im; }
+Object.keys(CHARS).forEach(peepImg);   // tüm kapı fotoğraflarını baştan yükle
 function drawPeep(t) {
   const g = peepCv.getContext('2d'), W = 1280, Hh = 720, id = visitorP && visitorP.id, c = id && CHARS[id];
   postMat.uniforms.lens.value = 1;
   g.drawImage(peepBg, 0, 0);
   if (c && c.peep) {   // ziyaretçinin kesilmiş fotoğrafı, gece arka planının önünde
-    let im = peepPhotos[id]; if (!im) { im = peepPhotos[id] = new Image(); im.src = c.peep; }
+    const im = peepImg(id);
     if (im.complete && im.naturalWidth) {
       const near = visitorP.near, z = (1 + near * .35) * (1 + Math.sin(t * .7) * .006), h = Hh * .8 * z, w = h * im.width / im.height;
       const x = W * .31 - w / 2 + Math.sin(t * .9) * 3, y = Hh + 30 - h + near * 40;
@@ -677,8 +679,6 @@ function doorMenu(first) {
   menuDlg(nm, greet, [
     { t: 'Kimsin?', dis: A.who, f: () => { A.who = 1; say(c.ad, c.who, null, () => doorMenu()); } },
     { t: 'Neden geldin?', dis: A.why, f: () => { A.why = 1; say(nm, c.why, null, () => doorMenu()); } },
-    { t: 'Gülümse bakalım.', dis: A.smile, f: () => { A.smile = 1; paintClose(visitorP.id, 'dis'); say(nm, c.s.includes('dis') ? '(Gülümsüyor. Dişleri bembeyaz, kusursuz. Fazla kusursuz.)' : '(Gülümsüyor. Dişleri biraz sararmış, çarpık. Sıradan bir gülümseme.)', null, () => { $('close').classList.add('hidden'); doorMenu(); }); } },
-    { t: 'Deliğe yaklaş, gözlerine bakayım.', dis: A.eyes, f: () => { A.eyes = 1; visitorP.near = 1; paintClose(visitorP.id, 'goz'); say(nm, c.s.includes('goz') ? '(Deliğe yaklaşıyor. Gözleri kıpkırmızı, damarlar patlamış.)' : '(Deliğe yaklaşıyor. Gözleri yorgun ama normal.)', null, () => { visitorP.near = 0; $('close').classList.add('hidden'); doorMenu(); }); } },
     { t: '🚪 Kapıyı aç, içeri al.', cls: 'g', f: () => decide(true) },
     { t: '✋ Git buradan.', cls: 'r', f: () => decide(false) },
     { t: '← Delikten çekil', f: () => { endPeep(); knocked = true; objective('Kapıda hâlâ biri var. Gözetleme deliğinden bak (E).'); } },
