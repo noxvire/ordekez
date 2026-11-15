@@ -1103,9 +1103,20 @@ function closePaper() { $('paper').classList.add('hidden'); }
 const OUT = new THREE.Vector3(3, 0, 7), DOOR_IN = new THREE.Vector3(3, 0, 3.3), DESK = new THREE.Vector3(1.15, 0, 1.45);
 // müşterinin başının üstünde isim
 // miyav: önceden çözülmüş ses, anında çalar
-let meowBuf = null;
-fetch('dk_miyav.mp3').then(r => r.arrayBuffer()).then(b => { const go = () => ac().decodeAudioData(b).then(x => meowBuf = x); try { go(); } catch (e) {} });
-function playMeow() { const c = ac(); if (!meowBuf) return; const s = c.createBufferSource(); s.buffer = meowBuf; s.connect(master); s.start(); }
+let meowBuf = null, meowRaw = null;
+const meowEl = new Audio('dk_miyav2.mp3'); meowEl.preload = 'auto';
+fetch('dk_miyav2.mp3').then(r => r.arrayBuffer()).then(b => { meowRaw = b; });
+function playMeow() {
+  try {
+    const c = ac();
+    if (!meowBuf && meowRaw) { const raw = meowRaw; meowRaw = null; c.decodeAudioData(raw).then(x => { meowBuf = x; }).catch(() => {}); }
+    if (meowBuf) { const s = c.createBufferSource(); s.buffer = meowBuf; const g = c.createGain(); g.gain.value = 1.4; s.connect(g); g.connect(master); s.start(); return; }
+  } catch (e) {}
+  // ses henüz çözülmediyse doğrudan dosyadan çal
+  try { meowEl.currentTime = 0; meowEl.volume = Math.min(1, SET.vol); meowEl.play().catch(() => {}); } catch (e) {}
+}
+// ilk tıklamada sesi hazırla (bekleme olmasın)
+addEventListener('pointerdown', () => { if (!meowBuf && meowRaw) { try { const raw = meowRaw; meowRaw = null; ac().decodeAudioData(raw).then(x => { meowBuf = x; }); } catch (e) {} } }, { once: true });
 function nameTag(name, fake) {
   const cv = document.createElement('canvas'), g = cv.getContext('2d'); g.font = 'bold 30px monospace';
   const w = Math.ceil(g.measureText(name).width) + 28; cv.width = w; cv.height = 46;
@@ -1881,7 +1892,7 @@ function frame(now) {
 }
 showMenu();
 requestAnimationFrame(frame);
-window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, spawnCustomer, solids, get CAMERA() { return camera; }, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
+window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, spawnCustomer, solids, playMeow, get meowBuf() { return meowBuf; }, get CAMERA() { return camera; }, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
 </script>
 </body>
 </html>
