@@ -306,20 +306,20 @@ function posterTex(title, emoji, bg, sub) {
    OYUNLAR (ürünler)
    ===================================================================== */
 const GAMES = {
-  ordekavi: { ad: 'Ördek Avcısı 2', cat: 'Aksiyon', p: 100, e: '🦆', c: '#2f6a2a' },
-  aysavas:  { ad: 'Götten Yemek', cat: 'Aksiyon', p: 110, e: '🍑', c: '#20304a' },
-  sberdi:   { ad: 'Süper Erdi Bros.', cat: 'Aksiyon', p: 90, e: '🍄', c: '#a02020' },
-  bkr64:    { ad: 'Backrooms 64', cat: 'Korku', p: 95, e: '🚪', c: '#8a7a20' },
-  sessiz:   { ad: 'Sessiz Koridor', cat: 'Korku', p: 100, e: '👁️', c: '#2a2a2a' },
-  zkombat:  { ad: 'Ördekez Kombat', cat: 'Dövüş', p: 105, e: '🥋', c: '#6a1a5a' },
-  erdikart: { ad: 'Erdi Truck Sim', cat: 'Yarış', p: 120, e: '🚚', c: '#c06010' },
-  futbol:   { ad: 'Pro Ördek Futbol', cat: 'Spor', p: 95, e: '⚽', c: '#1a6a30' },
-  ciftlik:  { ad: 'Ördek Çiftliği', cat: 'Aile', p: 80, e: '🌾', c: '#7a9a30' },
-  konsol:   { ad: 'PlayKutu Konsol', cat: 'Donanım', p: 900, e: '🎮', c: '#3a3a44' },
-  kol:      { ad: 'Oyun Kolu', cat: 'Donanım', p: 150, e: '🕹️', c: '#22222a' },
-  hafiza:   { ad: 'Hafıza Kartı', cat: 'Donanım', p: 60, e: '💾', c: '#20406a' },
+  ordekavi: { ad: 'Ördek Avcısı 2', cat: 'Aksiyon', p: 15, e: '🦆', c: '#2f6a2a' },
+  aysavas:  { ad: 'Götten Yemek', cat: 'Aksiyon', p: 15, e: '🍑', c: '#20304a' },
+  sberdi:   { ad: 'Süper Erdi Bros.', cat: 'Aksiyon', p: 15, e: '🍄', c: '#a02020' },
+  bkr64:    { ad: 'Backrooms 64', cat: 'Korku', p: 15, e: '🚪', c: '#8a7a20' },
+  sessiz:   { ad: 'Sessiz Koridor', cat: 'Korku', p: 15, e: '👁️', c: '#2a2a2a' },
+  zkombat:  { ad: 'Ördekez Kombat', cat: 'Dövüş', p: 15, e: '🥋', c: '#6a1a5a' },
+  erdikart: { ad: 'Erdi Truck Sim', cat: 'Yarış', p: 15, e: '🚚', c: '#c06010' },
+  futbol:   { ad: 'Pro Ördek Futbol', cat: 'Spor', p: 15, e: '⚽', c: '#1a6a30' },
+  ciftlik:  { ad: 'Ördek Çiftliği', cat: 'Aile', p: 15, e: '🌾', c: '#7a9a30' },
+  konsol:   { ad: 'PlayKutu Konsol', cat: 'Donanım', p: 90, e: '🎮', c: '#3a3a44' },
+  kol:      { ad: 'Oyun Kolu', cat: 'Donanım', p: 30, e: '🕹️', c: '#22222a' },
+  hafiza:   { ad: 'Hafıza Kartı', cat: 'Donanım', p: 15, e: '💾', c: '#20406a' },
 };
-const costOf = id => Math.round(GAMES[id].p * .9);   // toptancı fiyatı
+const costOf = id => Math.round(GAMES[id].p * 2 / 3);   // toptancı: 10'a al, 15'e sat
 const START_STOCK = { ordekavi: 4, aysavas: 3, sberdi: 4, bkr64: 3, sessiz: 2, zkombat: 3, erdikart: 4, futbol: 3, ciftlik: 3, konsol: 2, kol: 3, hafiza: 4 };
 function coverTex(id) {
   const G = GAMES[id];
@@ -1179,7 +1179,7 @@ function ambStop() { if (!ambNodes) return; try { ambNodes.hum.stop(); ambNodes.
    ===================================================================== */
 const SAVE_KEY = 'dk_save';
 let S = null;   // kalıcı (gece arası)
-function freshSave() { return { night: 1, money: 5000, flags: { testCash: 1 }, incoming: {}, skin: { floor: 'dama', wall: 'yesil' }, owned: { dama: 1, yesil: 1 }, stock: { ...START_STOCK }, upg: {}, lanet: 0, fakeRefused: 0, rel: {}, best: 0, ended: false }; }
+function freshSave() { return { night: 1, money: 0, flags: {}, incoming: {}, skin: { floor: 'dama', wall: 'yesil' }, owned: { dama: 1, yesil: 1 }, stock: { ...START_STOCK }, upg: {}, lanet: 0, fakeRefused: 0, rel: {}, best: 0, ended: false }; }
 function loadSave() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return null; } }
 function writeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 
@@ -1318,7 +1318,7 @@ function startNight() {
   $('hint').classList.add('hidden'); hintT = 0; doorUser = 0;   // önceki günün ipucu kalmasın
   S.koli = S.koli || {}; setCarryKoli(false);
   setShopOpen(false);
-  S.flags = S.flags || {}; if (!S.flags.testCash) { S.flags.testCash = 1; S.money += 5000; }   // TEST: deneme parası (sonra kaldırılacak)
+  S.flags = S.flags || {}; if (S.flags.testCash && !S.flags.testCashGone) { S.flags.testCashGone = 1; S.money = Math.max(0, S.money - 5000); }   // test parası geri alındı
   S.incoming = S.incoming || {}; S.skin = S.skin || { floor: 'dama', wall: 'yesil' }; S.owned = S.owned || { dama: 1, yesil: 1 };
   let got = 0; for (const [id, q] of Object.entries(S.incoming)) { S.stock[id] = (S.stock[id] || 0) + q; got += q; } S.incoming = {};
   applySkin();
@@ -1542,7 +1542,7 @@ function total() { return counterItems.reduce((s, c) => s + GAMES[c.id].p, 0); }
 
 /* ---------- kasa ---------- */
 let till = null;
-const BILLS = [200, 100, 50, 20, 10, 5, 1];
+const BILLS = [50, 20, 10, 5, 1];
 function openTill() {
   const c = N.cust;
   if (!c || c.st !== 'wait') { toast('Kasada bekleyen müşteri yok.'); SND.beep(); return; }
@@ -1552,7 +1552,7 @@ function openTill() {
     say(c.v.who, c.v.fake ? 'Hayır. Hayır. Hayır. ' + wantText(c.v) + '.' : `Ben ${ids} istemedim ki, ${wantText(c.v)} istiyordum.`, null, () => lockPointer(), c.v.fake);
     return;
   }
-  const tot = total(), pay = Math.max(c.v.pay, tot);
+  const tot = total(), pay = [20, 50, 100, 200, 500].find(b => b > tot) || Math.ceil((tot + 1) / 100) * 100;   // müşteri bir üst banknotla öder
   till = { tot, pay, change: pay - tot, given: 0 };
   state = 'till'; unlockPointer(); SND.drawer();
   $('till').classList.remove('hidden'); renderTill();
@@ -1586,7 +1586,7 @@ $('tOk').onclick = () => {
   const after = () => {
     if (v.chat) say(v.who, v.chat.q, v.chat.o.map(o => o[0]), i => {
       const o = v.chat.o[i]; S.rel[v.who] = (S.rel[v.who] || 0) + o[1];
-      const tip = Math.round(o[2] * (S.upg.neon ? 1.3 : 1)); if (tip) { S.money += tip; N.tips += tip; SND.coin(); }
+      const tip = Math.round(o[2] / 5 * (S.upg.neon ? 1.3 : 1)); if (tip) { S.money += tip; N.tips += tip; SND.coin(); }
       say(v.who, o[3] + (tip ? `  (+${tip} ₺ bahşiş)` : ''), null, () => { if (v.onThanks) EV[v.onThanks](); say(v.who, v.thanks, null, () => leave(c)); });
     });
     else { if (v.onThanks) EV[v.onThanks](); say(v.who, v.thanks, null, () => leave(c)); }
@@ -1852,15 +1852,15 @@ function goSleep() {
 const SKINS = {
   floor: [
     { id: 'dama', ad: 'Damalı karo', p: 0, draw: (g, w, h) => { for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) { g.fillStyle = (x + y) % 2 ? '#2b2a26' : '#8b8576'; g.fillRect(x * 16, y * 16, 16, 16); } } },
-    { id: 'parke', ad: 'Ahşap parke', p: 120, draw: (g, w, h) => { noiseFill(g, w, h, '#6a4428', .2, 200); for (let y = 0; y < h; y += 8) { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, y, w, 1); g.fillRect((y * 3) % w, y, 1, 8); } } },
-    { id: 'hali', ad: 'Mor halıfleks', p: 150, draw: (g, w, h) => { noiseFill(g, w, h, '#3a2a4a', .18, 300); g.fillStyle = 'rgba(160,120,200,.15)'; for (let i = 0; i < 8; i++) g.fillRect((i * 9) % w, (i * 5) % h, 3, 3); } },
-    { id: 'mavi', ad: 'Mavi karo', p: 140, draw: (g, w, h) => { for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { g.fillStyle = (x + y) % 2 ? '#2a4a6a' : '#6a90b0'; g.fillRect(x * 8, y * 8, 8, 8); } } },
+    { id: 'parke', ad: 'Ahşap parke', p: 24, draw: (g, w, h) => { noiseFill(g, w, h, '#6a4428', .2, 200); for (let y = 0; y < h; y += 8) { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, y, w, 1); g.fillRect((y * 3) % w, y, 1, 8); } } },
+    { id: 'hali', ad: 'Mor halıfleks', p: 30, draw: (g, w, h) => { noiseFill(g, w, h, '#3a2a4a', .18, 300); g.fillStyle = 'rgba(160,120,200,.15)'; for (let i = 0; i < 8; i++) g.fillRect((i * 9) % w, (i * 5) % h, 3, 3); } },
+    { id: 'mavi', ad: 'Mavi karo', p: 28, draw: (g, w, h) => { for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { g.fillStyle = (x + y) % 2 ? '#2a4a6a' : '#6a90b0'; g.fillRect(x * 8, y * 8, 8, 8); } } },
   ],
   wall: [
     { id: 'yesil', ad: 'Yeşil duvar kâğıdı', p: 0, draw: (g, w, h) => { noiseFill(g, w, h, '#3c4a3a', .18, 200); for (let x = 0; x < w; x += 8) { g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(x, 0, 2, h); } g.fillStyle = 'rgba(60,40,10,.25)'; g.fillRect(0, 26, w, 6); } },
-    { id: 'morcizgi', ad: 'Mor çizgili', p: 120, draw: (g, w, h) => { noiseFill(g, w, h, '#4a3a5a', .12, 160); for (let x = 0; x < w; x += 6) { g.fillStyle = 'rgba(200,160,230,.18)'; g.fillRect(x, 0, 2, h); } } },
-    { id: 'tugla', ad: 'Tuğla', p: 180, draw: (g, w, h) => { g.fillStyle = '#6a3424'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a1c14'; for (let y = 0; y < h; y += 6) { g.fillRect(0, y, w, 1); for (let x = (y / 6 % 2) * 6; x < w; x += 12) g.fillRect(x, y, 1, 6); } } },
-    { id: 'yildiz', ad: 'Gece yıldızlı', p: 220, draw: (g, w, h) => { g.fillStyle = '#12142a'; g.fillRect(0, 0, w, h); for (let i = 0; i < 14; i++) { g.fillStyle = i % 3 ? '#e8e2a0' : '#9ab0ff'; g.fillRect(Math.random() * w | 0, Math.random() * h | 0, 1, 1); } } },
+    { id: 'morcizgi', ad: 'Mor çizgili', p: 24, draw: (g, w, h) => { noiseFill(g, w, h, '#4a3a5a', .12, 160); for (let x = 0; x < w; x += 6) { g.fillStyle = 'rgba(200,160,230,.18)'; g.fillRect(x, 0, 2, h); } } },
+    { id: 'tugla', ad: 'Tuğla', p: 36, draw: (g, w, h) => { g.fillStyle = '#6a3424'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a1c14'; for (let y = 0; y < h; y += 6) { g.fillRect(0, y, w, 1); for (let x = (y / 6 % 2) * 6; x < w; x += 12) g.fillRect(x, y, 1, 6); } } },
+    { id: 'yildiz', ad: 'Gece yıldızlı', p: 44, draw: (g, w, h) => { g.fillStyle = '#12142a'; g.fillRect(0, 0, w, h); for (let i = 0; i < 14; i++) { g.fillStyle = i % 3 ? '#e8e2a0' : '#9ab0ff'; g.fillRect(Math.random() * w | 0, Math.random() * h | 0, 1, 1); } } },
   ],
 };
 function skinCanvas(kind, id) { const sk = SKINS[kind].find(x => x.id === id) || SKINS[kind][0]; const c = document.createElement('canvas'); c.width = c.height = 32; sk.draw(c.getContext('2d'), 32, 32); return c; }
@@ -1872,10 +1872,10 @@ function applySkin() {
   for (const t of skinClones) t.needsUpdate = true;
 }
 const UPG2 = [
-  { id: 'kedi', ad: '🐈 Odin (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 300 },
-  { id: 'kamera', ad: '📹 Güvenlik kamerası sistemi', d: 'Bilgisayardan 5 kamera izlenir + tezgâhta monitör', p: 350 },
-  { id: 'neon', ad: '💡 Neon tabela', d: 'Bahşişler %30 artar', p: 250 },
-  { id: 'lamba', ad: '🔆 Yeni floresanlar', d: 'Daha az titreme, daha parlak', p: 200 },
+  { id: 'kedi', ad: '🐈 Odin (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 60 },
+  { id: 'kamera', ad: '📹 Güvenlik kamerası sistemi', d: 'Bilgisayardan 5 kamera izlenir + tezgâhta monitör', p: 75 },
+  { id: 'neon', ad: '💡 Neon tabela', d: 'Bahşişler %30 artar', p: 50 },
+  { id: 'lamba', ad: '🔆 Yeni floresanlar', d: 'Daha az titreme, daha parlak', p: 40 },
 ];
 let pcTab = 'shop', cart = {};
 function openPC() { state = 'pc'; unlockPointer(); $('pc').classList.remove('hidden'); SND.beep(); cart = {}; renderPC(); }
@@ -2011,7 +2011,7 @@ function updateNight(dt, now) {
 /* =====================================================================
    GECE SONU + DÜKKÂN GELİŞTİRMELERİ
    ===================================================================== */
-const RENT = 10;   // elektrik
+const RENT = 5;   // elektrik
 const UPG = [
   { id: 'kedi', ad: '🐈 Odin (dükkân kedisi)', d: 'Kediler bazı şeyleri hisseder...', p: 400 },
   { id: 'kamera', ad: '📹 Güvenlik monitörü', d: 'Tezgâhta kamera görüntüsü', p: 450 },
@@ -2104,7 +2104,7 @@ function closeMenuPanel() { $('mPanel').classList.add('hidden'); $('mItems').cla
 function menuGo(k) {
   ac(); SND.click(); if (k === 'cont' || k === 'new') keyGuard();
   // TEST: dukkan.html?gece=2 → seçilen geceden başla
-  { const gq = +new URLSearchParams(location.search).get('gece'); if (gq > 1 && (k === 'cont' || k === 'new')) { S = freshSave(); S.night = gq; S.flags = S.flags || {}; S.flags.tutDone = true; S.flags.testCash = 1; history.replaceState(null, '', location.pathname); fadeTo(startNight); return; } }
+  { const gq = +new URLSearchParams(location.search).get('gece'); if (gq > 1 && (k === 'cont' || k === 'new')) { S = freshSave(); S.night = gq; S.flags = S.flags || {}; S.flags.tutDone = true; history.replaceState(null, '', location.pathname); fadeTo(startNight); return; } }
   if (k === 'cont') { S = loadSave(); if (S && S.flags && S.flags.tbc) { showTBC(); return; } if (S) fadeTo(startNight); }
   else if (k === 'new') {
     const sv = loadSave();
