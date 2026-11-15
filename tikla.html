@@ -139,7 +139,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 
 <script>
 /* ============ AYARLAR ============ */
-// Rarity'ler: renk + koleksiyondaki her kartın verdiği kazanç bonusu (her kopya +%25 daha)
+// Rarity'ler
 const RAR = {
   siradan:  { ad: 'SIRADAN',  c: '#9aa0a6', bonus: .01 },
   nadir:    { ad: 'NADİR',    c: '#3d9bff', bonus: .025 },
@@ -191,9 +191,8 @@ const save = () => { S.son = Date.now(); try { localStorage.setItem(KEY, JSON.st
 /* ============ HESAPLAR ============ */
 const lv = id => S.lv[id] || 0;
 const upCost = u => Math.ceil(u.base * Math.pow(u.k, lv(u.id)));
-function cardBonus() { let b = 0; for (const c of CARDS) { const n = S.kart[c.id] || 0; if (n) b += RAR[c.r].bonus * (1 + .25 * (Math.min(n, 9) - 1)); } return b; }
 let frenzyT = 0;
-const mult = () => Math.pow(2, lv('carpan')) * (1 + cardBonus()) * (frenzyT > 0 ? 5 : 1);
+const mult = () => Math.pow(2, lv('carpan')) * (frenzyT > 0 ? 5 : 1);
 const perClick = () => (1 + lv('parmak')) * mult();
 const autoInt = () => 5 / (1 + .15 * lv('hiz'));                       // robot kaç saniyede bir çalışır
 const autoRate = () => lv('oto') ? 1 / autoInt() : 0;                   // robot tıkı / sn            // tıklama/sn
@@ -278,8 +277,8 @@ function buyPack(p) {
     [440, 554, 659, 880, 1175].slice(0, ri + 1).forEach((fr, k) => setTimeout(() => beep(fr, .14, 'triangle', .07), k * 80));
     if (ri >= 3) flash(RAR[c.r].c);
     if (isNew[i]) { const t = document.createElement('div'); t.className = 'tag'; t.textContent = 'YENİ!'; f.parentNode.appendChild(t); }
-    else { const t = document.createElement('div'); t.className = 'tag'; t.style.background = '#a998d6'; t.textContent = 'KOPYA +%' + (RAR[c.r].bonus * 25).toFixed(1).replace('.0', ''); f.parentNode.appendChild(t); }
-    if (flipped === 3) { $('openOk').style.display = ''; $('openHint').textContent = 'Kartlar koleksiyonuna eklendi. Her kart kazancını artırır!'; }
+    else { const t = document.createElement('div'); t.className = 'tag'; t.style.background = '#a998d6'; t.textContent = 'KOPYA'; f.parentNode.appendChild(t); }
+    if (flipped === 3) { $('openOk').style.display = ''; $('openHint').textContent = 'Kartlar koleksiyonuna eklendi.'; }
   });
 }
 $('openOk').onclick = () => $('open').classList.remove('on');
@@ -288,7 +287,7 @@ function flash(c) { const b = $('burst'); b.style.background = `radial-gradient(
 /* ============ KOLEKSİYON ============ */
 $('colBtn').onclick = () => {
   const have = CARDS.filter(c => S.kart[c.id]).length;
-  $('colSub').innerHTML = `${have} / ${CARDS.length} kart toplandı · Kart bonusu: <b style="color:#8fe39a">+%${Math.round(cardBonus() * 100)}</b> kazanç`;
+  $('colSub').innerHTML = `${have} / ${CARDS.length} kart toplandı`;
   const sorted = [...CARDS].sort((a, b) => RORDER.indexOf(a.r) - RORDER.indexOf(b.r));
   $('colGrid').innerHTML = sorted.map(c => cardHTML(c, S.kart[c.id] || 0, !S.kart[c.id])).join('');
   $('col').classList.add('on');
@@ -311,7 +310,7 @@ function refresh() {
   $('money').textContent = fmt(S.para) + ' 🪙';
   const ps = perSec();
   const ar = autoRate(); $('rates').innerHTML = `Tıklama başı <b>${fmt(perClick())}</b>${ar ? ` · 🤖 ${autoInt().toFixed(1).replace('.0', '')} sn'de <b>${fmt(perAuto())}</b> para` : ''}`;
-  const cb = cardBonus(); $('bonus').textContent = cb ? `🎴 Kart bonusu +%${Math.round(cb * 100)}${lv('carpan') ? ` · ✖️ ×${Math.pow(2, lv('carpan'))}` : ''}` : (lv('carpan') ? `✖️ ×${Math.pow(2, lv('carpan'))}` : '');
+  $('bonus').textContent = lv('carpan') ? `✖️ ×${Math.pow(2, lv('carpan'))}` : '';
   document.querySelectorAll('.up').forEach(b => { const u = UPS.find(x => x.id === b.dataset.u), L = lv(u.id), mx = u.max && L >= u.max;
     b.querySelector('.pr').textContent = mx ? 'MAKS' : fmt(upCost(u)); b.querySelector('.lv').textContent = 'Seviye ' + L + (u.max ? ' / ' + u.max : '');
     b.classList.toggle('no', !mx && S.para < upCost(u)); b.classList.toggle('max', !!mx); });
