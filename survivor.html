@@ -17,7 +17,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .hot{position:absolute;left:55.8%;width:19.8%;border-radius:1.2vmin;transition:transform .12s,box-shadow .12s,background .12s}
 .hot:hover{background:rgba(255,255,255,.18);box-shadow:0 0 22px rgba(255,170,220,.9);transform:scale(1.03)}
 .hot:active{transform:scale(.97)}
-#hPlay{top:47.6%;height:8.6%}#hSet{top:57.8%;height:7%}#hSkin{top:66.1%;height:7%}#hExit{top:74.4%;height:7%}
+#hPlay{top:47.6%;height:8.6%}#hSkin{top:57.8%;height:7%}#hUp{top:66.1%;height:7%}#hSet{top:74.4%;height:7%}
 #tTop{position:absolute;top:2%;right:1.5%;display:flex;gap:.8vmin;flex-wrap:wrap;justify-content:flex-end}
 .pill{background:rgba(255,240,250,.92);color:#b0407a;font-weight:700;font-size:clamp(11px,1.7vmin,18px);padding:.8vmin 1.6vmin;border-radius:99px;border:2px solid #f6a8cf;box-shadow:0 3px 0 #d980ad}
 .pill:active{transform:translateY(2px);box-shadow:0 1px 0 #d980ad}
@@ -89,10 +89,10 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 <div id="title">
   <div id="tbox">
     <button class="hot" id="hPlay" aria-label="Oyuna Başla"></button>
-    <button class="hot" id="hSet" aria-label="Ayarlar"></button>
     <button class="hot" id="hSkin" aria-label="Skin Seç"></button>
-    <button class="hot" id="hExit" aria-label="Çıkış"></button>
-    <div id="tTop"><span class="pill" id="tGold">🪙 0</span><button class="pill" id="tUp">⬆️ Güçlendir</button></div>
+    <button class="hot" id="hUp" aria-label="Güçlendir"></button>
+    <button class="hot" id="hSet" aria-label="Ayarlar"></button>
+    <div id="tTop"><span class="pill" id="tGold">🪙 0</span><button class="pill" id="hExit">← Siteye dön</button></div>
     <div id="tBest"></div>
   </div>
 </div>
@@ -222,8 +222,8 @@ function bossSprite(src, r) {
   const h = document.createElement('canvas'); h.width = h.height = s; const hg = h.getContext('2d'); hg.drawImage(c, 0, 0); hg.globalCompositeOperation = 'source-atop'; hg.fillStyle = 'rgba(255,255,255,.7)'; hg.fillRect(0, 0, s, s);
   return cache[k] = { c, h, s };
 }
-// pembe kedi patisi
-function paw(g, x, y, s, a = 1) { g.save(); g.globalAlpha *= a; g.fillStyle = '#ff8ac2'; g.strokeStyle = '#fff'; g.lineWidth = Math.max(2, s * .06);
+// pembe kedi patisi (altın = evrim)
+function paw(g, x, y, s, a = 1, gold) { g.save(); g.globalAlpha *= a; g.fillStyle = gold ? '#ffc93c' : '#ff8ac2'; if (gold) { g.shadowColor = '#ffb000'; g.shadowBlur = 16; } g.strokeStyle = '#fff'; g.lineWidth = Math.max(2, s * .06);
   g.beginPath(); g.ellipse(x, y + s * .18, s * .32, s * .26, 0, 0, 7); g.fill(); g.stroke();
   for (const [dx, dy, r] of [[-.36, -.12, .13], [-.13, -.33, .14], [.13, -.33, .14], [.36, -.12, .13]]) { g.beginPath(); g.ellipse(x + dx * s, y + dy * s, r * s, r * s * 1.15, dx * .8, 0, 7); g.fill(); g.stroke(); }
   g.fillStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.ellipse(x - s * .1, y + s * .1, s * .08, s * .05, -.5, 0, 7); g.fill(); g.restore(); }
@@ -232,26 +232,28 @@ function emo(ch, size) { const k = ch + size; if (emojiC[k]) return emojiC[k]; c
 
 /* =================== AYARLAR =================== */
 const ENEMIES = {
-  slime:  { kind: 'slime',  r: 17, hp: 9,  spd: 62,  dmg: 5,  xp: 1, hues: [330, 200, 140, 50] },
-  ghost:  { kind: 'ghost',  r: 16, hp: 7,  spd: 108, dmg: 5,  xp: 1, hues: [280, 200] },
-  bat:    { kind: 'bat',    r: 14, hp: 6,  spd: 128, dmg: 5,  xp: 1, hues: [275, 300] },
-  mantar: { kind: 'mantar', r: 26, hp: 42, spd: 44,  dmg: 12, xp: 4, hues: [0, 330, 280] },
-  kedi:   { kind: 'kedi',   r: 21, hp: 26, spd: 96,  dmg: 11, xp: 6, hues: [0] },
+  slime:  { kind: 'slime',  r: 17, hp: 18,  spd: 62,  dmg: 5,  xp: 1, hues: [330, 200, 140, 50] },
+  ghost:  { kind: 'ghost',  r: 16, hp: 16,  spd: 108, dmg: 5,  xp: 1, hues: [280, 200] },
+  bat:    { kind: 'bat',    r: 14, hp: 14,  spd: 128, dmg: 5,  xp: 1, hues: [275, 300] },
+  mantar: { kind: 'mantar', r: 26, hp: 90, spd: 44,  dmg: 12, xp: 4, hues: [0, 330, 280] },
+  kedi:   { kind: 'kedi',   r: 21, hp: 60, spd: 96,  dmg: 11, xp: 6, hues: [0] },
 };
 const BOSSES = [
-  { t: 180, ad: 'KELERDY',       img: 'tk_kelerdy.jpg',       hp: 1800,  r: 58, spd: 62, dmg: 16 },
-  { t: 360, ad: 'BEBEK ERDİ',    img: 'tk_erdi_bebek.jpg',    hp: 6000,  r: 64, spd: 76, dmg: 22 },
-  { t: 540, ad: 'DİKTATÖR ERDİ', img: 'tk_erdi_diktator.jpg', hp: 16000, r: 74, spd: 70, dmg: 28 },
+  { t: 300, ad: 'KELERDY',       img: 'tk_kelerdy.jpg',       hp: 5000,  r: 60, spd: 66, dmg: 18 },
+  { t: 600, ad: 'BEBEK ERDİ',    img: 'tk_erdi_bebek.jpg',    hp: 18000, r: 68, spd: 78, dmg: 26 },
+  { t: 900, ad: 'DİKTATÖR ERDİ', img: 'tk_erdi_diktator.jpg', hp: 45000, r: 80, spd: 72, dmg: 34, final: true },
 ];
-const WIN_T = 600;
+const WIN_T = 900;                     // 15 dk: son patron gelir, onu yenince kazanırsın
+// her 3 dakikada yeni yaratık türü
+const NEWTYPES = [{ t: 0, k: 'slime' }, { t: 180, k: 'ghost', ad: '👻 Hayaletler geldi!' }, { t: 360, k: 'bat', ad: '🦇 Yarasalar geldi!' }, { t: 540, k: 'mantar', ad: '🍄 Mantarlar geldi!' }, { t: 720, k: 'kedi', ad: '🐈‍⬛ Kara kediler geldi!' }];
 const WEAPONS = {
-  katana:  { ad: 'Pembe Katana',   ic: '🗡️', d: ['Baktığın yöne pembe kılıç savurur', '+%30 hasar', 'Arkaya da savurur', '+%30 genişlik, daha sık', 'Çift kesiş, +%50 hasar'] },
-  kalp:    { ad: 'Kalp Atışı',     ic: '💗', d: ['En yakın düşmana kalp fırlatır', '+1 kalp', '+%30 hasar, daha hızlı', '+1 kalp, delip geçer', '+2 kalp, çok hızlı'] },
-  ordek:   { ad: 'Ördek Sürüsü',   ic: '🐥', d: ['Etrafında dönen ördekçikler', '+1 ördek', '+%40 hasar, daha hızlı döner', '+1 ördek, daha geniş', '+1 ördek, +%50 hasar'] },
-  pati:    { ad: 'Kedi Patisi',    ic: '🐾', d: ['Rastgele düşmana dev pati iner', '+%30 alan', '+1 pati', '+%50 hasar, daha sık', '+1 pati, kocaman pati'] },
-  sevgi:   { ad: 'Sevgi Halkası',  ic: '💞', d: ['Etrafındaki düşmanlara sürekli hasar', '+%25 alan', '+%50 hasar', '+%25 alan, düşmanları iter', '+%60 hasar, dev halka'] },
-  yildiz:  { ad: 'Yıldız Yağmuru', ic: '⭐', d: ['Rastgele düşmanlara yıldız düşer', '+1 yıldız', '+%40 hasar', '+2 yıldız, daha sık', '+2 yıldız, +%60 hasar'] },
-  kedicik: { ad: 'Kedi Dostu',     ic: '🐱', d: ['Düşmanlara saldıran kedicik', '+%40 hasar', '+1 kedicik', 'Daha hızlı koşar ve ısırır', '+1 kedicik, +%50 hasar'] },
+  katana:  { ad: 'Pembe Katana',   ic: '🗡️', d: ['En yakın düşmana pembe kılıç savurur', '2 kılıç: sağa ve sola, daha uzun', '3 kılıç: sağ, sol ve yukarı/aşağı', '4 kılıç: dört yöne, daha büyük ve sık', '✨ EVRİM: Altın Katana — dev, çok hızlı, çok güçlü'] },
+  kalp:    { ad: 'Kalp Atışı',     ic: '💗', d: ['En yakın düşmana kalp fırlatır', '+1 kalp, daha büyük', '+%30 hasar, daha hızlı', '+1 kalp, delip geçer', '✨ EVRİM: Altın Kalpler — 5 dev kalp, delip geçer'] },
+  ordek:   { ad: 'Ördek Sürüsü',   ic: '🐥', d: ['Etrafında dönen ördekçik', '+1 ördek, daha büyük', '+%40 hasar, daha hızlı döner', '+1 ördek, daha geniş', '✨ EVRİM: Altın Ördekler — dev ve çok güçlü'] },
+  pati:    { ad: 'Kedi Patisi',    ic: '🐾', d: ['Rastgele düşmana dev pati iner', '+%30 alan', '+1 pati', '+%50 hasar, daha sık', '✨ EVRİM: Altın Pati — 3 kocaman pati'] },
+  sevgi:   { ad: 'Sevgi Halkası',  ic: '💞', d: ['Etrafındaki düşmanlara sürekli hasar', '+%25 alan', '+%50 hasar', '+%25 alan, düşmanları iter', '✨ EVRİM: Mor Sevgi — dev halka, +%60 hasar'] },
+  yildiz:  { ad: 'Yıldız Yağmuru', ic: '⭐', d: ['Rastgele düşmanlara yıldız düşer', '+1 yıldız, daha büyük', '+%40 hasar', '+2 yıldız, daha sık', '✨ EVRİM: Gökkuşağı Yağmuru — 7 dev yıldız'] },
+  kedicik: { ad: 'Kedi Dostu',     ic: '🐱', d: ['Düşmanlara saldıran kedicik', '+%40 hasar, daha büyük', '+1 kedicik', 'Daha hızlı koşar ve ısırır', '✨ EVRİM: Aslan Kediler — 3 dev kedi'] },
 };
 const PASSIVES = {
   guc:   { ad: 'Kurdele',       ic: '🎀', d: '+%12 hasar' },
@@ -261,7 +263,7 @@ const PASSIVES = {
   sogum: { ad: 'Altın Çan',     ic: '🔔', d: 'Saldırılar %8 daha sık' },
   zirh:  { ad: 'Oyuncak Ayı',   ic: '🧸', d: 'Alınan hasar -2' },
 };
-const MAXLV = 5, MAXW = 6, MAXP = 6;
+const MAXLV = 5, MAXW = 4, MAXP = 4;   // en fazla 4 yetenek + 4 eşya, her biri 5 seviye
 const META = [
   { id: 'can',   ic: '💖', ad: 'Can',        d: '+10 maksimum can',      max: 5, base: 40 },
   { id: 'guc',   ic: '🗡️', ad: 'Güç',        d: '+%6 hasar',             max: 5, base: 60 },
@@ -347,7 +349,7 @@ const gkey = (x, y) => ((x / GRID) | 0) * 100000 + ((y / GRID) | 0);
 function startGame() {
   P = { x: 0, y: 0, r: 20, skin: M.skin,
     maxHp: 100 + 10 * mlv('can'), hp: 0, spd: 215 * (1 + .04 * mlv('hiz')), dmgMul: 1 + .06 * mlv('guc'), magnet: 90 * (1 + .15 * mlv('mik')), xpMul: 1 + .08 * mlv('xp'),
-    lv: 1, xp: 0, next: 3, fx: 1, fy: 0, face: 1, inv: 0, revive: mlv('dir'), w: { katana: 1 }, p: {}, cds: {}, hitT: 0, walk: 0 };
+    lv: 1, xp: 0, next: 4, fx: 1, fy: 0, face: 1, inv: 0, revive: mlv('dir'), w: { katana: 1 }, p: {}, cds: {}, hitT: 0, walk: 0 };
   P.hp = P.maxHp;
   enemies = []; projs = []; gems = []; picks = []; fx = []; texts = []; pets = []; T = 0; kills = 0; coins = 0; spawnAcc = 0; bossIdx = 0; curBoss = null; cam = { x: 0, y: 0 }; levelQueue = 0; won = false;
   M.oyun++; saveM();
@@ -365,23 +367,26 @@ const magNow = () => P.magnet * (1 + .35 * pl('mik'));
 /* =================== DÜŞMANLAR =================== */
 function spawnEnemy(type, boss) {
   const a = Math.random() * Math.PI * 2, d = Math.hypot(W, H) / 2 + 60;
-  const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1 + T / 75;
+  const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1 + T / 70 + Math.pow(T / 450, 2) * 2.5;
   let e;
   if (boss) e = { x, y, r: boss.r, hp: boss.hp * (1 + T / 900), spd: boss.spd, dmg: boss.dmg, xp: 60, boss: boss.ad, img: boss.img };
-  else { const K = ENEMIES[type]; e = { x, y, r: K.r, hp: K.hp * m, spd: K.spd * (1 + T / 1500), dmg: K.dmg * (1 + T / 600), xp: K.xp, kind: K.kind, hue: K.hues[(Math.random() * K.hues.length) | 0], ph: Math.random() * 7 }; }
+  else { const K = ENEMIES[type]; e = { x, y, r: K.r, hp: K.hp * m, spd: K.spd * (1 + T / 2500), dmg: K.dmg * (1 + T / 800), xp: K.xp, kind: K.kind, hue: K.hues[(Math.random() * K.hues.length) | 0], ph: Math.random() * 7 }; }
   e.max = e.hp; e.kx = 0; e.ky = 0; e.flash = 0; e.hitCd = {};
   enemies.push(e); return e;
 }
 function spawner(dt) {
-  const rate = .5 + T / 50 + Math.pow(T / 180, 2) * 4;
+  const finalUp = bossIdx >= BOSSES.length;            // son patron sahnede: sadece az sayıda yardımcı
+  const rate = (.8 + T / 28 + Math.pow(T / 240, 2) * 6) * (finalUp ? .25 : 1);
   spawnAcc += rate * dt;
-  const cap = 140 + T / 2.5;
+  const cap = 220 + T / 1.6;
+  const types = NEWTYPES.filter(n => T >= n.t).map(n => n.k);
   while (spawnAcc >= 1) { spawnAcc--; if (enemies.length > cap) continue;
-    const r = Math.random(); let k = 'slime';
-    if (T > 40 && r < .2) k = 'ghost'; if (T > 90 && r > .2 && r < .32) k = 'bat'; if (T > 120 && r > .84) k = 'mantar'; if (T > 270 && r > .94) k = 'kedi';
+    // en yeni tür daha sık, eskiler de gelmeye devam
+    const r = Math.random(), k = r < .35 ? types[types.length - 1] : types[(Math.random() * types.length) | 0];
     spawnEnemy(k); }
-  if (Math.floor((T - dt) / 60) !== Math.floor(T / 60) && T > 5) { const n = 14 + T / 10; for (let i = 0; i < n; i++) { const e = spawnEnemy(T > 240 ? 'bat' : 'slime'); const a = i / n * Math.PI * 2, d = Math.hypot(W, H) / 2 + 40; e.x = P.x + Math.cos(a) * d; e.y = P.y + Math.sin(a) * d; } toast('💢 Etrafın sarıldı!'); }
-  if (bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t) { const b = BOSSES[bossIdx++]; curBoss = spawnEnemy(null, b); toast(`👑 ${b.ad} GELDİ!`); chime([392, 330, 262, 196], 120, 'square', .04); }
+  for (const n of NEWTYPES) if (n.ad && T - dt < n.t && T >= n.t) { toast(n.ad); chime([523, 659, 523, 784], 90, 'square', .03); }
+  if (Math.floor((T - dt) / 60) !== Math.floor(T / 60) && T > 5 && !finalUp) { const n = 20 + T / 8, ty = types[types.length - 1]; for (let i = 0; i < n; i++) { const e = spawnEnemy(ty); const a = i / n * Math.PI * 2, d = Math.hypot(W, H) / 2 + 40; e.x = P.x + Math.cos(a) * d; e.y = P.y + Math.sin(a) * d; } toast('💢 Etrafın sarıldı!'); }
+  if (bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t) { const b = BOSSES[bossIdx++]; curBoss = spawnEnemy(null, b); curBoss.final = !!b.final; toast(b.final ? `👑 SON PATRON: ${b.ad}!` : `👑 ${b.ad} GELDİ!`); chime([392, 330, 262, 196], 120, 'square', .04); }
 }
 
 /* =================== HASAR =================== */
@@ -397,6 +402,7 @@ function kill(e) {
   e.dead = true; kills++;
   gems.push({ x: e.x, y: e.y, v: e.xp, ph: Math.random() * 7 });
   const r = Math.random();
+  if (e.final && !won) { won = true; setTimeout(() => { if (state === 'play' || state === 'lvup') gameOver(true); }, 1200); }
   if (e.boss) { picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
   else if (r < .025) picks.push({ x: e.x, y: e.y, k: 'coin' });
   else if (r < .029) picks.push({ x: e.x, y: e.y, k: 'cilek' });
@@ -412,37 +418,41 @@ function onScreen() { return enemies.filter(e => !e.dead && Math.abs(e.x - P.x) 
 function cdReady(id, base) { P.cds[id] = (P.cds[id] || 0) - DT; if (P.cds[id] > 0) return false; P.cds[id] = base * cdM(); return true; }
 function near(x, y) { const out = []; const cx = (x / GRID) | 0, cy = (y / GRID) | 0; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const a = grid.get((cx + i) * 100000 + (cy + j)); if (a) for (const e of a) out.push(e); } return out; }
 const aoe = (x, y, rad, dmg, push) => { for (const e of enemies) { if (e.dead) continue; const dx = e.x - x, dy = e.y - y, d = Math.hypot(dx, dy) || 1; if (d < rad + e.r) hurt(e, dmg, dx / d * push, dy / d * push); } };
-function katanaHit(dmg, reach, dirs) {
-  for (const s of dirs) { const dx = P.face * s; fx.push({ k: 'slash', x: P.x, y: P.y, dx, w: reach, t: .25 });
-    for (const e of enemies) { if (e.dead) continue; const rx = (e.x - P.x) * dx, ry = Math.abs(e.y - P.y); if (rx > -15 && rx < reach + e.r && ry < 60 + e.r) hurt(e, dmg, dx * 110, 0); } }
-  snd(1200, .12, 'sine', .03, .5);
+const KAT = { dmg: [0, 20, 24, 28, 32, 46], reach: [0, 140, 160, 175, 195, 250], cd: [0, 1.1, 1.0, .95, .85, .6], wide: [0, 55, 60, 66, 72, 95] };
+function katanaHit(l) {
+  const t = nearest(300), sx = t ? (t.x >= P.x ? 1 : -1) : P.face, sy = t ? (t.y >= P.y ? 1 : -1) : 1;
+  // seviye = kılıç sayısı (en çok 4): sağ/sol, sonra yukarı/aşağı
+  const dirs = [[sx, 0], [-sx, 0], [0, sy], [0, -sy]].slice(0, Math.min(4, l));
+  const reach = KAT.reach[l], wide = KAT.wide[l], dmg = KAT.dmg[l], gold = l >= 5;
+  for (const [dx, dy] of dirs) { fx.push({ k: 'slash', x: P.x, y: P.y - 8, dx, dy, w: reach, h: wide, gold, t: .25 });
+    for (const e of enemies) { if (e.dead) continue; const ex = e.x - P.x, ey = e.y - P.y + 8, along = ex * dx + ey * dy, side = Math.abs(ex * dy - ey * dx);
+      if (along > -15 && along < reach + e.r && side < wide + e.r) hurt(e, dmg, dx * 120, dy * 120); } }
+  snd(gold ? 900 : 1200, .12, 'sine', .03, .5);
 }
 let katanaQ = 0;
 function weapons(dt) {
   const L = P.w;
-  if (L.katana) { const l = L.katana, dmg = [0, 15, 20, 20, 20, 30][l], reach = l >= 4 ? 170 : 135, dirs = l >= 3 ? [1, -1] : [1];
-    if (katanaQ > 0) { katanaQ -= dt; if (katanaQ <= 0) katanaHit(dmg, reach, dirs); }
-    if (cdReady('katana', l >= 4 ? 1.0 : 1.25)) { katanaHit(dmg, reach, dirs); if (l >= 5) katanaQ = .18; } }
+  if (L.katana) { const l = L.katana; if (cdReady('katana', KAT.cd[l])) katanaHit(l); }
   if (L.kalp) { const l = L.kalp; if (cdReady('kalp', [0, .9, .85, .75, .7, .55][l])) {
     const n = [0, 1, 2, 2, 3, 5][l], dmg = [0, 12, 12, 16, 16, 20][l], pierce = l >= 4 ? 3 : 1, used = new Set();
     for (let i = 0; i < n; i++) { const t = nearest(700, used) || nearest(700); let ax = P.fx, ay = P.fy; if (t) { used.add(t); ax = t.x - P.x; ay = t.y - P.y; } const d = Math.hypot(ax, ay) || 1, sp = 520;
       const s = (i - (n - 1) / 2) * .1, c = Math.cos(s), si = Math.sin(s);
-      projs.push({ x: P.x, y: P.y - 10, vx: (ax / d * c - ay / d * si) * sp, vy: (ax / d * si + ay / d * c) * sp, r: 10, dmg, pierce, t: 1.4, hit: new Set() }); }
+      projs.push({ x: P.x, y: P.y - 10, vx: (ax / d * c - ay / d * si) * sp, vy: (ax / d * si + ay / d * c) * sp, r: [0, 10, 12, 13, 14, 18][l], sz: [0, 18, 22, 24, 26, 34][l], gold: l >= 5, dmg, pierce: l >= 5 ? 5 : pierce, t: 1.4, hit: new Set() }); }
     snd(1500, .05, 'sine', .015, 1.3); } }
   if (L.sevgi) { const l = L.sevgi, rad = [0, 72, 90, 90, 112, 142][l], dmg = [0, 5, 5, 8, 8, 13][l];
     if (cdReady('sevgi', .45)) for (const e of enemies) { if (e.dead) continue; const dx = e.x - P.x, dy = e.y - P.y, d = Math.hypot(dx, dy) || 1; if (d < rad + e.r) hurt(e, dmg, l >= 4 ? dx / d * 60 : 0, l >= 4 ? dy / d * 60 : 0); } }
-  if (L.ordek) { const l = L.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, dmg = [0, 12, 12, 17, 17, 26][l]; orbitA += dt * (l >= 3 ? 3.6 : 2.7);
+  if (L.ordek) { const l = L.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, dmg = [0, 12, 13, 18, 19, 34][l], hr = [0, 16, 18, 20, 22, 28][l]; orbitA += dt * (l >= 3 ? 3.6 : 2.7);
     for (let i = 0; i < n; i++) { const a = orbitA + i / n * Math.PI * 2, x = P.x + Math.cos(a) * rad, y = P.y + Math.sin(a) * rad;
-      for (const e of near(x, y)) { if (!e.dead && (e.x - x) ** 2 + (e.y - y) ** 2 < (e.r + 16) ** 2 && !(e.hitCd.ordek > T)) { hurt(e, dmg, Math.cos(a) * 120, Math.sin(a) * 120); e.hitCd.ordek = T + .35; } } } }
+      for (const e of near(x, y)) { if (!e.dead && (e.x - x) ** 2 + (e.y - y) ** 2 < (e.r + hr) ** 2 && !(e.hitCd.ordek > T)) { hurt(e, dmg, Math.cos(a) * 120, Math.sin(a) * 120); e.hitCd.ordek = T + .35; } } } }
   if (L.pati) { const l = L.pati; if (cdReady('pati', [0, 2.5, 2.5, 2.3, 1.7, 1.5][l])) {
     const n = l >= 5 ? 3 : l >= 3 ? 2 : 1, list = onScreen(), rad = [0, 55, 72, 72, 72, 105][l], dmg = [0, 28, 28, 28, 42, 50][l];
     for (let i = 0; i < n; i++) { const t = list.length ? list[(Math.random() * list.length) | 0] : null; const tx = t ? t.x : P.x + (Math.random() - .5) * 300, ty = t ? t.y : P.y + (Math.random() - .5) * 300;
-      fx.push({ k: 'patiIn', x: tx, y: ty, r: rad, t: .45, dmg, done: false }); } } }
+      fx.push({ k: 'patiIn', x: tx, y: ty, r: rad, t: .45, dmg, done: false, gold: l >= 5 }); } } }
   if (L.yildiz) { const l = L.yildiz; if (cdReady('yildiz', [0, 2.4, 2.4, 2.4, 1.7, 1.6][l])) {
     const n = [0, 2, 3, 3, 5, 7][l], dmg = [0, 22, 22, 31, 31, 50][l], list = onScreen();
-    for (let i = 0; i < n && list.length; i++) { const e = list.splice((Math.random() * list.length) | 0, 1)[0]; fx.push({ k: 'yildiz', x: e.x, y: e.y, t: .4, e, dmg, done: false }); }
+    for (let i = 0; i < n && list.length; i++) { const e = list.splice((Math.random() * list.length) | 0, 1)[0]; fx.push({ k: 'yildiz', x: e.x, y: e.y, t: .4, e, dmg, done: false, sz: [0, 30, 36, 40, 44, 58][l], rb: l >= 5, hue: Math.random() * 360 }); }
     chime([1568, 2093], 60, 'sine', .02); } }
-  if (L.kedicik) { const l = L.kedicik, n = l >= 5 ? 3 : l >= 3 ? 2 : 1, dmg = [0, 14, 20, 20, 20, 30][l], sp = l >= 4 ? 420 : 320;
+  if (L.kedicik) { const l = L.kedicik, n = l >= 5 ? 3 : l >= 3 ? 2 : 1, dmg = [0, 14, 20, 21, 23, 40][l], sp = l >= 4 ? 420 : 320;
     while (pets.length < n) pets.push({ x: P.x, y: P.y, t: null, cd: 0, face: 1 });
     pets.forEach((pt, i) => { pt.cd -= dt;
       if (!pt.t || pt.t.dead || Math.hypot(pt.t.x - P.x, pt.t.y - P.y) > 450) pt.t = nearest(380);
@@ -478,7 +488,7 @@ function update(dt) {
   projs = projs.filter(p => p.t > 0);
   for (const f of fx) {
     if (f.k === 'patiIn' && !f.done && f.t < .2) { f.done = true; aoe(f.x, f.y, f.r, f.dmg, 160); snd(160, .2, 'sine', .06, .5); for (let i = 0; i < 4; i++) fx.push({ k: 'kalpcik', x: f.x + (Math.random() - .5) * f.r, y: f.y, vy: -80, t: .6 }); }
-    if (f.k === 'yildiz' && !f.done && f.t < .12) { f.done = true; if (!f.e.dead) hurt(f.e, f.dmg); aoe(f.x, f.y, 30, f.dmg * .3, 40); }
+    if (f.k === 'yildiz' && !f.done && f.t < .12) { f.done = true; if (!f.e.dead) hurt(f.e, f.dmg); aoe(f.x, f.y, f.sz, f.dmg * .3, 40); }
   }
   const mag = magNow(); let got = false;
   for (const g of gems) { const dx = P.x - g.x, dy = P.y - g.y, d = Math.hypot(dx, dy) || 1; if (g.pull || d < mag) { g.pull = true; const s = Math.max(380, 900 - d); g.x += dx / d * s * dt; g.y += dy / d * s * dt; } if (d < P.r + 10) { g.got = true; got = true; addXp(g.v); } }
@@ -495,9 +505,9 @@ function update(dt) {
   enemies = enemies.filter(e => !e.dead);
   for (const f of fx) { f.t -= dt; if (f.k === 'kalpcik') f.y += f.vy * dt; } fx = fx.filter(f => f.t > 0);
   for (const t of texts) { t.t -= dt; t.y -= 40 * dt; } texts = texts.filter(t => t.t > 0);
-  if (T >= WIN_T && !won) { won = true; gameOver(true); }
+  
 }
-function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(3 + (P.lv - 1) * 3 + Math.pow(P.lv - 1, 1.45)); levelQueue++; } if (levelQueue && state === 'play') showLevelUp(); }
+function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(4 + (P.lv - 1) * 4.5 + Math.pow(P.lv - 1, 1.6)); levelQueue++; } if (levelQueue && state === 'play') showLevelUp(); }
 
 /* =================== SEVİYE ATLAMA =================== */
 function choices(n) {
@@ -546,9 +556,11 @@ function draw(dt) {
   const vis = (x, y, r) => Math.abs(x - cam.x) < W / 2 + r && Math.abs(y - cam.y) < H / 2 + r;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   if (P.w.sevgi) { const l = P.w.sevgi, rad = [0, 72, 90, 90, 112, 142][l]; const g = ctx.createRadialGradient(P.x, P.y, rad * .2, P.x, P.y, rad); g.addColorStop(0, 'rgba(255,150,200,0)'); g.addColorStop(1, 'rgba(255,120,190,.25)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(P.x, P.y, rad, 0, 7); ctx.fill();
-    const n = 8 + l * 2; for (let i = 0; i < n; i++) { const a = T * 1.2 + i / n * Math.PI * 2; ctx.fillStyle = i % 2 ? '#ff8ac2' : '#ffc2de'; heartPath(ctx, P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad - 6, 12); ctx.fill(); } }
-  for (const g of gems) { if (!vis(g.x, g.y, 12)) continue; const s = g.v >= 20 ? 16 : g.v >= 4 ? 13 : 10, b = Math.sin(T * 5 + g.ph) * 2;
-    ctx.fillStyle = g.v >= 20 ? '#ffc93c' : g.v >= 4 ? '#b48bff' : '#ff7eb6'; heartPath(ctx, g.x, g.y - s / 2 + b, s); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke(); }
+    const n = 8 + l * 2; for (let i = 0; i < n; i++) { const a = T * 1.2 + i / n * Math.PI * 2; ctx.fillStyle = l >= 5 ? (i % 2 ? '#b07cff' : '#ffc93c') : (i % 2 ? '#ff8ac2' : '#ffc2de'); heartPath(ctx, P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad - 6, 12 + l * 1.5); ctx.fill(); } }
+  for (const g of gems) { if (!vis(g.x, g.y, 20)) continue; const s = g.v >= 20 ? 26 : g.v >= 4 ? 21 : 17, b = Math.sin(T * 5 + g.ph) * 2.5, pul = 1 + Math.sin(T * 7 + g.ph) * .08;
+    ctx.save(); ctx.translate(g.x, g.y + b); ctx.scale(pul, pul); ctx.shadowColor = g.v >= 20 ? '#ffb000' : g.v >= 4 ? '#9a5cff' : '#ff3d8f'; ctx.shadowBlur = 10;
+    ctx.fillStyle = g.v >= 20 ? '#ffc93c' : g.v >= 4 ? '#a978ff' : '#ff5ea6'; heartPath(ctx, 0, -s / 2, s); ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.ellipse(-s * .2, -s * .22, s * .1, s * .07, -.6, 0, 7); ctx.fill(); ctx.restore(); }
   for (const k of picks) if (vis(k.x, k.y, 30)) { const e = { coin: '🪙', cilek: '🍓', balik: '🐟', sevgi: '💝', sandik: '🎁' }[k.k], s = k.k === 'sandik' ? 38 : 24, c = emo(e, s); ctx.drawImage(c, k.x - c.width / 2, k.y - c.height / 2 + Math.sin(T * 4 + k.x) * 3); }
   for (const f of fx) if (f.k === 'patiIn') { const k = 1 - f.t / .45; ctx.fillStyle = `rgba(255,120,180,${.15 + k * .25})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.stroke(); ctx.setLineDash([]); }
   const vEn = enemies.filter(e => vis(e.x, e.y, e.r * 1.4)).sort((a, b) => a.y - b.y);
@@ -558,23 +570,25 @@ function draw(dt) {
     const sq = e.boss ? 1 : 1 + Math.sin(T * 9 + e.ph) * .06, by = e.kind === 'ghost' || e.kind === 'bat' ? Math.sin(T * 6 + e.ph) * 4 : 0;
     ctx.save(); ctx.translate(e.x, e.y + by); ctx.scale((e.boss ? 1 : e.dir || 1) * (2 - sq), sq); ctx.drawImage(e.flash > 0 ? s.h : s.c, -s.s / 2, -s.s / 2); ctx.restore();
   }
-  for (const pt of pets) { const c = emo('🐱', 30); ctx.save(); ctx.translate(pt.x, pt.y + Math.sin(T * 14) * 2); ctx.scale(pt.face, 1); ctx.drawImage(c, -c.width / 2, -c.height / 2); ctx.restore(); }
+  for (const pt of pets) { const kl = P.w.kedicik || 1, c = emo(kl >= 5 ? '🦁' : '🐱', [0, 28, 32, 34, 36, 46][kl]); ctx.save(); ctx.translate(pt.x, pt.y + Math.sin(T * 14) * 2); ctx.scale(pt.face, 1); ctx.drawImage(c, -c.width / 2, -c.height / 2); ctx.restore(); }
   const sk = img(skinSrc(P.skin)), hh = 108;
   ctx.fillStyle = 'rgba(120,60,100,.22)'; ctx.beginPath(); ctx.ellipse(P.x, P.y + 26, 24, 8, 0, 0, 7); ctx.fill();
   if (sk.complete && sk.naturalWidth) { const ww = hh * sk.width / sk.height, bob = P.moving ? Math.abs(Math.sin(P.walk)) * 4 : Math.sin(T * 3) * 1.5, sq = P.moving ? 1 + Math.sin(P.walk * 2) * .03 : 1;
-    ctx.save(); ctx.translate(P.x, P.y + 28); ctx.scale(-P.face * sq, 2 - sq); ctx.globalAlpha = P.inv > 0 && Math.floor(T * 20) % 2 ? .45 : 1; ctx.drawImage(sk, -ww / 2, -hh - bob, ww, hh); ctx.restore(); ctx.globalAlpha = 1; }
-  if (P.w.ordek) { const l = P.w.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, im = img('ordek_ikon.png'); if (im.complete) for (let i = 0; i < n; i++) { const a = orbitA + i / n * Math.PI * 2; ctx.save(); ctx.translate(P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad); ctx.rotate(Math.sin(T * 8 + i) * .25); ctx.drawImage(im, -15, -21, 30, 41); ctx.restore(); } }
-  for (const p of projs) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(Math.sin(T * 10 + p.x) * .3); ctx.fillStyle = '#ff5d9e'; heartPath(ctx, 0, -9, 18); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore(); }
+    ctx.save(); ctx.translate(P.x, P.y + 28); ctx.scale(P.face * sq, 2 - sq); ctx.globalAlpha = P.inv > 0 && Math.floor(T * 20) % 2 ? .45 : 1; ctx.drawImage(sk, -ww / 2, -hh - bob, ww, hh); ctx.restore(); ctx.globalAlpha = 1; }
+  if (P.w.ordek) { const l = P.w.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, sc = [0, 1, 1.15, 1.25, 1.35, 1.8][l], im = img('ordek_ikon.png'); if (im.complete) for (let i = 0; i < n; i++) { const a = orbitA + i / n * Math.PI * 2; ctx.save(); ctx.translate(P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad); ctx.rotate(Math.sin(T * 8 + i) * .25); ctx.scale(sc, sc); if (l >= 5) { ctx.shadowColor = '#ffc93c'; ctx.shadowBlur = 18; } ctx.drawImage(im, -15, -21, 30, 41); ctx.restore(); } }
+  for (const p of projs) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(Math.sin(T * 10 + p.x) * .3); if (p.gold) { ctx.shadowColor = '#ffb000'; ctx.shadowBlur = 14; } ctx.fillStyle = p.gold ? '#ffc93c' : '#ff5d9e'; heartPath(ctx, 0, -p.sz / 2, p.sz); ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.restore(); }
   for (const f of fx) {
     if (f.k === 'puf') { const k = 1 - f.t / .35; ctx.fillStyle = `rgba(255,255,255,${.8 * (1 - k)})`; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; ctx.beginPath(); ctx.arc(f.x + Math.cos(a) * f.r * (.4 + k), f.y + Math.sin(a) * f.r * (.4 + k), f.r * .35 * (1 - k * .5), 0, 7); ctx.fill(); } }
     if (f.k === 'kalpcik') { ctx.globalAlpha = Math.min(1, f.t * 2); ctx.fillStyle = '#ff7eb6'; heartPath(ctx, f.x, f.y, 12); ctx.fill(); ctx.globalAlpha = 1; }
-    if (f.k === 'slash') { const k = f.t / .25; ctx.save(); ctx.translate(f.x + f.dx * 10, f.y - 8); ctx.scale(f.dx, 1);
-      const g = ctx.createLinearGradient(0, 0, f.w, 0); g.addColorStop(0, `rgba(255,140,200,${.85 * k})`); g.addColorStop(1, `rgba(255,220,240,${.2 * k})`);
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, -60); ctx.quadraticCurveTo(f.w * 1.15, -30 - (1 - k) * 20, f.w * .95, 40); ctx.quadraticCurveTo(f.w * .7, 0, 0, -60); ctx.fill();
-      ctx.strokeStyle = `rgba(255,255,255,${k})`; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, -60); ctx.quadraticCurveTo(f.w * 1.15, -30, f.w * .95, 40); ctx.stroke();
-      ctx.globalAlpha = k; ctx.drawImage(emo('✨', 16), f.w * .8 - 11, -31); paw(ctx, f.w * .55, 8, 16); ctx.restore(); ctx.globalAlpha = 1; }
-    if (f.k === 'patiIn') { const k = Math.min(1, (.45 - f.t) / .25), y = f.y - (1 - k) * 220; paw(ctx, f.x, y, f.r * 1.5, f.t < .1 ? f.t * 10 : 1); }
-    if (f.k === 'yildiz') { const k = Math.min(1, (.4 - f.t) / .28), c = emo('⭐', 34); ctx.drawImage(c, f.x - 120 * (1 - k) - c.width / 2, f.y - 300 * (1 - k) - c.height / 2);
+    if (f.k === 'slash') { const k = f.t / .25, w = f.w, hh = f.h; ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(Math.atan2(f.dy, f.dx));
+      const c1 = f.gold ? `rgba(255,205,70,${.9 * k})` : `rgba(255,140,200,${.85 * k})`, c2 = f.gold ? `rgba(255,250,200,${.25 * k})` : `rgba(255,220,240,${.2 * k})`;
+      const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, c1); g.addColorStop(1, c2);
+      if (f.gold) { ctx.shadowColor = '#ffd84a'; ctx.shadowBlur = 20; }
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(10, -hh); ctx.quadraticCurveTo(w * 1.15, -hh * .5 - (1 - k) * 20, w * .95, hh * .7); ctx.quadraticCurveTo(w * .7, 0, 10, -hh); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.strokeStyle = `rgba(255,255,255,${k})`; ctx.lineWidth = f.gold ? 5 : 3; ctx.beginPath(); ctx.moveTo(10, -hh); ctx.quadraticCurveTo(w * 1.15, -hh * .5, w * .95, hh * .7); ctx.stroke();
+      ctx.globalAlpha = k; ctx.drawImage(emo('✨', f.gold ? 24 : 16), w * .8 - 12, -hh * .55 - 12); paw(ctx, w * .55, hh * .15, f.gold ? 24 : 16); ctx.restore(); ctx.globalAlpha = 1; }
+    if (f.k === 'patiIn') { const k = Math.min(1, (.45 - f.t) / .25), y = f.y - (1 - k) * 220; paw(ctx, f.x, y, f.r * 1.5, f.t < .1 ? f.t * 10 : 1, f.gold); }
+    if (f.k === 'yildiz') { const k = Math.min(1, (.4 - f.t) / .28), c = emo(f.rb ? '🌟' : '⭐', f.sz); if (f.rb) { ctx.save(); ctx.filter = `hue-rotate(${f.hue | 0}deg) saturate(1.6)`; } ctx.drawImage(c, f.x - 120 * (1 - k) - c.width / 2, f.y - 300 * (1 - k) - c.height / 2); if (f.rb) ctx.restore();
       if (f.t < .12) { ctx.fillStyle = `rgba(255,240,150,${f.t * 6})`; ctx.beginPath(); ctx.arc(f.x, f.y, 34, 0, 7); ctx.fill(); } }
     if (f.k === 'isir') { ctx.globalAlpha = Math.min(1, f.t * 5); ctx.drawImage(emo('💢', 18), f.x - 12, f.y - 30); ctx.globalAlpha = 1; }
   }
@@ -611,7 +625,7 @@ function resumeGame() { $('pause').classList.remove('on'); state = 'play'; last 
 $('resume').onclick = resumeGame; $('pauseBtn').onclick = pauseGame;
 $('quit').onclick = () => { $('pause').classList.remove('on'); gameOver(false); };
 function gameOver(win) {
-  state = 'over'; joy = null; $('joy').style.display = 'none';
+  state = 'over'; joy = null; $('joy').style.display = 'none'; $('lvup').classList.remove('on'); $('pause').classList.remove('on');
   const earned = Math.round((coins + kills / 25 + Math.floor(T / 30) * 2 + (win ? 150 : 0)) * (1 + .15 * mlv('altin')));
   M.altin += earned; if (T > M.best) M.best = T; if (kills > M.bestKill) M.bestKill = kills; if (win) M.kazandi++; saveM();
   $('overImg').src = skinSrc(P.skin); $('overImg').style.transform = win ? '' : 'rotate(-8deg)';
@@ -632,7 +646,7 @@ $('toMenu').onclick = showMenu;
 $('hPlay').onclick = startGame;
 $('hExit').onclick = () => location.href = 'index.html';
 $('hSkin').onclick = () => { renderSkins(); $('skins').classList.add('on'); };
-$('tUp').onclick = () => { renderShop(); $('shop').classList.add('on'); };
+$('hUp').onclick = () => { renderShop(); $('shop').classList.add('on'); };
 $('hSet').onclick = () => { renderSet(); $('settings').classList.add('on'); };
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.scr').classList.remove('on'); showMenu(); });
 function showMenu() {
