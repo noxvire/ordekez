@@ -339,15 +339,16 @@ function solid(x0, x1, z0, z1) { solids.push([Math.min(x0, x1), Math.max(x0, x1)
 function plane(w, h, mat, x, y, z, rx = 0, ry = 0) { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); m.position.set(x, y, z); m.rotation.set(rx, ry, 0); scene.add(m); return m; }
 
 const H = 3;
+const skinClones = [];
 const wallM = lam(TX.wall), floorM = lam(TX.floor), ceilM = lam(TX.ceil);
 // zemin / tavan (dükkân + depo)
 plane(10, 8, floorM, 0, 0, 0, -Math.PI / 2);
 plane(10, 8, ceilM, 0, H, 0, Math.PI / 2);
-{ const t = TX.floor.clone(); t.repeat.set(3, 3); t.needsUpdate = true; plane(3, 3, lam({ map: t, color: 0x8a8070 }), -3.5, 0, -5.5, -Math.PI / 2); plane(3, 3, lam({ map: TX.ceil, color: 0x777066 }), -3.5, H, -5.5, Math.PI / 2); }
+{ const t = TX.floor.clone(); t.repeat.set(3, 3); t.needsUpdate = true; skinClones.push(t); plane(3, 3, lam({ map: t, color: 0x8a8070 }), -3.5, 0, -5.5, -Math.PI / 2); plane(3, 3, lam({ map: TX.ceil, color: 0x777066 }), -3.5, H, -5.5, Math.PI / 2); }
 // duvar parçası (yatay xz doğrultusunda)
 function wallSeg(x0, x1, z0, z1, y0 = 0, y1 = H, mat = wallM) {
   const w = Math.abs(x1 - x0) || .1, d = Math.abs(z1 - z0) || .1;
-  const tm = mat === wallM ? lam({ map: (() => { const t = TX.wall.clone(); t.repeat.set(Math.max(w, d) / 1.6, (y1 - y0) / 1.5); t.needsUpdate = true; return t; })() }) : mat;
+  const tm = mat === wallM ? lam({ map: (() => { const t = TX.wall.clone(); t.repeat.set(Math.max(w, d) / 1.6, (y1 - y0) / 1.5); t.needsUpdate = true; skinClones.push(t); return t; })() }) : mat;
   const m = box(w, y1 - y0, d, tm, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2); occluders.push(m);
   if (y0 < 1.5) solid(x0 - .05, x1 + .05, z0 - .05, z1 + .05);
   return m;
@@ -584,9 +585,17 @@ box(1.0, 2.1, .55, lam(TX.woodD), -1.4, 1.05, -7.15); box(.02, 1.9, .01, lam(0x1
 solid(-1.9, -.9, -7.45, -6.85);
 // masa + eski bilgisayar
 box(1.2, .06, .6, lam(TX.wood), -1.55, .75, -5.2); for (const [x, z] of [[-2.1, -5.45], [-1.0, -5.45], [-2.1, -4.95], [-1.0, -4.95]]) box(.05, .75, .05, lam(TX.woodD), x + .05, .375, z);
-const pcBody = box(.4, .32, .35, lam(0xcfc6b0), -1.6, .95, -5.25); const pcScr = box(.32, .22, .01, basic({ color: 0x2a6a4a }), -1.6, .96, -5.07);
-for (const m of [pcBody, pcScr]) { m.userData = { kind: 'pc' }; inter.push(m); } box(.5, .03, .18, lam(0xcfc6b0), -1.5, .79, -4.98);
-solid(-1.95, -1.0, -5.5, -4.9);
+// modern bilgisayar: odaya (bize) dönük ince monitör, klavye, mouse, kasa
+const pcM = lam(0x1a1c22), pcScrTex = ctex(64, 36, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#2a3a8a'); gr.addColorStop(1, '#8a3ad8'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, h - 4, w, 4); g.fillStyle = '#ffd84a'; g.fillRect(2, h - 3, 3, 2); for (let i = 0; i < 4; i++) { g.fillStyle = '#e8e8f0'; g.fillRect(3, 3 + i * 6, 4, 4); } g.fillStyle = '#fff'; g.font = '6px monospace'; g.fillText('ZeynepOS', 22, 18); });
+const pcBody = box(.04, .36, .62, pcM, -1.86, 1.13, -5.2);                       // monitör kasası
+const pcScr = box(.005, .32, .58, basic({ map: pcScrTex }), -1.835, 1.13, -5.2);  // ekran (+x yönüne, odaya bakar)
+box(.04, .18, .05, pcM, -1.9, .87, -5.2); box(.16, .015, .2, pcM, -1.88, .785, -5.2); // ayak
+const pcKb = box(.16, .02, .44, lam(0x24262c), -1.45, .79, -5.2); box(.14, .005, .4, basic({ color: 0x6a3ad8 }), -1.45, .802, -5.2);
+box(.1, .025, .06, pcM, -1.42, .79, -4.88);                                          // mouse
+const pcTower = box(.42, .46, .2, pcM, -1.75, .23, -5.62); box(.38, .4, .005, basic({ color: 0x3a2a6a }), -1.75, .23, -5.517); box(.02, .3, .006, basic({ color: 0xb04aff }), -1.6, .23, -5.514);
+const pcGlow = new THREE.PointLight(0x7a5aff, 1.4, 2.2, 1.6); pcGlow.position.set(-1.6, 1.1, -5.2); scene.add(pcGlow);
+for (const m of [pcBody, pcScr, pcKb]) { m.userData = { kind: 'pc' }; inter.push(m); }
+solid(-1.95, -1.0, -5.5, -4.9); solid(-1.97, -1.53, -5.73, -5.5);
 // halı, poster, pencere
 plane(1.8, 1.2, lam({ map: ctex(16, 12, (g, w, h) => { g.fillStyle = '#6a2a3a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d8b070'; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.fillStyle = '#d8b070'; g.fillRect(7, 5, 2, 2); }) }), 2.0, .005, -5.8, -Math.PI / 2);
 plane(.55, .8, lam(posterTex('KEDİ\nKULÜBÜ', '🐈‍⬛', '#3a2a5a', '♥')), 1.2, 1.7, -7.48);
@@ -1463,6 +1472,7 @@ function applySkin() {
     const tex = kind === 'floor' ? TX.floor : TX.wall, cv = tex.userData.canvas || tex.image, g = cv.getContext('2d');
     g.clearRect(0, 0, cv.width, cv.height); g.drawImage(skinCanvas(kind, (S && S.skin && S.skin[kind]) || SKINS[kind][0].id), 0, 0, cv.width, cv.height); tex.needsUpdate = true;
   }
+  for (const t of skinClones) t.needsUpdate = true;
 }
 const UPG2 = [
   { id: 'kedi', ad: '🐈 Pamuk (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 300 },
@@ -1825,7 +1835,7 @@ function frame(now) {
 }
 showMenu();
 requestAnimationFrame(frame);
-window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
+window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
 </script>
 </body>
 </html>
