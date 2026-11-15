@@ -1976,11 +1976,11 @@ function renderMenu() {
 function menuPanel(html) { const p = $('mPanel'); p.innerHTML = html; p.classList.remove('hidden'); $('mItems').classList.add('hidden'); p.querySelector('[data-close]').onclick = closeMenuPanel; }
 function closeMenuPanel() { $('mPanel').classList.add('hidden'); $('mItems').classList.remove('hidden'); SND.click(); }
 function menuGo(k) {
-  ac(); SND.click();
+  ac(); SND.click(); if (k === 'cont' || k === 'new') keyGuard();
   if (k === 'cont') { S = loadSave(); if (S) fadeTo(startNight); }
   else if (k === 'new') {
     const sv = loadSave();
-    if (sv && !sv.ended) { menuPanel(`<h3>YENİ OYUN</h3><p>Kayıtlı ilerlemen (Gece ${sv.night}) silinecek. Emin misin?</p><button id="mYes">Evet, baştan başla</button> <button data-close>Vazgeç</button>`); $('mYes').onclick = () => { $('mPanel').classList.add('hidden'); $('mItems').classList.remove('hidden'); S = freshSave(); fadeTo(startNight); }; }
+    if (sv && !sv.ended) { menuPanel(`<h3>YENİ OYUN</h3><p>Kayıtlı ilerlemen (Gece ${sv.night}) silinecek. Emin misin?</p><button id="mYes">Evet, baştan başla</button> <button data-close>Vazgeç</button>`); $('mYes').onclick = () => { keyGuard(); $('mPanel').classList.add('hidden'); $('mItems').classList.remove('hidden'); S = freshSave(); fadeTo(startNight); }; }
     else { S = freshSave(); fadeTo(startNight); }
   }
   else if (k === 'set') {
@@ -2010,6 +2010,12 @@ $('vol').oninput = e => { SET.vol = +e.target.value; if (master) master.gain.val
 $('sens').oninput = e => { SET.sens = +e.target.value; localStorage.setItem('dk_set', JSON.stringify(SET)); };
 
 let lockPending = 0, isLocked = false;
+// Ctrl+W sekmeyi kapatmasın: tam ekranda tuş kilidi + oyundayken çıkış uyarısı
+function keyGuard() {
+  try { if (!document.fullscreenElement) { const r = document.documentElement.requestFullscreen({ navigationUI: 'hide' }); if (r && r.then) r.then(() => { try { navigator.keyboard && navigator.keyboard.lock(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyR', 'KeyT', 'KeyN']).catch(() => {}); } catch (e) {} }).catch(() => {}); } } catch (e) {}
+}
+addEventListener('beforeunload', e => { if (state === 'play' || state === 'pc' || state === 'cam' || state === 'pause') { e.preventDefault(); e.returnValue = ''; } });
+addEventListener('keydown', e => { if (e.ctrlKey && ['KeyW', 'KeyS', 'KeyD', 'KeyR', 'KeyQ'].includes(e.code)) e.preventDefault(); }, true);
 function lockPointer() { if (state !== 'play' || dlg || document.pointerLockElement || performance.now() < lockPending) return; lockPending = performance.now() + 600; try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 let selfUnlock = false;   // fareyi oyunun kendisi bıraktıysa duraklatma menüsü açılmaz
 function unlockPointer() { if (document.pointerLockElement) { selfUnlock = true; document.exitPointerLock(); } }
