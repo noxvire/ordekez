@@ -461,7 +461,7 @@ const note = plane(.22, .28, lam({ map: ctex(16, 20, (g, w, h) => { g.fillStyle 
 note.rotation.z = .3; note.visible = false;
 // telefon
 // tezgâhta küçük radyo: arka plan müziği buradan çalar (E: aç/kapat)
-const radio = new THREE.Group(); radio.position.set(2.25, 1.05, counterZ - .22); radio.rotation.y = Math.PI + .25; scene.add(radio);
+const radio = new THREE.Group(); radio.position.set(1.75, 1.05, counterZ - .25); radio.rotation.y = Math.PI - .2; scene.add(radio);
 { const rm = lam(0x6a3a24), gm = lam(0x2a2420);
   box(.32, .18, .12, rm, 0, .09, 0, radio); box(.14, .12, .005, lam(0x1a1614), -.07, .09, .062, radio);
   for (let i = 0; i < 4; i++) box(.12, .01, .006, lam(0x3a3430), -.07, .045 + i * .03, .065, radio);
@@ -476,7 +476,7 @@ function updateMusic() {
   if (!radioOn || music.paused) return;
   const wp = radio.position, d = Math.hypot(camera.position.x - wp.x, camera.position.z - wp.z);
   const inMenu = state === 'menu';
-  music.volume = Math.min(1, (inMenu ? 0 : .16 * clamp(1.15 - d / 9, .25, 1)) * SET.vol);
+  music.volume = Math.min(1, (inMenu ? 0 : .085 * clamp(1.15 - d / 9, .25, 1)) * SET.vol);
 }
 const phone = new THREE.Group(); phone.position.set(2.85, 1.05, counterZ + .22); scene.add(phone);
 box(.2, .08, .26, lam(0x7a1a1a), 0, .04, 0, phone); box(.24, .06, .07, lam(0x6a1414), 0, .11, 0, phone);
