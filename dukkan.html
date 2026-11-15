@@ -802,7 +802,7 @@ function animRig(p, moving, dt) {
 // PS1 tarzı düşük poligonlu 3B model: çizimdeki ön/arka resimler gövdeye kaplanır
 // çocuk: PS1 tarzı 3B model (çizimdeki renkler: lacivert kapüşonlu, siyah kargo, kıvırcık saç, gözlük, sırt çantası)
 function makeKidModel(id, def, fake) {
-  const st = def.kid3d, H = def.frames.h, sc = H / 1.42, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(sc); g.add(body);
+  const st = def.kid3d, H = def.frames.h, sc = H / 1.66, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(sc); g.add(body);
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76; drawFace(cv, def, fake);
   const noiseT = (base, dots, n = 40, w = 32, h = 32, extra) => ctex(w, h, (q, W, Hh) => { q.fillStyle = base; q.fillRect(0, 0, W, Hh); for (let i = 0; i < n; i++) { q.fillStyle = dots[i % dots.length]; q.fillRect(Math.random() * W | 0, Math.random() * Hh | 0, 2, 2); } extra && extra(q, W, Hh); });
   const floral = (base, n) => noiseT(base, ['#6a5a8a', '#8a7aa0', '#3a3050', '#9a8a70', '#5a4a6a'], n);
@@ -1347,7 +1347,7 @@ function nameTag(name, fake) {
 }
 function spawnCustomer(v) {
   const p = makePerson(v.who, v.fake); p.g.position.copy(OUT); scene.add(p.g);
-  { const def = CH[v.who], tag = nameTag(def.ad, v.fake); tag.position.y = (def.frames ? def.frames.h + .2 : def.sprite ? def.sprite.h + .22 : 1.95 * (def.h || 1)); p.g.add(tag); p.tag = tag; }
+  { const def = CH[v.who], tag = nameTag(def.ad, v.fake); p.g.updateMatrixWorld(true); const bb = new THREE.Box3().setFromObject(p.g); tag.position.y = (isFinite(bb.max.y) ? bb.max.y - p.g.position.y : (def.sprite ? def.sprite.h : 1.9)) + .28; p.g.add(tag); p.tag = tag; }
   if (v.fake) p.g.traverse(o => { if (o.isMesh) o.layers.enable(1); });
   N.cust = { v, p, st: 'in', path: [DOOR_IN.clone(), DESK.clone()], bellDone: false, pi: 0, wait: 0, angry: 0 };
 }
