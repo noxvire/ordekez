@@ -60,6 +60,30 @@
   #till .act .ok{background:#3c6a2a;border-color:#7ac35a}
   #till .msg{min-height:20px;font-size:14px;color:#ffb070;margin-top:6px}
   /* kâğıt */
+  #pc{position:fixed;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55)}
+  #pc .win{width:min(860px,96vw);max-height:90vh;display:flex;flex-direction:column;background:#c0c0c0;color:#111;border:3px solid;border-color:#fff #444 #444 #fff;box-shadow:0 20px 60px #000;font-family:"Courier New",monospace}
+  #pc .bar{display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#1a2a8a,#3a6ac8);color:#fff;padding:5px 8px}
+  #pc .bar b{flex:1;letter-spacing:2px}
+  #pc .bar button{font:inherit;background:#c0c0c0;border:2px solid;border-color:#fff #444 #444 #fff;cursor:pointer;padding:0 7px}
+  #pc .tabs{display:flex;gap:4px;padding:6px 8px 0}
+  #pc .tabs button{font:inherit;font-size:14px;padding:6px 12px;background:#b0b0b0;border:2px solid;border-color:#fff #444 #444 #fff;cursor:pointer}
+  #pc .tabs button.on{background:#e0e0e0;font-weight:700}
+  #pcBody{padding:10px;overflow:auto;background:#e0e0e0;margin:0 8px 8px;border:2px solid;border-color:#444 #fff #fff #444;min-height:340px}
+  #pcBody h4{margin:6px 0;font-size:14px;letter-spacing:1px}
+  #pcBody .row{display:flex;align-items:center;gap:8px;padding:5px 4px;border-bottom:1px dashed #999;font-size:14px}
+  #pcBody .row .n{flex:1}
+  #pcBody .row small{color:#555}
+  #pcBody button{font:inherit;font-size:13px;padding:3px 10px;background:#c0c0c0;border:2px solid;border-color:#fff #444 #444 #fff;cursor:pointer}
+  #pcBody button:disabled{color:#888;cursor:default}
+  #pcBody .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+  #pcBody .sw{display:inline-block;width:34px;height:22px;border:2px solid #444;vertical-align:middle;image-rendering:pixelated;background-size:cover}
+  #pcBody .note{font-size:13px;color:#333;margin-top:8px}
+  #camUI{position:fixed;inset:0;z-index:6;pointer-events:none;font-family:"Courier New",monospace;color:#fff;text-shadow:2px 2px 0 #000}
+  #camUI .top{position:absolute;left:20px;right:20px;top:16px;display:flex;justify-content:space-between;font-size:20px}
+  #camUI .rec{color:#ff3a3a;animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+  #camUI .bot{position:absolute;left:0;right:0;bottom:22px;display:flex;justify-content:center;align-items:center;gap:20px;font-size:15px}
+  #camUI button{pointer-events:auto;font:inherit;font-size:16px;padding:6px 14px;background:rgba(0,0,0,.6);color:#fff;border:2px solid #fff;cursor:pointer}
   #paper{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-1deg);width:min(460px,92vw);background:#eadfbf;color:#2c2210;padding:26px 28px;z-index:6;box-shadow:6px 6px 0 rgba(0,0,0,.6);font-size:16px;line-height:1.55}
   #paper h3{font-size:18px;text-align:center;margin-bottom:12px;letter-spacing:2px}
   #paper ol{padding-left:22px}
@@ -143,6 +167,14 @@
 </div>
 
 <div id="paper" class="hidden"></div>
+<div id="pc" class="hidden">
+  <div class="win">
+    <div class="bar"><b>ZeynepOS 98</b><span id="pcMoney"></span><button id="pcX">✕</button></div>
+    <div class="tabs"><button data-t="shop">🛒 Alışveriş</button><button data-t="skin">🎨 Özelleştirme</button><button data-t="cam">📹 Kameralar</button></div>
+    <div id="pcBody"></div>
+  </div>
+</div>
+<div id="camUI" class="hidden"><div class="top"><span class="rec">● REC</span><b id="camName"></b><span id="camClock"></span></div><div class="bot"><button id="camPrev">◀ A</button><span>Esc / E: çık</span><button id="camNext">D ▶</button></div></div>
 
 <div id="menu">
   <div class="stage">
@@ -267,19 +299,20 @@ function posterTex(title, emoji, bg, sub) {
    OYUNLAR (ürünler)
    ===================================================================== */
 const GAMES = {
-  ordekavi: { ad: 'Ördek Avcısı 2', cat: 'Aksiyon', p: 180, e: '🦆', c: '#2f6a2a' },
-  aysavas:  { ad: 'Ay Savaşları', cat: 'Aksiyon', p: 200, e: '🌙', c: '#20304a' },
-  sberdi:   { ad: 'Süper Erdi Bros.', cat: 'Aksiyon', p: 150, e: '🍄', c: '#a02020' },
-  bkr64:    { ad: 'Backrooms 64', cat: 'Korku', p: 160, e: '🚪', c: '#8a7a20' },
-  sessiz:   { ad: 'Sessiz Koridor', cat: 'Korku', p: 170, e: '👁️', c: '#2a2a2a' },
-  zkombat:  { ad: 'Zeynep Kombat', cat: 'Dövüş', p: 190, e: '🥋', c: '#6a1a5a' },
-  erdikart: { ad: 'Erdi Kart 64', cat: 'Yarış', p: 220, e: '🏎️', c: '#c06010' },
-  futbol:   { ad: 'Pro Ördek Futbol 99', cat: 'Spor', p: 170, e: '⚽', c: '#1a6a30' },
-  ciftlik:  { ad: 'Ördek Çiftliği', cat: 'Aile', p: 140, e: '🌾', c: '#7a9a30' },
-  konsol:   { ad: 'PlayKutu Konsol', cat: 'Donanım', p: 1500, e: '🎮', c: '#3a3a44' },
-  kol:      { ad: 'Oyun Kolu', cat: 'Donanım', p: 250, e: '🕹️', c: '#22222a' },
-  hafiza:   { ad: 'Hafıza Kartı', cat: 'Donanım', p: 120, e: '💾', c: '#20406a' },
+  ordekavi: { ad: 'Ördek Avcısı 2', cat: 'Aksiyon', p: 100, e: '🦆', c: '#2f6a2a' },
+  aysavas:  { ad: 'Ay Savaşları', cat: 'Aksiyon', p: 110, e: '🌙', c: '#20304a' },
+  sberdi:   { ad: 'Süper Erdi Bros.', cat: 'Aksiyon', p: 90, e: '🍄', c: '#a02020' },
+  bkr64:    { ad: 'Backrooms 64', cat: 'Korku', p: 95, e: '🚪', c: '#8a7a20' },
+  sessiz:   { ad: 'Sessiz Koridor', cat: 'Korku', p: 100, e: '👁️', c: '#2a2a2a' },
+  zkombat:  { ad: 'Zeynep Kombat', cat: 'Dövüş', p: 105, e: '🥋', c: '#6a1a5a' },
+  erdikart: { ad: 'Erdi Kart 64', cat: 'Yarış', p: 120, e: '🏎️', c: '#c06010' },
+  futbol:   { ad: 'Pro Ördek Futbol 99', cat: 'Spor', p: 95, e: '⚽', c: '#1a6a30' },
+  ciftlik:  { ad: 'Ördek Çiftliği', cat: 'Aile', p: 80, e: '🌾', c: '#7a9a30' },
+  konsol:   { ad: 'PlayKutu Konsol', cat: 'Donanım', p: 900, e: '🎮', c: '#3a3a44' },
+  kol:      { ad: 'Oyun Kolu', cat: 'Donanım', p: 150, e: '🕹️', c: '#22222a' },
+  hafiza:   { ad: 'Hafıza Kartı', cat: 'Donanım', p: 60, e: '💾', c: '#20406a' },
 };
+const costOf = id => Math.round(GAMES[id].p * .9);   // toptancı fiyatı
 const START_STOCK = { ordekavi: 4, aysavas: 3, sberdi: 4, bkr64: 3, sessiz: 2, zkombat: 3, erdikart: 4, futbol: 3, ciftlik: 3, konsol: 2, kol: 3, hafiza: 4 };
 function coverTex(id) {
   const G = GAMES[id];
@@ -367,6 +400,7 @@ let flashOn = false;
 const counterX0 = 0, counterX1 = 3, counterZ = .6;
 box(3, 1, .7, lam(TX.wood), 1.5, .5, counterZ); box(3.1, .06, .8, lam(TX.woodD), 1.5, 1.02, counterZ); solid(-.05, 3.05, .2, 1.0);
 const counterTop = box(1.7, .02, .6, new THREE.MeshBasicMaterial({ visible: false }), 1.2, 1.06, counterZ); counterTop.userData = { kind: 'counter' }; inter.push(counterTop);
+function dropCounterItem(it) { scene.remove(it.mesh); const i = inter.indexOf(it.mesh); if (i >= 0) inter.splice(i, 1); }
 const counterSlots = [[1.2, .5], [.82, .5], [1.58, .5], [1.2, .72]];   // ilki tezgâhın tam ortası
 // kasa makinesi
 const reg = new THREE.Group(); reg.position.set(2.45, 1.05, counterZ - .05); scene.add(reg);
@@ -394,9 +428,16 @@ const phone = new THREE.Group(); phone.position.set(2.85, 1.05, counterZ + .22);
 box(.2, .08, .26, lam(0x7a1a1a), 0, .04, 0, phone); box(.24, .06, .07, lam(0x6a1414), 0, .11, 0, phone);
 phone.children.forEach(m => { m.userData = { kind: 'phone' }; inter.push(m); });
 // kedi (geliştirme)
-const cat = new THREE.Group(); cat.position.set(2.0, 1.05, counterZ - .2); cat.visible = false; scene.add(cat);
+// kedi köşesi: tezgâhın sağında yerde minder ve mama kabı
+{ const cush = new THREE.Mesh(new THREE.CylinderGeometry(.34, .38, .1, 12), lam(0x7a3a5a)); cush.position.set(3.5, .05, .15); scene.add(cush);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(.33, .06, 6, 14), lam(0x8a4a6a)); rim.rotation.x = Math.PI / 2; rim.position.set(3.5, .11, .15); scene.add(rim);
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.09, .07, .06, 10), lam(0xc0c4c8)); bowl.position.set(3.55, .03, .7); scene.add(bowl);
+  box(.12, .01, .12, lam(0x8a5a2a), 3.55, .065, .7);
+  plane(.3, .12, basic({ map: signTex('PAMUK', '#3a2030', '#ffd8e8', 32, 12) }), 3.5, .5, .99, 0, Math.PI).visible = true; }
+const cat = new THREE.Group(); cat.position.set(3.5, .1, .15); cat.rotation.y = -.6; cat.visible = false; scene.add(cat);
 { const cm = lam(0xe8e4dc); box(.34, .16, .16, cm, 0, .1, 0, cat); box(.14, .14, .13, cm, .2, .2, 0, cat); box(.04, .06, .03, cm, .2, .3, .04, cat); box(.04, .06, .03, cm, .2, .3, -.04, cat); box(.18, .03, .03, cm, -.24, .16, 0, cat);
   box(.02, .02, .005, basic({ color: 0x55ff55 }), .27, .22, .04, cat); box(.02, .02, .005, basic({ color: 0x55ff55 }), .27, .22, -.04, cat); }
+cat.traverse(o => { if (o.isMesh) { o.userData = { kind: 'cat' }; inter.push(o); } });
 // neon tabela (geliştirme)
 const neon = plane(2.4, .5, basic({ map: signTex('OYUN DÜKKÂNI', '#000', '#ff3ad8', 96, 18), transparent: true }), -1.25, 2.65, 3.98, 0, Math.PI); neon.visible = false;
 const neonL = new THREE.PointLight(0xff4ad8, 0, 4, 1.5); neonL.position.set(-1.25, 2.6, 3.4); scene.add(neonL);
@@ -513,7 +554,7 @@ const BR = { x0: -2, x1: 5, z0: -7.5, z1: -4 };
 { const t = TX.floor.clone(); const wf = ctex(32, 32, (g, w, h) => { noiseFill(g, w, h, '#5a3a24', .2, 220); for (let y = 0; y < h; y += 8) { g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(0, y, w, 1); } for (let i = 0; i < 4; i++) { g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect((i * 13) % w, (i * 8) % h, 1, 8); } }, [7, 3.5]);
   plane(7, 3.5, lam(wf), 1.5, .001, -5.75, -Math.PI / 2); plane(7, 3.5, lam({ map: TX.ceil, color: 0x9a8f80 }), 1.5, H, -5.75, Math.PI / 2); }
 const brWallM = lam({ map: ctex(32, 32, (g, w, h) => { noiseFill(g, w, h, '#5a4a6a', .12, 160); for (let x = 0; x < w; x += 6) { g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(x, 0, 1, h); } for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(255,230,240,.18)'; g.fillRect((i * 11) % w + 2, (i * 7) % h, 2, 2); } }, [5, 2]) });
-wallSeg(-2, 5, -7.6, -7.5, 0, H, brWallM);
+wallSeg(-2, -.8, -7.6, -7.5, 0, H, brWallM); wallSeg(.4, 5, -7.6, -7.5, 0, H, brWallM); wallSeg(-.8, .4, -7.6, -7.5, 0, 1.25, brWallM); wallSeg(-.8, .4, -7.6, -7.5, 2.15, H, brWallM);
 plane(2.65, H, brWallM, -.675, H / 2, -4.11, 0, Math.PI); plane(3.45, H, brWallM, 3.275, H / 2, -4.11, 0, Math.PI); plane(.9, H - 2.3, brWallM, 1.1, 2.3 + (H - 2.3) / 2, -4.11, 0, Math.PI); const rightWall2 = wallSeg(5, 5.1, -7.5, -4, 0, H, brWallM); wallSeg(-2.1, -2, -7.6, -7);
 // kapı
 const bedDoorPivot = new THREE.Group(); bedDoorPivot.position.set(.65, 0, -4.05); scene.add(bedDoorPivot);
@@ -542,12 +583,35 @@ box(1.0, 2.1, .55, lam(TX.woodD), -1.4, 1.05, -7.15); box(.02, 1.9, .01, lam(0x1
 solid(-1.9, -.9, -7.45, -6.85);
 // masa + eski bilgisayar
 box(1.2, .06, .6, lam(TX.wood), -1.55, .75, -5.2); for (const [x, z] of [[-2.1, -5.45], [-1.0, -5.45], [-2.1, -4.95], [-1.0, -4.95]]) box(.05, .75, .05, lam(TX.woodD), x + .05, .375, z);
-box(.4, .32, .35, lam(0xcfc6b0), -1.6, .95, -5.25); box(.32, .22, .01, basic({ color: 0x1a3a2a }), -1.6, .96, -5.07); box(.5, .03, .18, lam(0xcfc6b0), -1.5, .79, -4.98);
+const pcBody = box(.4, .32, .35, lam(0xcfc6b0), -1.6, .95, -5.25); const pcScr = box(.32, .22, .01, basic({ color: 0x2a6a4a }), -1.6, .96, -5.07);
+for (const m of [pcBody, pcScr]) { m.userData = { kind: 'pc' }; inter.push(m); } box(.5, .03, .18, lam(0xcfc6b0), -1.5, .79, -4.98);
 solid(-1.95, -1.0, -5.5, -4.9);
 // halı, poster, pencere
 plane(1.8, 1.2, lam({ map: ctex(16, 12, (g, w, h) => { g.fillStyle = '#6a2a3a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d8b070'; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.fillStyle = '#d8b070'; g.fillRect(7, 5, 2, 2); }) }), 2.0, .005, -5.8, -Math.PI / 2);
 plane(.55, .8, lam(posterTex('KEDİ\nKULÜBÜ', '🐈‍⬛', '#3a2a5a', '♥')), 1.2, 1.7, -7.48);
-plane(1.2, .9, lam({ map: TX.street }), -.2, 1.7, -7.48); box(1.3, .06, .08, lam(TX.woodD), -.2, 2.17, -7.46); box(1.3, .06, .08, lam(TX.woodD), -.2, 1.23, -7.46); box(.06, .9, .08, lam(TX.woodD), -.2, 1.7, -7.46);
+// gerçek pencere: arka sokağa bakar
+{ const fm = lam(TX.woodD);
+  box(1.3, .07, .2, fm, -.2, 2.17, -7.55); box(1.3, .1, .3, fm, -.2, 1.22, -7.5); box(.07, .9, .2, fm, -.83, 1.7, -7.55); box(.07, .9, .2, fm, .43, 1.7, -7.55); box(.05, .9, .06, fm, -.2, 1.7, -7.58); box(1.24, .04, .06, fm, -.2, 1.7, -7.58);
+  plane(1.2, .9, new THREE.MeshBasicMaterial({ color: 0x6a80a8, transparent: true, opacity: .14, depthWrite: false }), -.2, 1.7, -7.56); }
+// dükkânın arkası: ıslak ara sokak
+{ const ag = ctex(32, 32, (g, w, h) => { noiseFill(g, w, h, '#1c1b20', .25, 260); g.fillStyle = 'rgba(120,140,170,.12)'; for (let i = 0; i < 6; i++) g.fillRect(Math.random() * w | 0, Math.random() * h | 0, 6, 2); }, [8, 4]);
+  plane(22, 10, lam(ag), 1, -.01, -12.6, -Math.PI / 2);
+  const brick = ctex(32, 32, (g, w, h) => { g.fillStyle = '#3a2420'; g.fillRect(0, 0, w, h); g.fillStyle = '#2a1814'; for (let y = 0; y < h; y += 6) { g.fillRect(0, y, w, 1); for (let x = (y / 6 % 2) * 6; x < w; x += 12) g.fillRect(x, y, 1, 6); } }, [10, 4]);
+  plane(22, 9, lam(brick), 1, 4.5, -17, 0, 0);
+  box(2.2, 1.6, .02, basic({ color: 0x2a2416 }), 3.5, 4.2, -16.98); box(.8, .6, .02, basic({ color: 0xd8b860 }), 3.5, 4.2, -16.96);   // komşunun ışıklı penceresi
+  box(1.6, 1.1, .9, lam(0x24402c), -2.4, .55, -9.4); box(1.7, .08, 1.0, lam(0x1a3020), -2.4, 1.14, -9.4);   // çöp konteyneri
+  for (let x = -5; x <= 7; x += .5) box(.06, 1.6, .06, lam(0x3a3a3e), x, .8, -14);
+  box(12.2, .05, .05, lam(0x3a3a3e), 1, 1.5, -14); box(12.2, .05, .05, lam(0x3a3a3e), 1, .4, -14);
+  box(.12, 4, .12, lam(0x2a2a2a), 4.2, 2, -12); box(.6, .1, .2, basic({ color: 0xffc070 }), 4.0, 3.95, -12);
+  const bl = new THREE.PointLight(0xffb060, 4, 11, 1.4); bl.position.set(4, 3.6, -11.8); scene.add(bl);
+  for (let i = 0; i < 5; i++) box(.5, .5, .5, lam(TX.box), -4 + i * .35, .25 + (i % 2) * .5, -8.2 - (i % 3) * .3);
+  // arka kapı (sokak tarafı)
+  box(1, 2.2, .06, lam(0x3a3f44), 2.6, 1.1, -7.66);
+}
+const RAIN2_N = 500, rain2Geo = new THREE.BufferGeometry(), rain2Pos = new Float32Array(RAIN2_N * 3);
+for (let i = 0; i < RAIN2_N; i++) { rain2Pos[i * 3] = rand(-6, 8); rain2Pos[i * 3 + 1] = rand(0, 6); rain2Pos[i * 3 + 2] = rand(-16.5, -7.8); }
+rain2Geo.setAttribute('position', new THREE.BufferAttribute(rain2Pos, 3));
+scene.add(new THREE.Points(rain2Geo, new THREE.PointsMaterial({ color: 0x7a8aa8, size: .03, transparent: true, opacity: .5 })));
 
 /* =====================================================================
    KİŞİLER
@@ -746,6 +810,7 @@ const SND = {
   glitch() { for (let i = 0; i < 6; i++) { tone(rand(200, 2000), rand(100, 3000), .05, .06, 'square', i * .05); } noise(.35, .25, 3000, 'highpass'); },
   hiss() { noise(.9, .3, 4500, 'highpass'); },
   ring() { for (let k = 0; k < 2; k++) for (let i = 0; i < 10; i++) tone(i % 2 ? 480 : 440, i % 2 ? 480 : 440, .045, .07, 'square', k * .5 + i * .045); },
+  purr() { for (let i = 0; i < 6; i++) tone(52, 48, .22, .08, 'sawtooth', i * .24); },
   click() { tone(1200, 600, .03, .08, 'square'); },
   clunk() { noise(.4, .9, 150); tone(80, 35, .4, .5, 'square'); },
   whisper() { for (let i = 0; i < 6; i++) noise(.3, .18, rand(1800, 3200), 'bandpass', 3, i * .2); },
@@ -769,7 +834,7 @@ function ambStop() { if (!ambNodes) return; try { ambNodes.hum.stop(); ambNodes.
    ===================================================================== */
 const SAVE_KEY = 'dk_save';
 let S = null;   // kalıcı (gece arası)
-function freshSave() { return { night: 1, money: 300, stock: { ...START_STOCK }, upg: {}, lanet: 0, fakeRefused: 0, rel: {}, flags: {}, best: 0, ended: false }; }
+function freshSave() { return { night: 1, money: 0, incoming: {}, skin: { floor: 'dama', wall: 'yesil' }, owned: { dama: 1, yesil: 1 }, stock: { ...START_STOCK }, upg: {}, lanet: 0, fakeRefused: 0, rel: {}, flags: {}, best: 0, ended: false }; }
 function loadSave() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return null; } }
 function writeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 
@@ -895,19 +960,23 @@ const keys = {};
 
 function applyUpgrades() {
   cat.visible = !!S.upg.kedi; neon.visible = !!S.upg.neon; neonL.intensity = S.upg.neon ? 2.5 : 0; mon.visible = !!S.upg.kamera;
+  const ci = inter.indexOf(cat.children[0]); if (!cat.visible) cat.children.forEach(m => { const i = inter.indexOf(m); if (i >= 0) inter.splice(i, 1); }); else cat.children.forEach(m => { if (!inter.includes(m)) inter.push(m); });
   for (const t of tubes) t.base = S.upg.lamba ? 7 : 5.5;
 }
 function refreshShelves() {
   for (const id in shelfBoxes) shelfBoxes[id].forEach((b, k) => { b.visible = k < (N ? N.stock[id] : S.stock[id]); });
 }
 function startNight() {
-  setShopOpen(true);
+  setShopOpen(false);
+  S.incoming = S.incoming || {}; S.skin = S.skin || { floor: 'dama', wall: 'yesil' }; S.owned = S.owned || { dama: 1, yesil: 1 };
+  let got = 0; for (const [id, q] of Object.entries(S.incoming)) { S.stock[id] = (S.stock[id] || 0) + q; got += q; } S.incoming = {};
+  applySkin();
   tut = null; tutArrow.visible = false;
   if (N && N.cust) scene.remove(N.cust.p.g);
   if (dlg) { dlg = null; $('dlg').classList.add('hidden'); }
   const def = NIGHTS[S.night];
-  N = { def, t: 0, stock: { ...S.stock }, earned: 0, tips: 0, served: 0, lost: 0, queue: def.visits.slice(), events: def.events.slice(), cust: null, done: false, power: true, tvMode: 'demo', tvT: 0, phone: null, closed: false, lanetTonight: 0 };
-  held = null; setHeld(null); counterItems.forEach(c => scene.remove(c.mesh)); counterItems = [];
+  N = { def, opened: false, gap: 4, t: 0, stock: { ...S.stock }, earned: 0, tips: 0, served: 0, lost: 0, queue: def.visits.slice(), events: def.events.slice(), cust: null, done: false, power: true, tvMode: 'demo', tvT: 0, phone: null, closed: false, lanetTonight: 0 };
+  held = null; setHeld(null); counterItems.forEach(dropCounterItem); counterItems = [];
   P.pos.set(3.0, 0, -5.6); P.yaw = 2.2; P.pitch = -.05; bedDoorTarget = 0; bedDoorOpen = 0; bedDoorPivot.rotation.y = 0; solids.includes(bedDoorSolid) || solids.push(bedDoorSolid);
   for (const t of tubes) { t.off = false; t.flick = 0; }
   depoTarget = 0; depoOpen = 0; depoPivot.rotation.y = 0; solids.includes(depoSolid) || solids.push(depoSolid);
@@ -915,8 +984,9 @@ function startNight() {
   applyUpgrades(); refreshShelves(); writeSave();
   $('menu').classList.add('hidden'); $('sum').classList.add('hidden'); $('hud').classList.remove('hidden');
   state = 'play'; ambStart(); lockPointer();
-  showTitle(def.title, def.sub);
-  if (S.night === 1) setTimeout(() => { if (state === 'play' && S.night === 1 && hintT < 100) hint('Odadan çık ve dükkâna geç. Kasanın yanındaki notu oku (E).'); }, 2500);
+  showTitle('GÜN ' + S.night, def.sub);
+  if (got) setTimeout(() => toast(`📦 Siparişlerin geldi: ${got} ürün raflara dizildi.`, 4), 3600);
+  setTimeout(() => { if (state === 'play' && hintT < 100) hint('Uyandın. Dükkâna geç ve kapıdaki tabelayı çevirip dükkânı aç.', 9999); }, 2500);
   updateHud(true);
 }
 
@@ -1128,7 +1198,7 @@ $('tOk').onclick = () => {
   if (d < 0) { SND.beep(); renderTill(`Müşteri: "Para üstü eksik! ${-d} ₺ daha vermen lazım."`); return; }
   closeTill(true);
   N.earned += t.pay - t.given; S.money += t.pay - t.given; N.served++;
-  for (const it of counterItems) scene.remove(it.mesh); counterItems = [];
+  for (const it of counterItems) dropCounterItem(it); counterItems = [];
   SND.drawer(); SND.beep();
   if (d > 0) toast(`${d} ₺ fazla verdin...`);
   if (tut) tutSet(null);
@@ -1209,7 +1279,9 @@ const EV = {
     const wp = new THREE.Vector3(); b.getWorldPosition(wp);
     N.stock[id]--; refreshShelves();
     const m = boxMesh(id); m.position.copy(wp); scene.add(m);
-    N.fall = { m, vy: 0, id, done: false };
+    const nrm = new THREE.Vector3(0, 0, 1).applyQuaternion(b.parent.getWorldQuaternion(new THREE.Quaternion())); nrm.y = 0; nrm.normalize();
+    const tFall = Math.sqrt(2 * Math.max(.2, wp.y) / 9.8), dist = .55;
+    N.fall = { m, vy: 1.2, vx: nrm.x * dist / (tFall + .25), vz: nrm.z * dist / (tFall + .25), id, done: false };
     SND.thud(); setTimeout(() => toast('Raftan bir şey düştü...'), 300);
   },
   tvName() { N.tvMode = 'name'; N.tvT = 3; SND.static(2.5); glitch = .6; },
@@ -1307,7 +1379,9 @@ function promptFor(f) {
     case 'depoDoor': return depoTarget ? 'Kapıyı kapat' : 'Depoyu aç';
     case 'bedDoor': return bedDoorTarget ? 'Kapıyı kapat' : 'Odaya gir';
     case 'bed': return N && N.canSleep ? 'Uyu (günü bitir)' : 'Yatak';
-    case 'sign': return N && N.allDone && !N.shopClosed ? 'Tabelayı çevir: KAPALI' : N && N.shopClosed ? '' : 'Tabela: AÇIK';
+    case 'cat': return "Pamuk'u sev";
+    case 'pc': return 'Bilgisayarı kullan';
+    case 'sign': return !N ? '' : !N.opened ? 'Dükkânı aç (tabelayı çevir: AÇIK)' : N.allDone && !N.shopClosed ? 'Dükkânı kapat (tabelayı çevir: KAPALI)' : N.shopClosed ? '' : 'Tabela: AÇIK';
     case 'fall': return held ? '' : 'Yerden al';
   }
   return '';
@@ -1330,9 +1404,12 @@ function interact() {
     case 'bedDoor': bedDoorTarget = bedDoorTarget ? 0 : 1; SND.drawer(); { const i = solids.indexOf(bedDoorSolid); if (bedDoorTarget && i >= 0) solids.splice(i, 1); else if (!bedDoorTarget && i < 0) solids.push(bedDoorSolid); } break;
     case 'bed': if (N.canSleep) goSleep(); else toast(N.allDone && !N.shopClosed ? 'Önce dükkânı kapat (kapıdaki tabela).' : N.shopClosed ? 'Bir şey daha olacak gibi...' : 'Daha müşteriler gelecek. Dükkâna dön.'); break;
     case 'sign':
-      if (N.allDone && !N.shopClosed) { N.shopClosed = true; N.closedAt = performance.now(); setShopOpen(false); SND.click(); SND.drawer(); toast('Dükkân kapandı.', 2.5); $('hint').classList.add('hidden'); hintT = 0; }
+      if (!N.opened) { N.opened = true; N.gap = 3; setShopOpen(true); SND.click(); SND.bell(); toast('Dükkân açıldı. Müşteriler gelecek.', 2.5); $('hint').classList.add('hidden'); hintT = 0; if (S.night === 1) setTimeout(() => { if (hintT < 100) hint('Kasanın yanındaki notu oku (E). Müşteri gelince ona bak ve E bas.', 9); }, 1500); updateHud(true); }
+      else if (N.allDone && !N.shopClosed) { N.shopClosed = true; N.closedAt = performance.now(); setShopOpen(false); SND.click(); SND.drawer(); toast('Dükkân kapandı.', 2.5); $('hint').classList.add('hidden'); hintT = 0; }
       else if (!N.allDone) toast('Daha müşteri gelecek, dükkân açık kalmalı.');
       break;
+    case 'cat': SND.purr(); toast('🐈 Prrr... Pamuk mırlıyor.', 2); break;
+    case 'pc': openPC(); break;
     case 'fall': if (!held) { scene.remove(N.fall.m); N.fall.taken = true; setHeld(N.fall.id); SND.pick(); } break;
   }
 }
@@ -1364,6 +1441,69 @@ function goSleep() {
   $('fade').classList.add('on'); toast('Zzz...', 2);
   setTimeout(() => { endNight(); setTimeout(() => $('fade').classList.remove('on'), 400); }, 1500);
 }
+/* ---------- yatak odasındaki bilgisayar ---------- */
+const SKINS = {
+  floor: [
+    { id: 'dama', ad: 'Damalı karo', p: 0, draw: (g, w, h) => { for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) { g.fillStyle = (x + y) % 2 ? '#2b2a26' : '#8b8576'; g.fillRect(x * 16, y * 16, 16, 16); } } },
+    { id: 'parke', ad: 'Ahşap parke', p: 120, draw: (g, w, h) => { noiseFill(g, w, h, '#6a4428', .2, 200); for (let y = 0; y < h; y += 8) { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, y, w, 1); g.fillRect((y * 3) % w, y, 1, 8); } } },
+    { id: 'hali', ad: 'Mor halıfleks', p: 150, draw: (g, w, h) => { noiseFill(g, w, h, '#3a2a4a', .18, 300); g.fillStyle = 'rgba(160,120,200,.15)'; for (let i = 0; i < 8; i++) g.fillRect((i * 9) % w, (i * 5) % h, 3, 3); } },
+    { id: 'mavi', ad: 'Mavi karo', p: 140, draw: (g, w, h) => { for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) { g.fillStyle = (x + y) % 2 ? '#2a4a6a' : '#6a90b0'; g.fillRect(x * 8, y * 8, 8, 8); } } },
+  ],
+  wall: [
+    { id: 'yesil', ad: 'Yeşil duvar kâğıdı', p: 0, draw: (g, w, h) => { noiseFill(g, w, h, '#3c4a3a', .18, 200); for (let x = 0; x < w; x += 8) { g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(x, 0, 2, h); } g.fillStyle = 'rgba(60,40,10,.25)'; g.fillRect(0, 26, w, 6); } },
+    { id: 'morcizgi', ad: 'Mor çizgili', p: 120, draw: (g, w, h) => { noiseFill(g, w, h, '#4a3a5a', .12, 160); for (let x = 0; x < w; x += 6) { g.fillStyle = 'rgba(200,160,230,.18)'; g.fillRect(x, 0, 2, h); } } },
+    { id: 'tugla', ad: 'Tuğla', p: 180, draw: (g, w, h) => { g.fillStyle = '#6a3424'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a1c14'; for (let y = 0; y < h; y += 6) { g.fillRect(0, y, w, 1); for (let x = (y / 6 % 2) * 6; x < w; x += 12) g.fillRect(x, y, 1, 6); } } },
+    { id: 'yildiz', ad: 'Gece yıldızlı', p: 220, draw: (g, w, h) => { g.fillStyle = '#12142a'; g.fillRect(0, 0, w, h); for (let i = 0; i < 14; i++) { g.fillStyle = i % 3 ? '#e8e2a0' : '#9ab0ff'; g.fillRect(Math.random() * w | 0, Math.random() * h | 0, 1, 1); } } },
+  ],
+};
+function skinCanvas(kind, id) { const sk = SKINS[kind].find(x => x.id === id) || SKINS[kind][0]; const c = document.createElement('canvas'); c.width = c.height = 32; sk.draw(c.getContext('2d'), 32, 32); return c; }
+function applySkin() {
+  for (const kind of ['floor', 'wall']) {
+    const tex = kind === 'floor' ? TX.floor : TX.wall, cv = tex.userData.canvas || tex.image, g = cv.getContext('2d');
+    g.clearRect(0, 0, cv.width, cv.height); g.drawImage(skinCanvas(kind, (S && S.skin && S.skin[kind]) || SKINS[kind][0].id), 0, 0, cv.width, cv.height); tex.needsUpdate = true;
+  }
+}
+const UPG2 = [
+  { id: 'kedi', ad: '🐈 Pamuk (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 300 },
+  { id: 'kamera', ad: '📹 Güvenlik kamerası sistemi', d: 'Bilgisayardan 5 kamera izlenir + tezgâhta monitör', p: 350 },
+  { id: 'neon', ad: '💡 Neon tabela', d: 'Bahşişler %30 artar', p: 250 },
+  { id: 'lamba', ad: '🔆 Yeni floresanlar', d: 'Daha az titreme, daha parlak', p: 200 },
+];
+let pcTab = 'shop', cart = {};
+function openPC() { state = 'pc'; unlockPointer(); $('pc').classList.remove('hidden'); SND.beep(); cart = {}; renderPC(); }
+function closePC() { $('pc').classList.add('hidden'); state = 'play'; lockPointer(); }
+function renderPC() {
+  $('pcMoney').textContent = `Kasa: ${S.money} ₺`;
+  document.querySelectorAll('#pc .tabs button').forEach(b => { b.classList.toggle('on', b.dataset.t === pcTab); b.style.display = b.dataset.t === 'cam' && !S.upg.kamera ? 'none' : ''; });
+  const B = $('pcBody'), cartTot = Object.entries(cart).reduce((a, [id, q]) => a + q * costOf(id), 0);
+  if (pcTab === 'shop') {
+    B.innerHTML = `<h4>TOPTANCI — yarın sabah gelir</h4><div class="grid2">${Object.keys(GAMES).map(id => `<div class="row"><span class="n">${GAMES[id].e} ${GAMES[id].ad}<br><small>Alış ${costOf(id)} ₺ · Satış ${GAMES[id].p} ₺ · Rafta ${N ? N.stock[id] : S.stock[id]}${S.incoming[id] ? ' · yolda ' + S.incoming[id] : ''}</small></span><button data-o="${id}" data-d="-1">−</button><b>${cart[id] || 0}</b><button data-o="${id}" data-d="1">+</button></div>`).join('')}</div>
+      <div class="row"><span class="n"><b>Sepet: ${cartTot} ₺</b></span><button id="pcBuy" ${!cartTot || cartTot > S.money ? 'disabled' : ''}>Sipariş ver</button></div>
+      <h4 style="margin-top:12px">DÜKKÂN EŞYALARI</h4>${UPG2.map(u => `<div class="row"><span class="n">${u.ad}<br><small>${u.d}</small></span>${S.upg[u.id] ? '<b>✓ Alındı</b>' : `<button data-u="${u.id}" ${S.money < u.p ? 'disabled' : ''}>${u.p} ₺</button>`}</div>`).join('')}`;
+    B.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const id = b.dataset.o; cart[id] = Math.max(0, Math.min(9, (cart[id] || 0) + +b.dataset.d)); SND.click(); renderPC(); });
+    B.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const u = UPG2.find(x => x.id === b.dataset.u); if (S.money < u.p) return; S.money -= u.p; S.upg[u.id] = 1; applyUpgrades(); SND.drawer(); writeSave(); renderPC(); updateHud(true); });
+    const pb = $('pcBuy'); if (pb) pb.onclick = () => { if (cartTot > S.money) return; S.money -= cartTot; for (const [id, q] of Object.entries(cart)) if (q) S.incoming[id] = (S.incoming[id] || 0) + q; cart = {}; SND.drawer(); writeSave(); toast('📦 Sipariş verildi. Yarın sabah gelecek.', 3); renderPC(); updateHud(true); };
+  } else if (pcTab === 'skin') {
+    const part = kind => SKINS[kind].map(sk => { const own = S.owned[sk.id], on = S.skin[kind] === sk.id, url = skinCanvas(kind, sk.id).toDataURL();
+      return `<div class="row"><span class="sw" style="background-image:url(${url})"></span><span class="n">${sk.ad}</span>${on ? '<b>Kullanılıyor</b>' : own ? `<button data-use="${kind}:${sk.id}">Kullan</button>` : `<button data-buy="${kind}:${sk.id}" ${S.money < sk.p ? 'disabled' : ''}>${sk.p} ₺</button>`}</div>`; }).join('');
+    B.innerHTML = `<h4>ZEMİN</h4>${part('floor')}<h4 style="margin-top:12px">DUVAR</h4>${part('wall')}<div class="note">Değişiklik dükkânda hemen uygulanır.</div>`;
+    B.querySelectorAll('[data-use]').forEach(b => b.onclick = () => { const [k, id] = b.dataset.use.split(':'); S.skin[k] = id; applySkin(); SND.click(); writeSave(); renderPC(); });
+    B.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { const [k, id] = b.dataset.buy.split(':'), sk = SKINS[k].find(x => x.id === id); if (S.money < sk.p) return; S.money -= sk.p; S.owned[id] = 1; S.skin[k] = id; applySkin(); SND.drawer(); writeSave(); renderPC(); updateHud(true); });
+  } else if (pcTab === 'cam') {
+    B.innerHTML = `<h4>GÜVENLİK KAMERALARI</h4>${CAMS.map((c, i) => `<div class="row"><span class="n">📹 CAM ${i + 1} — ${c.ad}</span><button data-cam="${i}">İzle</button></div>`).join('')}<div class="note">Kamerada A / D ile değiştir, Esc ile bilgisayara dön.</div>`;
+    B.querySelectorAll('[data-cam]').forEach(b => b.onclick = () => openCam(+b.dataset.cam));
+  }
+}
+document.querySelectorAll('#pc .tabs button').forEach(b => b.onclick = () => { pcTab = b.dataset.t; SND.click(); renderPC(); });
+$('pcX').onclick = () => closePC();
+// kameralar
+const mkCam = (ad, p, l) => { const c = new THREE.PerspectiveCamera(70, 16 / 9, .05, 40); c.position.set(...p); c.lookAt(...l); c.layers.enable(2); c.layers.enable(3); scene.add(c); return { ad, c }; };
+const CAMS = [mkCam('DÜKKÂN İÇİ', [4.6, 2.75, 3.6], [0, .8, -1.5]), mkCam('YATAK ODASI', [4.7, 2.75, -4.3], [1, .6, -6.8]), mkCam('DEPO', [-2.3, 2.75, -4.3], [-4.4, .5, -6.6]),
+  mkCam('DÜKKÂNIN ÖNÜ', [-2.5, 3.2, 9], [1.5, 1, 4]), mkCam('DÜKKÂNIN ARKASI', [5, 3.4, -15.5], [0, .6, -8])];
+let camIdx = -1;
+function openCam(i) { camIdx = (i + CAMS.length) % CAMS.length; state = 'cam'; $('pc').classList.add('hidden'); $('camUI').classList.remove('hidden'); $('hud').classList.add('hidden'); $('camName').textContent = `CAM ${camIdx + 1} — ${CAMS[camIdx].ad}`; SND.static(.4); glitch = .5; }
+function closeCam() { camIdx = -1; $('camUI').classList.add('hidden'); $('hud').classList.remove('hidden'); state = 'pc'; $('pc').classList.remove('hidden'); renderPC(); }
+$('camPrev').onclick = () => openCam(camIdx - 1); $('camNext').onclick = () => openCam(camIdx + 1);
 let stepAcc = 0;
 function collide(x, z) {
   const r = .28;
@@ -1405,23 +1545,22 @@ function updatePlayer(dt) {
 function clockStr(m) { const t = 22 * 60 + Math.floor(m); const h = Math.floor(t / 60) % 24, mm = t % 60; return `${String(h).padStart(2, '0')}:${String(mm).padStart(2, '0')}`; }
 let hudKey = '';
 function updateHud(force) {
-  const k = `${S.money}|${N ? Math.floor(N.t) : 0}|${S.night}`;
+  const k = `${S.money}|${N ? (N.opened ? 1 : 0) + (N.shopClosed ? 2 : 0) : 0}|${S.night}`;
   if (k === hudKey && !force) return; hudKey = k;
   $('money').textContent = `₺ ${S.money}`;
-  $('clock').querySelector('b').textContent = N ? clockStr(N.t) : '22:00';
-  $('clock').querySelector('span').textContent = `Gece ${S.night} / 5`;
+  $('clock').querySelector('b').textContent = 'GÜN ' + S.night;
+  $('clock').querySelector('span').textContent = N && !N.opened ? 'Dükkân kapalı' : N && N.shopClosed ? 'Dükkân kapandı' : 'Dükkân açık';
 }
 function updateNight(dt, now) {
   const n = N;
   // saat: müşteri yokken daha hızlı akar
-  const rate = n.cust ? .55 : 1.6;
-  const pending = n.queue.length > 0 || n.cust;
-  n.t = Math.min(n.t + dt * rate, pending ? 295 : 300);
+  // saat yok: dükkân açıkken iç zaman akar (olaylar için), müşteri biri gidince birkaç saniye sonra gelir
+  if (n.opened && !n.shopClosed) n.t = Math.min(n.t + dt * (n.cust ? .35 : .8), 300);
   // olaylar
-  for (const e of n.events) if (!e.done && (n.t >= e.m || (n.shopClosed && performance.now() > n.closedAt + 6000)) && !dlg) { e.done = true; EV[e.f](); }
+  for (const e of n.events) if (!e.done && n.opened && (n.t >= e.m || (n.shopClosed && performance.now() > n.closedAt + 6000)) && !dlg) { e.done = true; EV[e.f](); }
   n.events = n.events.filter(e => !e.done);
   // müşteri
-  if (!n.cust && n.queue.length && n.t >= n.queue[0].m && n.power) { const v = n.queue.shift(); spawnCustomer(v); }
+  if (n.opened && !n.cust && n.queue.length && n.power) { n.gap -= dt; if (n.gap <= 0) { const v = n.queue.shift(); n.t = Math.max(n.t, v.m); spawnCustomer(v); n.gap = rand(6, 12); } }
   const c = n.cust;
   if (c) {
     if (c.st === 'in') { if (walk(c, dt)) custArrived(c); }
@@ -1431,7 +1570,7 @@ function updateNight(dt, now) {
   // telefon
   if (n.phone) { n.phone.ringT -= dt; if (n.phone.ringT <= 0) { n.phone.ringT = 2.2; n.phone.rings++; SND.ring(); if (n.phone.rings === 1) toast('☎ Telefon çalıyor...'); if (n.phone.rings > 12) n.phone = null; } }
   // düşen kutu
-  if (n.fall && !n.fall.done) { n.fall.vy -= 9.8 * dt; n.fall.m.position.y += n.fall.vy * dt; n.fall.m.rotation.x += dt * 6; if (n.fall.m.position.y < .03) { n.fall.m.position.y = .03; n.fall.m.rotation.set(-Math.PI / 2, 0, 1); n.fall.done = true; } }
+  if (n.fall && !n.fall.done) { n.fall.vy -= 9.8 * dt; n.fall.m.position.y += n.fall.vy * dt; n.fall.m.position.x += n.fall.vx * dt; n.fall.m.position.z += n.fall.vz * dt; n.fall.m.rotation.x += dt * 6; if (n.fall.m.position.y < .03) { n.fall.m.position.y = .03; n.fall.m.rotation.set(-Math.PI / 2, 0, 1); n.fall.done = true; } }
   // ışıklar
   for (const t of tubes) {
     let on = !t.off && n.power;
@@ -1452,7 +1591,7 @@ function updateNight(dt, now) {
   }
   // gece bitti mi
   // son müşteri gidince: dükkânı kapat, sonra uyu
-  if (!n.def.finale && !n.cust && !n.queue.length && !dlg && !n.allDone && n.power && n.served + (n.refused || 0) > 0) {
+  if (!n.def.finale && n.opened && !n.cust && !n.queue.length && !dlg && !n.allDone && n.power) {
     n.allDone = true;
     toast('Bu gecelik müşteri kalmadı.', 3);
     hint('Dükkânı kapat: kapıdaki AÇIK tabelasına bak ve E bas.', 9999);
@@ -1464,7 +1603,7 @@ function updateNight(dt, now) {
 /* =====================================================================
    GECE SONU + DÜKKÂN GELİŞTİRMELERİ
    ===================================================================== */
-const RENT = 200;
+const RENT = 10;   // elektrik
 const UPG = [
   { id: 'kedi', ad: '🐈 Pamuk (dükkân kedisi)', d: 'Kediler bazı şeyleri hisseder...', p: 400 },
   { id: 'kamera', ad: '📹 Güvenlik monitörü', d: 'Tezgâhta kamera görüntüsü', p: 450 },
@@ -1476,7 +1615,7 @@ function endNight() {
   state = 'sum'; unlockPointer(); ambStop();
   S.stock = { ...N.stock };
   if (held) { S.stock[held]++; setHeld(null); }
-  for (const c of counterItems) { S.stock[c.id]++; scene.remove(c.mesh); } counterItems = [];
+  for (const c of counterItems) { S.stock[c.id]++; dropCounterItem(c); } counterItems = [];
   S.money -= RENT;
   if (NIGHTS[S.night].finale) return showEnding();
   order = {};
@@ -1486,24 +1625,20 @@ function renderSum() {
   const n = N, cost = Object.entries(order).reduce((s, [id, q]) => s + q * Math.round(GAMES[id].p * .5), 0);
   const el = $('sum'); el.classList.remove('hidden'); $('hud').classList.add('hidden');
   const weird = n.lanetTonight ? `<p style="color:#ff7a5a">Bu gece bir şey yanlış gitti. Kasada ıslak yapraklar var...</p>` : '';
-  el.innerHTML = `<h2>GECE ${S.night} BİTTİ</h2>${weird}
+  el.innerHTML = `<h2>GÜN ${S.night} BİTTİ</h2>${weird}
     <div class="cols"><div class="tbl">
       <div><span>Satış</span><span>${n.earned - n.tips + n.lost} ₺</span></div>
       <div><span>Bahşiş</span><span>${n.tips} ₺</span></div>
       ${n.lost ? `<div class="neg"><span>Kaybolan para</span><span>-${n.lost} ₺</span></div>` : ''}
-      <div class="neg"><span>Kira + elektrik</span><span>-${RENT} ₺</span></div>
+      <div class="neg"><span>Elektrik</span><span>-${RENT} ₺</span></div>
       <div class="tot"><span>Kasa</span><span>${S.money} ₺</span></div>
       <div style="opacity:.7;font-size:13px;margin-top:8px"><span>Müşteri</span><span>${n.served}</span></div>
     </div>
-    <div class="shop"><h4>STOK SİPARİŞİ (yarın gelir)</h4><div class="grid">${Object.keys(GAMES).map(id => `<div class="it"><span>${GAMES[id].e} ${GAMES[id].ad}<small>Rafta ${S.stock[id]} · ${Math.round(GAMES[id].p * .5)} ₺/adet</small></span><span><button data-o="${id}" data-d="-1">−</button> <b>${order[id] || 0}</b> <button data-o="${id}" data-d="1">+</button></span></div>`).join('')}</div>
-      <h4 style="margin-top:10px">DÜKKÂNI GELİŞTİR</h4>${UPG.map(u => `<div class="it"><span>${u.ad}<small>${u.d}</small></span>${S.upg[u.id] ? '<b style="color:#9ee870">✓</b>' : `<button data-u="${u.id}" ${S.money - cost < u.p ? 'disabled' : ''}>${u.p} ₺</button>`}</div>`).join('')}
     </div></div>
-    <p>Sipariş tutarı: <b>${cost} ₺</b> · Kalan: <b>${S.money - cost} ₺</b></p>
-    <button class="mbtn" id="bNext" ${S.money - cost < 0 ? 'disabled' : ''}>GECE ${S.night + 1}'E BAŞLA ▶</button>
+    <p style="font-size:14px;opacity:.8">Stok siparişi ve dükkân eşyaları: odandaki bilgisayardan.${Object.keys(S.incoming || {}).length ? ' Verdiğin siparişler yarın sabah gelecek.' : ''}</p>
+    <button class="mbtn" id="bNext">GÜN ${S.night + 1} ▶</button>
     <button class="mbtn" id="bSumMenu" style="min-width:180px;font-size:14px">Kaydet ve Ana Menü</button>`;
-  el.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const id = b.dataset.o; order[id] = Math.max(0, Math.min(8, (order[id] || 0) + +b.dataset.d)); SND.click(); renderSum(); });
-  el.querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const u = UPG.find(x => x.id === b.dataset.u); S.money -= u.p; S.upg[u.id] = 1; SND.drawer(); renderSum(); });
-  const commit = () => { const c = Object.entries(order).reduce((s, [id, q]) => s + q * Math.round(GAMES[id].p * .5), 0); S.money -= c; for (const [id, q] of Object.entries(order)) S.stock[id] += q; order = {}; S.night++; writeSave(); };
+  const commit = () => { S.night++; writeSave(); };
   $('bNext').onclick = () => { commit(); fadeTo(startNight); };
   $('bSumMenu').onclick = () => { commit(); showMenu(); };
 }
@@ -1567,7 +1702,7 @@ function menuGo(k) {
 }
 function showMenu() {
   state = 'menu'; unlockPointer(); ambStop();
-  ['sum', 'pause', 'till', 'paper', 'dlg', 'hud', 'selfCam'].forEach(id => $(id).classList.add('hidden')); dlg = null;
+  ['sum', 'pause', 'till', 'paper', 'dlg', 'hud', 'selfCam', 'pc', 'camUI'].forEach(id => $(id).classList.add('hidden')); dlg = null; camIdx = -1;
   if (N && N.cust) { scene.remove(N.cust.p.g); } if (depoGhost) { scene.remove(depoGhost.p.g); depoGhost = null; } if (ghost) { scene.remove(ghost.g); ghost = null; }
   N = null; $('menu').classList.remove('hidden'); $('mPanel').classList.add('hidden'); $('mItems').classList.remove('hidden'); mSel = 0; renderMenu();
   P.pos.set(-1.5, 0, 2.5); P.yaw = -2.4; P.pitch = -.08;
@@ -1612,6 +1747,8 @@ addEventListener('keydown', e => {
     if (e.code === 'Enter' || e.code === 'Space' || e.code === 'KeyE') menuGo(mList[mSel][0]);
     return;
   }
+  if (state === 'cam') { if (e.code === 'Escape' || e.code === 'KeyE') closeCam(); else if (e.code === 'KeyA' || e.code === 'ArrowLeft') openCam(camIdx - 1); else if (e.code === 'KeyD' || e.code === 'ArrowRight') openCam(camIdx + 1); return; }
+  if (state === 'pc') { if (e.code === 'Escape') closePC(); return; }
   if (state === 'till') { if (e.code === 'Escape') closeTill(); return; }
   if (dlg && e.code === 'Escape') { if (state === 'play') pause(); else if (state === 'pause') resume(); return; }
   if (dlg && state === 'pause') return;
@@ -1651,7 +1788,7 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
   if (state === 'menu') { menuT += dt; camera.position.set(-1.2 + Math.sin(menuT * .15) * .4, 1.55, 2.6); camera.rotation.set(-.06, -2.5 + Math.sin(menuT * .1) * .25, 0); }
-  else { updatePlayer(dt); if (N && state !== 'pause' && state !== 'sum') { updateNight(dt, t); } }
+  else { updatePlayer(dt); if (N && state !== 'pause' && state !== 'sum' && state !== 'pc' && state !== 'cam') { updateNight(dt, t); } }
   updateDlg(dt);
   // kapılar
   doorOpen += (doorTarget - doorOpen) * Math.min(1, dt * 5); doorPivot.rotation.y = -doorOpen * 1.3;
@@ -1659,6 +1796,7 @@ function frame(now) {
   bedDoorOpen += (bedDoorTarget - bedDoorOpen) * Math.min(1, dt * 4); bedDoorPivot.rotation.y = bedDoorOpen * 1.6;
   // yağmur
   for (let i = 0; i < RAIN_N; i++) { rainPos[i * 3 + 1] -= dt * 9; if (rainPos[i * 3 + 1] < 0) rainPos[i * 3 + 1] = 6; } rainGeo.attributes.position.needsUpdate = true;
+  for (let i = 0; i < RAIN2_N; i++) { rain2Pos[i * 3 + 1] -= dt * 9; if (rain2Pos[i * 3 + 1] < 0) rain2Pos[i * 3 + 1] = 6; } rain2Geo.attributes.position.needsUpdate = true;
   // hud
   if (state === 'play' && N) {
     focus = dlg ? null : getFocus(); const pr = promptFor(focus);
@@ -1676,12 +1814,17 @@ function frame(now) {
   if (state === 'menu') return;   // menü resmi tam ekran, 3D çizmeye gerek yok
   renderMirror(dt);
   if ((N && N.tvMode === 'cam') || mon.visible) { renderer.setRenderTarget(camRT); renderer.render(scene, secCam); }
-  renderer.setRenderTarget(rt); renderer.render(scene, camera);
+  if (state === 'cam' && camIdx >= 0) {
+    const vc = CAMS[camIdx].c; if (selfP) for (const k of ['real', 'fake']) faceTo(selfP[k], vc.position);
+    vc.aspect = camera.aspect; vc.updateProjectionMatrix(); postMat.uniforms.glitch.value = Math.max(glitch, .06);
+    $('camClock').textContent = new Date().toLocaleTimeString('tr-TR');
+    renderer.setRenderTarget(rt); renderer.render(scene, vc);
+  } else { renderer.setRenderTarget(rt); renderer.render(scene, camera); }
   renderer.setRenderTarget(null); renderer.render(postScene, postCam);
 }
 showMenu();
 requestAnimationFrame(frame);
-window.__dk = { takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
+window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
 </script>
 </body>
 </html>
