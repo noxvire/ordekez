@@ -287,20 +287,17 @@ function snd(f, d = .06, type = 'sine', v = .03, slide = 0) {
 let sndBudget = 0;
 const hitSnd = () => { if (sndBudget > 0) return; sndBudget = .06; snd(700 + Math.random() * 300, .05, 'sine', .018, 1.5); };
 const chime = (notes, gap = 80, type = 'triangle', v = .05) => notes.forEach((f, i) => setTimeout(() => snd(f, .18, type, v), i * gap));
-// müzik kutusu
-const MEL = [76, 79, 83, 81, 79, 76, 74, 76, 79, 81, 79, 74, 72, 74, 76, 79, 76, 72, 71, 72, 74, 76, 79, 81, 83, 81, 79, 76, 74, 72, 74, 76];
-const BASS = [52, 52, 55, 55, 48, 48, 50, 50];
-let musT = null, musStep = 0;
-const mf = n => 440 * Math.pow(2, (n - 69) / 12);
-function musicTick() {
-  if (!M.set.muzik || !AC || AC.state !== 'running') return;
-  const t = AC.currentTime, n = MEL[musStep % MEL.length];
-  const note = (f, d, v, type) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g).connect(master); o.start(t); o.stop(t + d); };
-  if (musStep % 2 === 0 || Math.random() < .5) { note(mf(n), .5, .035, 'sine'); note(mf(n + 12), .3, .008, 'triangle'); }
-  if (musStep % 4 === 0) note(mf(BASS[(musStep / 4) % BASS.length]), .9, .03, 'triangle');
-  musStep++;
+// müzik: menüde neşeli parça, savaşta ikinci parça (kısık, döngüde)
+const MUS = { menu: new Audio('zs_menu.mp3'), savas: new Audio('zs_battle.mp3') };
+MUS.menu.loop = MUS.savas.loop = true; MUS.menu.volume = .45; MUS.savas.volume = .28; MUS.menu.preload = 'auto';
+let musWant = 'menu';
+function music(which) {
+  musWant = which;
+  for (const k in MUS) { const a = MUS[k];
+    if (k === which && M.set.muzik) { if (a.paused) { if (k === 'savas') a.currentTime = 0; a.play().catch(() => {}); } }
+    else if (!a.paused) a.pause(); }
 }
-function wake() { try { ac(); if (AC.state !== 'running') AC.resume(); if (!musT) musT = setInterval(musicTick, 220); } catch (e) {} }
+function wake() { try { ac(); if (AC.state !== 'running') AC.resume(); } catch (e) {} if (M.set.muzik && MUS[musWant].paused) MUS[musWant].play().catch(() => {}); }
 addEventListener('pointerdown', wake); addEventListener('keydown', wake);
 
 /* =================== KANVAS =================== */
@@ -354,7 +351,7 @@ function startGame() {
   enemies = []; projs = []; gems = []; picks = []; fx = []; texts = []; pets = []; T = 0; kills = 0; coins = 0; spawnAcc = 0; bossIdx = 0; curBoss = null; cam = { x: 0, y: 0 }; levelQueue = 0; won = false;
   M.oyun++; saveM();
   document.querySelectorAll('.scr').forEach(s => s.classList.remove('on')); $('title').style.display = 'none'; $('hud').style.display = 'block';
-  state = 'play'; last = performance.now(); refreshSlots(); chime([523, 659, 784, 1046], 70);
+  state = 'play'; last = performance.now(); refreshSlots(); chime([523, 659, 784, 1046], 70); music('savas');
 }
 
 /* =================== İSTATİSTİK =================== */
@@ -618,15 +615,16 @@ function loop(now) {
 
 /* =================== EKRANLAR =================== */
 const fmtT = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-function pauseGame() { if (state !== 'play') return; state = 'pause';
+function pauseGame() { if (state !== 'play') return; state = 'pause'; MUS.savas.volume = .12;
   $('pStats').innerHTML = `<span>Süre</span><b>${fmtT(T)}</b><span>Seviye</span><b>${P.lv}</b><span>Yenilen</span><b>${kills}</b><span>Can</span><b>${Math.ceil(P.hp)} / ${P.maxHp}</b>`;
   $('pause').classList.add('on'); }
-function resumeGame() { $('pause').classList.remove('on'); state = 'play'; last = performance.now(); }
+function resumeGame() { $('pause').classList.remove('on'); state = 'play'; last = performance.now(); MUS.savas.volume = .28; }
 $('resume').onclick = resumeGame; $('pauseBtn').onclick = pauseGame;
 $('quit').onclick = () => { $('pause').classList.remove('on'); gameOver(false); };
 function gameOver(win) {
   state = 'over'; joy = null; $('joy').style.display = 'none'; $('lvup').classList.remove('on'); $('pause').classList.remove('on');
   const earned = Math.round((coins + kills / 25 + Math.floor(T / 30) * 2 + (win ? 150 : 0)) * (1 + .15 * mlv('altin')));
+  MUS.savas.volume = .28; music(win ? 'menu' : 'menu');
   M.altin += earned; if (T > M.best) M.best = T; if (kills > M.bestKill) M.bestKill = kills; if (win) M.kazandi++; saveM();
   $('overImg').src = skinSrc(P.skin); $('overImg').style.transform = win ? '' : 'rotate(-8deg)';
   $('overT').textContent = win ? '🏆 HAYATTA KALDIN!' : '💔 Yoruldun…';
@@ -650,7 +648,7 @@ $('hUp').onclick = () => { renderShop(); $('shop').classList.add('on'); };
 $('hSet').onclick = () => { renderSet(); $('settings').classList.add('on'); };
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.scr').classList.remove('on'); showMenu(); });
 function showMenu() {
-  state = 'menu'; P = null; $('hud').style.display = 'none'; $('title').style.display = 'flex';
+  state = 'menu'; P = null; $('hud').style.display = 'none'; $('title').style.display = 'flex'; music('menu');
   ['lvup', 'pause', 'over'].forEach(id => $(id).classList.remove('on'));
   $('tGold').textContent = `🪙 ${M.altin}`;
   $('tBest').innerHTML = M.oyun ? `🏆 En iyi: ${fmtT(M.best)} · 💀 ${M.bestKill}${M.kazandi ? ` · ${M.kazandi} zafer` : ''}` : '';
@@ -671,7 +669,7 @@ function renderShop() {
     if (mlv(m.id) >= m.max || M.altin < c) { snd(200, .15, 'triangle', .04); return; } M.altin -= c; M.up[m.id] = mlv(m.id) + 1; saveM(); chime([784, 1046], 60); renderShop(); });
 }
 function renderSet() {
-  document.querySelectorAll('.tg').forEach(b => { b.classList.toggle('on', !!M.set[b.dataset.s]); b.onclick = () => { M.set[b.dataset.s] = M.set[b.dataset.s] ? 0 : 1; saveM(); renderSet(); snd(880, .06, 'sine', .04); }; });
+  document.querySelectorAll('.tg').forEach(b => { b.classList.toggle('on', !!M.set[b.dataset.s]); b.onclick = () => { M.set[b.dataset.s] = M.set[b.dataset.s] ? 0 : 1; saveM(); renderSet(); snd(880, .06, 'sine', .04); if (b.dataset.s === 'muzik') music(musWant); }; });
 }
 [...new Set([...BOSSES.map(b => b.img), skinSrc(M.skin), 'ordek_ikon.png'])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
