@@ -665,7 +665,7 @@ const CH = {
              m3: { wF: 166, wB: 153, head: [[50, 111, 4, 88], [45, 108, 4, 88], .95], torso: [[30, 136, 84, 262], [28, 124, 84, 262], .5],
                    armR: [[2, 36, 92, 262], [118, 152, 92, 262]], armL: [[130, 164, 92, 262], [0, 34, 92, 262]],
                    legR: [[6, 80, 252, 512], [76, 148, 252, 512]], legL: [[80, 162, 252, 512], [2, 77, 252, 512]] } } },
-  cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#e0a020', pants: '#3050a0', h: .78 },
+  cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#1c2140', pants: '#1a1818', h: .78, glasses: true, frames: { src: 'dk_cocuk_yuru.png', n: 8, h: 1.42, dir: -1, headX: .58 } },
   teyze: { ad: 'Teyze', skin: '#d8a888', hair: '#8a8580', shirt: '#6a3a6a', pants: '#3a2a3a', old: true, glasses: true, longHair: true },
   adam:  { ad: 'Takım Elbiseli Adam', skin: '#cfc2b0', hair: '#111', shirt: '#151518', pants: '#151518', h: 1.06, eyeC: '#111' },
   ogr:   { ad: 'Üniversiteli', skin: '#c99878', hair: '#3a2010', shirt: '#2a6a5a', pants: '#3a3a40', glasses: true, beard: true },
@@ -680,10 +680,11 @@ const CH = {
 };
 // çizimlerden gelen karakterler: düz resim (her zaman sana dönük), arkası ayrı resim
 for (const k in CH) if (CH[k].sprite) { loadImg(CH[k].sprite.on, () => {}); loadImg(CH[k].sprite.arka, () => {}); if (CH[k].sprite.yuru) loadImg(CH[k].sprite.yuru, () => {}); }
+for (const k in CH) if (CH[k].frames) loadImg(CH[k].frames.src, () => {});
 function spriteTex(src, edit) {
   const cv = document.createElement('canvas'); cv.width = 4; cv.height = 4;
   const t = new THREE.CanvasTexture(cv); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;
-  loadImg(src, im => { cv.width = im.width; cv.height = im.height; const g = cv.getContext('2d'); g.drawImage(im, 0, 0); if (edit) edit(g, cv.width, cv.height); t.image = cv; t.needsUpdate = true; t.userData.ready = true; });
+  loadImg(src, im => { cv.width = im.width; cv.height = im.height; const g = cv.getContext('2d'); g.drawImage(im, 0, 0); if (edit) edit(g, cv.width, cv.height); t.dispose(); t.image = cv; t.needsUpdate = true; t.userData.ready = true; });
   return t;
 }
 const BILL_GEO = new THREE.PlaneGeometry(1, 1).translate(0, .5, 0);
@@ -799,6 +800,31 @@ function animRig(p, moving, dt) {
   }
 }
 // PS1 tarzı düşük poligonlu 3B model: çizimdeki ön/arka resimler gövdeye kaplanır
+// sadece yürüme kareleri olan karakter (çizimden): kameraya dönük, gittiği yöne göre aynalanır
+function makeFramePerson(id, def, fake) {
+  const F = def.frames, g = new THREE.Group(), bill = new THREE.Group(); g.add(bill);
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76; drawFace(cv, def, fake);
+  const tex = spriteTex(F.src, (q, w, h) => {
+    if (fake) { const d = q.getImageData(0, 0, w, h); for (let i = 0; i < d.data.length; i += 4) { const v = (d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3; d.data[i] = v * .75 + 12; d.data[i + 1] = v * .66; d.data[i + 2] = v * .72 + 8; } q.putImageData(d, 0, 0); }
+    // konuşma portresi: ilk karenin kafası
+    const fw = w / F.n, s0 = fw * .46, cg = cv.getContext('2d'); cg.clearRect(0, 0, 64, 76); cg.fillStyle = '#2a2430'; cg.fillRect(0, 0, 64, 76);
+    cg.drawImage(q.canvas, fw * (F.headX || .5) - s0 / 2, 2, s0, s0 * 76 / 64, 0, 0, 64, 76); if (cv._tex) cv._tex.needsUpdate = true;
+  });
+  tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearFilter; tex.repeat.set(1 / F.n, 1);
+  const mat = new THREE.MeshBasicMaterial({ map: tex, alphaTest: .5, side: THREE.DoubleSide, fog: true });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).translate(0, .5, 0), mat); mesh.userData = { kind: 'cust' }; bill.add(mesh);
+  const fit = () => { if (!tex.userData.ready) return setTimeout(fit, 100); mesh.scale.set(F.h * (tex.image.width / F.n) / tex.image.height, F.h, 1); }; fit();
+  const dummy = () => { const d = new THREE.Group(); g.add(d); return d; };
+  return { g, sprite: bill, cv, ph: 0, isFrames: true, tex, mat, F, mesh, lit: 1, head: dummy(), armL: dummy(), armR: dummy(), legL: dummy(), legR: dummy() };
+}
+function framesView(p, moving) {
+  const g = p.g; g.getWorldPosition(_wp);
+  let rel = g.rotation.y - Math.atan2(camera.position.x - _wp.x, camera.position.z - _wp.z); rel = Math.atan2(Math.sin(rel), Math.cos(rel));
+  const n = p.F.n, f = moving ? Math.floor(((p.ph / (Math.PI * 2)) * n) % n + n) % n : 3;
+  p.tex.offset.x = f / n; p.mesh.scale.x = Math.abs(p.mesh.scale.x) * (rel > 0 ? -1 : 1) * p.F.dir;
+  p.sprite.rotation.y = Math.atan2(camera.position.x - _wp.x, camera.position.z - _wp.z) - g.rotation.y;
+  const lit = N && N.power && !tubes.every(t => t.off) ? .95 : flashOn ? .55 : .12; p.mat.color.setScalar(lit);
+}
 function makeModelPerson(id, def, fake) {
   const sp = def.sprite, M = sp.m3, Hm = sp.h, k = Hm / 512, g = new THREE.Group();
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76; drawFace(cv, def, fake);
@@ -905,6 +931,7 @@ function makeModelPerson(id, def, fake) {
 function makePerson(id, fake) {
   const def = CH[id], s = def.h || 1, g = new THREE.Group();
   if (def.sprite && def.sprite.m3) return makeModelPerson(id, def, fake);
+  if (def.frames) return makeFramePerson(id, def, fake);
   if (def.sprite) { const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76; drawFace(cv, def, fake); return makeSpritePerson(id, def, fake, cv); }
   const skinM = lam(def.skin), shirtM = lam(def.shirt), pantsM = lam(def.pants), hairM = lam(fake ? '#050505' : def.hair);
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76;
@@ -1004,7 +1031,7 @@ const RULES = `<h3>DÜKKÂN KURALLARI</h3><ol>
 // gece senaryoları: m = 22:00'den sonraki dakika
 const NIGHTS = {
   1: { title: 'GECE 1', sub: 'Hoş geldin', visits: [
-      { m: 8, who: 'erdi', want: ['sberdi'], pay: 200,
+      { m: 8, who: 'cocuk', want: ['sberdi'], pay: 200,
         hi: 'Abla iyi akşamlar! Süper Erdi Bros. var mı? Harçlığımı biriktirdim!',
         thanks: 'Yaşasın! Annem uyumadan eve koşmam lazım!',
         chat: { q: 'Abla bu oyunda prenses kurtarılıyor mu?', o: [['Hayır, prensesi Erdi kurtarıyor.', 1, 5, 'Erdi mi? O kim ya? Neyse, sağ ol abla!'], ['Prenses kendi kendini kurtarıyor.', 2, 15, 'Vay be! Prenses güçlüymüş! Al abla, bahşiş!'], ['Oyna da gör.', 0, 0, 'Peki...']] } },
@@ -1240,7 +1267,7 @@ function nameTag(name, fake) {
 }
 function spawnCustomer(v) {
   const p = makePerson(v.who, v.fake); p.g.position.copy(OUT); scene.add(p.g);
-  { const def = CH[v.who], tag = nameTag(def.ad, v.fake); tag.position.y = (def.sprite ? def.sprite.h + .22 : 1.95 * (def.h || 1)); p.g.add(tag); p.tag = tag; }
+  { const def = CH[v.who], tag = nameTag(def.ad, v.fake); tag.position.y = (def.frames ? def.frames.h + .2 : def.sprite ? def.sprite.h + .22 : 1.95 * (def.h || 1)); p.g.add(tag); p.tag = tag; }
   if (v.fake) p.g.traverse(o => { if (o.isMesh) o.layers.enable(1); });
   N.cust = { v, p, st: 'in', path: [DOOR_IN.clone(), DESK.clone()], bellDone: false, pi: 0, wait: 0, angry: 0 };
 }
@@ -1251,9 +1278,10 @@ function walk(c, dt) {
   if (!c.bellDone && g.position.z < 4.9 && g.position.z > 3) { c.bellDone = true; doorTarget = 1; if (!c.v.noBell) SND.bell(); setTimeout(() => { doorTarget = 0; }, 1600); }
   if (d < .05) { c.path.shift(); return c.path.length === 0; }
   const s = Math.min(d, sp * dt); g.position.x += dx / d * s; g.position.z += dz / d * s;
-  if (c.p.isSprite || c.p.isModel) turnTo(g, Math.atan2(dx, dz), .2); else g.rotation.y = Math.atan2(dx, dz);
+  if (c.p.isSprite || c.p.isModel || c.p.isFrames) turnTo(g, Math.atan2(dx, dz), .2); else g.rotation.y = Math.atan2(dx, dz);
   c.p.ph += dt * 7; const sw = Math.sin(c.p.ph) * .5;
   if (c.p.isSprite) spriteFacing(c.p, dt, true);
+  if (c.p.isFrames) framesView(c.p, true);
   c.p.legL.rotation.x = sw; c.p.legR.rotation.x = -sw; c.p.armL.rotation.x = -sw * .7; c.p.armR.rotation.x = sw * .7;
   if (Math.sin(c.p.ph) * Math.sin(c.p.ph - dt * 7) < 0 && !c.v.fake) SND.step();
   return false;
@@ -1270,6 +1298,7 @@ function spriteFacing(p, dt, moving) {
 }
 function idlePose(c, now) {
   const p = c.p;
+  if (p.isFrames) { framesView(p, false); return; }
   if (p.isModel) { turnTo(p.g, Math.atan2(camera.position.x - p.g.position.x, camera.position.z - p.g.position.z), .08); for (const o of [p.legL, p.legR]) o.rotation.x *= .8; p.armL.rotation.x = p.armL.rotation.x * .8 + Math.sin(now * 1.3) * .006; p.armR.rotation.x = p.armR.rotation.x * .8 - Math.sin(now * 1.3) * .006; p.head.rotation.y = 0; if (c.v.fake) p.head.rotation.z = Math.sin(now * .7) * .12; return; }
   if (p.isSprite) { turnTo(p.g, Math.atan2(camera.position.x - p.g.position.x, camera.position.z - p.g.position.z), .12); spriteFacing(p, .016, false); if (c.v.fake) p.sprite.rotation.z = Math.sin(now * .7) * .06; return; } p.legL.rotation.x = p.legR.rotation.x = 0; p.armL.rotation.x = p.armR.rotation.x = Math.sin(now * 1.3) * .03;
   const want = Math.atan2(camera.position.x - p.g.position.x, camera.position.z - p.g.position.z);
@@ -1697,7 +1726,7 @@ const _hp = new THREE.Vector3();
 function dialogCam(dt) {
   let fovT = 72;
   if (dlg && N && N.cust && (dlg.who === N.cust.v.who || dlg.who === 'self') && ['talk', 'wait', 'final', 'arrived', 'vanish'].includes(N.cust.st)) {
-    const g = N.cust.p.g; _hp.set(g.position.x, (N.cust.p.isModel ? CH[N.cust.v.who].sprite.h * .9 : (N.cust.p.isSprite ? 1.58 : 1.5) * (CH[N.cust.v.who].h || 1)), g.position.z);
+    const g = N.cust.p.g; _hp.set(g.position.x, (N.cust.p.isFrames ? CH[N.cust.v.who].frames.h * .88 : N.cust.p.isModel ? CH[N.cust.v.who].sprite.h * .9 : (N.cust.p.isSprite ? 1.58 : 1.5) * (CH[N.cust.v.who].h || 1)), g.position.z);
     const dx = _hp.x - camera.position.x, dz = _hp.z - camera.position.z, dy = _hp.y - camera.position.y;
     const wantYaw = Math.atan2(-dx, -dz), wantPitch = Math.atan2(dy, Math.hypot(dx, dz));
     let dy2 = wantYaw - P.yaw; dy2 = Math.atan2(Math.sin(dy2), Math.cos(dy2));
