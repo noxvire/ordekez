@@ -662,7 +662,7 @@ const CH = {
   erdi:  { ad: 'Erdi', photo: 'dk_erdi.png', skin: '#d8a888', hair: '#121012', shirt: '#1c1a1c', pants: '#211d22', shoes: '#cfcac4', print: 'erdi', eyes: [[25, 30], [49, 30]], mouth: [37, 50], h: 1.04,
            sprite: { on: 'dk_erdi_on.png', arka: 'dk_erdi_arka.png', yuru: 'dk_erdi_yuru.png', yuruN: 8, h: 1.8, eyes: [[77, 40], [97, 40]], mouth: [87, 54],
              rigF: { armL: [0, 33, 92, 262], armR: [133, 166, 92, 262], hip: 238, split: 83 }, rigB: { armL: [0, 31, 92, 264], armR: [122, 153, 92, 264], hip: 240, split: 76 },
-             m3: { head: [[50, 111, 4, 88], [45, 108, 4, 88], .95], torso: [[30, 136, 84, 262], [28, 124, 84, 262], .5],
+             m3: { wF: 166, wB: 153, head: [[50, 111, 4, 88], [45, 108, 4, 88], .95], torso: [[30, 136, 84, 262], [28, 124, 84, 262], .5],
                    armR: [[2, 36, 92, 262], [118, 152, 92, 262]], armL: [[130, 164, 92, 262], [0, 34, 92, 262]],
                    legR: [[6, 80, 252, 512], [76, 148, 252, 512]], legL: [[80, 162, 252, 512], [2, 77, 252, 512]] } } },
   cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#e0a020', pants: '#3050a0', h: .78 },
@@ -674,7 +674,7 @@ const CH = {
   zeynep:{ ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f', shoes: '#e8e4dc', print: 'cat', longHair: true, eyes: [[21, 32], [46, 32]], mouth: [35, 52],
            sprite: { on: 'dk_zeynep_on.png', arka: 'dk_zeynep_arka.png', yuru: 'dk_zeynep_yuru.png', yuruN: 8, h: 1.7, eyes: [[76, 46], [96, 46]], mouth: [85, 63],
              rigF: { armR: [117, 153, 95, 268], hip: 246, split: 78 }, rigB: { armL: [0, 33, 104, 276], armR: [140, 177, 104, 276], hip: 248, split: 88 },
-             m3: { head: [[38, 113, 4, 100], [50, 128, 4, 100], 1.0], torso: [[36, 132, 96, 268], [44, 138, 100, 278], .55],
+             m3: { wF: 153, wB: 177, head: [[38, 113, 4, 100], [50, 128, 4, 100], 1.0], torso: [[36, 132, 96, 268], [44, 138, 100, 278], .55],
                    armR: [[4, 42, 98, 262], [136, 175, 104, 272]], armL: [[115, 150, 98, 268], [2, 44, 104, 272]],
                    legR: [[16, 80, 262, 512], [88, 146, 276, 512]], legL: [[76, 132, 262, 512], [10, 90, 276, 512]] } } },
 };
@@ -804,9 +804,44 @@ function makeModelPerson(id, def, fake) {
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76; drawFace(cv, def, fake);
   const atlas = document.createElement('canvas'); atlas.width = 4; atlas.height = 4;
   const tex = new THREE.CanvasTexture(atlas); tex.colorSpace = THREE.SRGBColorSpace; tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearMipmapLinearFilter;
-  const mat = lam({ map: tex }); let WF = 166, WB = 153;
+  const mat = lam({ map: tex }); let WF = M.wF, WB = M.wB;
   const P_ = { g, cv, ph: 0, mats: [mat], isModel: true };
   const parts = [];
+  function alphaOf(im) { const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const q = c.getContext('2d'); q.drawImage(im, 0, 0); return { w: im.width, d: q.getImageData(0, 0, im.width, im.height).data }; }
+  // bir satırdaki dolu piksel aralığı (dikdörtgen içinde)
+  function ext(A, r, py) {
+    const y = Math.round(clamp(py, 0, 511)); let l = -1, rr = -1;
+    for (let x = Math.max(0, r[0]); x < Math.min(A.w, r[1]); x++) if (A.d[(y * A.w + x) * 4 + 3] > 110) { if (l < 0) l = x; rr = x; }
+    return l < 0 ? null : [l, rr + 1];
+  }
+  // satır satır çizimin genişliğine göre halka; ön yarı ön resimden, arka yarı arka resimden
+  function profileGeo(aF, aB, rF, rB, dr, rows, yOf) {
+    const segs = 16, cF = (rF[0] + rF[1]) / 2, cB = (rB[0] + rB[1]) / 2, pos = [], uv = [], idx = [];
+    const hF = rF[3] - rF[2], hB = rB[3] - rB[2];
+    let last = null;
+    for (let j = 0; j <= rows; j++) {
+      const t = j / rows, pyF = rF[3] - t * hF, pyB = rB[3] - t * hB;
+      let eF = ext(aF, rF, pyF), eB = ext(aB, rB, pyB);
+      if (!eF && !eB) { eF = eB = last ? [last[0], last[1]] : [cF - 1, cF + 1]; }
+      eF = eF || [cF - (eB[1] - eB[0]) / 2, cF + (eB[1] - eB[0]) / 2]; eB = eB || [cB - (eF[1] - eF[0]) / 2, cB + (eF[1] - eF[0]) / 2];
+      if (j === rows) { const m = (eF[0] + eF[1]) / 2; eF = [m - .5, m + .5]; const mb = (eB[0] + eB[1]) / 2; eB = [mb - .5, mb + .5]; }
+      last = eF;
+      // model x: ön resimde sol = -x ; arka resimde sağ = -x
+      const fL = (eF[0] - cF) * k, fR = (eF[1] - cF) * k, bL = -(eB[1] - cB) * k, bR = -(eB[0] - cB) * k;
+      const L0 = (fL + bL) / 2, R0 = (fR + bR) / 2, y = yOf(pyF), depth = Math.max(fR - fL, bR - bL) * dr;
+      for (let i = 0; i <= segs; i++) {
+        const a = i / segs * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a), front = sn >= 0, w = Math.abs(sn);
+        const L = front ? L0 + (fL - L0) * w : L0 + (bL - L0) * w, R = front ? R0 + (fR - R0) * w : R0 + (bR - R0) * w;
+        const x = (L + R) / 2 + (R - L) / 2 * c, z = sn * depth / 2;
+        pos.push(x, y, z);
+        const fx = (c + 1) / 2;   // 0 = sol kenar, 1 = sağ kenar
+        if (front) uv.push((eF[0] + fx * (eF[1] - eF[0])) / (WF + WB), 1 - pyF / 512);
+        else uv.push((WF + eB[1] - fx * (eB[1] - eB[0])) / (WF + WB), 1 - pyB / 512);
+      }
+    }
+    for (let j = 0; j < rows; j++) for (let i = 0; i < segs; i++) { const a = j * (segs + 1) + i, b = a + segs + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); }
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setIndex(idx); geo.computeVertexNormals(); return geo;
+  }
   // bir parça: geometri + ön/arka resim dikdörtgeni; UV her köşenin öne/arkaya bakmasına göre
   const part = (geo, rF, rB, cx, cy, w, h) => { const m = new THREE.Mesh(geo, mat); m.userData = { kind: 'cust' }; parts.push({ geo, rF, rB, cx, cy, w, h }); return m; };
   function uvAll() {
@@ -823,16 +858,17 @@ function makeModelPerson(id, def, fake) {
     }
   }
   const pxX = x => (x - WF / 2) * k, pxY = y => (512 - y) * k;
+  let torsoMesh, headMesh;
   // gövde
   { const [rF, rB, dr] = M.torso, w = (rF[1] - rF[0]) * k, h = (rF[3] - rF[2]) * k;
     const geo = new THREE.CylinderGeometry(.5, .42, 1, 8, 3).scale(w, h, w * dr);
-    const t = part(geo, rF, rB, 0, 0, w, h); t.position.set(pxX((rF[0] + rF[1]) / 2), pxY((rF[2] + rF[3]) / 2), 0); g.add(t); }
+    const t = part(geo, rF, rB, 0, 0, w, h); t.position.set(pxX((rF[0] + rF[1]) / 2), pxY((rF[2] + rF[3]) / 2), 0); g.add(t); torsoMesh = t; }
   // kafa (boyun pivotu)
   const head = new THREE.Group();
   { const [rF, rB, dr] = M.head, w = (rF[1] - rF[0]) * k, h = (rF[3] - rF[2]) * k;
     head.position.set(pxX((rF[0] + rF[1]) / 2), pxY(rF[3]) - .02, 0); g.add(head);
     const geo = new THREE.SphereGeometry(.5, 9, 7).scale(w, h, w * dr).translate(0, h / 2, 0);
-    head.add(part(geo, rF, rB, 0, h / 2, w, h)); }
+    headMesh = part(geo, rF, rB, 0, h / 2, w, h); head.add(headMesh); }
   // kollar / bacaklar: üstten pivotlu
   const limb = (key, dr, top) => {
     const [rF, rB] = M[key], w = (rF[1] - rF[0]) * k, h = (rF[3] - rF[2]) * k, piv = new THREE.Group();
@@ -853,6 +889,15 @@ function makeModelPerson(id, def, fake) {
       q.fillStyle = '#000'; for (const [x, y] of sp.eyes) { q.beginPath(); q.ellipse(x, y, 4.5, 3.5, 0, 0, 7); q.fill(); } q.fillStyle = '#ff2a1a'; for (const [x, y] of sp.eyes) q.fillRect(x, y, 1, 1);
     }
     tex.image = atlas; tex.needsUpdate = true; uvAll();
+    // kafa ve gövde: çizimin dış hattına göre şekillenir (yuvarlak değil)
+    const aF = alphaOf(imF), aB = alphaOf(imB);
+    const mk = (mesh, key, rows, y0m) => {
+      const [rF, rB, dr] = M[key], geo = profileGeo(aF, aB, rF, rB, dr, rows, y0m);
+      const i = parts.findIndex(q => q.geo === mesh.geometry); if (i >= 0) parts.splice(i, 1);
+      mesh.geometry.dispose(); mesh.geometry = geo;
+    };
+    mk(headMesh, 'head', 18, py => (M.head[0][3] - py) * k);
+    mk(torsoMesh, 'torso', 14, py => ((M.torso[0][2] + M.torso[0][3]) / 2 - py) * k);
   }));
 
   return P_;
