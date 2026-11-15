@@ -482,8 +482,7 @@ function renderMirror(dt) {
     setView(p, _md.x <= 0, dt);     // aynaya dönüksen önün, değilse arkan görünür
     const lv = N && N.power && !tubes.every(t => t.off) ? .9 : flashOn ? .5 : .1; if (Math.abs(p.lit - lv) > .01) setLit(p, lv);
     const mv = (keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD) && state === 'play' && !dlg; if (mv) p.ph += dt * 7; animRig(p, mv, dt);
-    p.g.rotation.y = 0; p.sprite.position.y = 0; p.sprite.rotation.z = 0;
-    faceTo(p, mirCam.position);
+    camera.getWorldDirection(_md); p.g.rotation.y = Math.atan2(_md.x, _md.z); p.sprite.position.y = 0; p.sprite.rotation.set(0, 0, 0);
   }
   if (toMir > 9) return;
   // yansıyan kamera
@@ -693,8 +692,18 @@ function makeSpritePerson(id, def, fake, cv) {
   };
   const bill = new THREE.Group(); g.add(bill);         // sana dönen taşıyıcı
   const flip = new THREE.Group(); bill.add(flip);      // kâğıt dönüşü (scale.x)
+  // kalınlık: aynı resimden üst üste katmanlar (dış katman tam renk, içtekiler gölgeli) → yandan bakınca dolu görünür
+  const THICK = .055, NS = 9;
+  const slices = (parent, geo, tex, th) => {
+    for (let i = 0; i < NS; i++) {
+      const f = i / (NS - 1), outer = i === NS - 1;
+      const m = new THREE.MeshBasicMaterial({ map: tex, alphaTest: .5, side: outer ? THREE.FrontSide : THREE.DoubleSide, fog: true });
+      m.userData.shade = outer ? 1 : .14 + f * .1; mats.push(m);
+      const mesh = new THREE.Mesh(geo, m); mesh.position.z = .004 + f * th; mesh.userData = { kind: 'cust' }; parent.add(mesh);
+    }
+  };
   const mkRig = (src, rig, back) => {
-    const R = { g: new THREE.Group(), parts: {} }; flip.add(R.g); R.g.visible = !back;
+    const R = { g: new THREE.Group(), parts: {} }; flip.add(R.g); if (back) R.g.rotation.y = Math.PI;   // arka resim karakterin arkasında, ters yöne bakar
     loadImg(src, im => {
       const W = im.width, Hh = im.height, k = sp.h / Hh;
       const base = document.createElement('canvas'); base.width = W; base.height = Hh; const bq = base.getContext('2d'); bq.drawImage(im, 0, 0);
@@ -703,10 +712,8 @@ function makeSpritePerson(id, def, fake, cv) {
         const [x0, x1, y0, y1] = rect, w = x1 - x0, h = y1 - y0;
         const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(base, x0, y0, w, h, 0, 0, w, h);
         const t = new THREE.CanvasTexture(c); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.anisotropy = 4; t.colorSpace = THREE.SRGBColorSpace;
-        const m = new THREE.MeshBasicMaterial({ map: t, alphaTest: .5, side: THREE.DoubleSide, fog: true }); mats.push(m);
         const geo = new THREE.PlaneGeometry(w * k, h * k).translate(((x0 + x1) / 2 - pivot[0]) * k, -((y0 + y1) / 2 - pivot[1]) * k, 0);
-        const mesh = new THREE.Mesh(geo, m); mesh.userData = { kind: 'cust' };
-        const piv = new THREE.Group(); piv.position.set((pivot[0] - W / 2) * k, (Hh - pivot[1]) * k, z); piv.add(mesh); R.g.add(piv); R.parts[name] = piv;
+        const piv = new THREE.Group(); piv.position.set((pivot[0] - W / 2) * k, (Hh - pivot[1]) * k, z); slices(piv, geo, t, name.startsWith('arm') ? .04 : THICK); R.g.add(piv); R.parts[name] = piv;
         return c;
       };
       // gövde: kollar ve bacaklar silinmiş hâli
@@ -714,9 +721,7 @@ function makeSpritePerson(id, def, fake, cv) {
       for (const a of ['armL', 'armR']) if (rig[a]) { const [x0, x1, y0, y1] = rig[a]; q.clearRect(x0, y0, x1 - x0, y1 - y0); }
       q.clearRect(0, rig.hip, W, Hh - rig.hip);
       const bt = new THREE.CanvasTexture(body); bt.magFilter = THREE.LinearFilter; bt.minFilter = THREE.LinearMipmapLinearFilter; bt.generateMipmaps = true; bt.anisotropy = 4; bt.colorSpace = THREE.SRGBColorSpace;
-      const bm = new THREE.MeshBasicMaterial({ map: bt, alphaTest: .5, side: THREE.DoubleSide, fog: true }); mats.push(bm);
-      const bmesh = new THREE.Mesh(new THREE.PlaneGeometry(W * k, Hh * k).translate(0, Hh * k / 2, 0), bm); bmesh.userData = { kind: 'cust' };
-      const bp = new THREE.Group(); bp.add(bmesh); R.g.add(bp); R.parts.body = bp;
+      const bp = new THREE.Group(); slices(bp, new THREE.PlaneGeometry(W * k, Hh * k).translate(0, Hh * k / 2, 0), bt, THICK); R.g.add(bp); R.parts.body = bp;
       // bacaklar (gövdenin biraz arkasında, kalçadan biraz yukarıdan başlar)
       part([0, rig.split, rig.hip - 6, Hh], [rig.split * .55, rig.hip], -.004, 'legL');
       part([rig.split, W, rig.hip - 6, Hh], [rig.split + (W - rig.split) * .45, rig.hip], -.003, 'legR');
@@ -733,9 +738,10 @@ function makeSpritePerson(id, def, fake, cv) {
   Object.assign(P_, { head: dummy(), armL: dummy(), armR: dummy(), legL: dummy(), legR: dummy() });
   return P_;
 }
-function setLit(p, v) { p.lit = v; for (const m of p.mats) m.color.setScalar(v); }
+function setLit(p, v) { p.lit = v; for (const m of p.mats) m.color.setScalar(v * (m.userData.shade ?? 1)); }
 // önden arkaya geçerken kâğıt gibi döner
 function setView(p, back, dt) {
+  p.back = back; p.flip.scale.x = 1; return;
   if (p.back !== back && p.flipT <= 0) { p.flipT = .28; p.pendingBack = back; }
   if (p.flipT > 0) {
     p.flipT -= dt; const t = clamp(1 - p.flipT / .28, 0, 1);
@@ -744,18 +750,19 @@ function setView(p, back, dt) {
   } else p.flip.scale.x = 1;
 }
 function animRig(p, moving, dt) {
-  const R = p.back ? p.B : p.F; if (!R.ready) return; const P2 = R.parts, s = Math.sin(p.ph), c = Math.cos(p.ph);
-  if (moving) {
-    if (P2.legL) { P2.legL.rotation.z = s * .07; P2.legL.position.y = (P2.legL.userData.y0 ??= P2.legL.position.y) + Math.max(0, s) * .045; }
-    if (P2.legR) { P2.legR.rotation.z = s * .07; P2.legR.position.y = (P2.legR.userData.y0 ??= P2.legR.position.y) + Math.max(0, -s) * .045; }
-    if (P2.armL) P2.armL.rotation.z = -.04 + s * .16;
-    if (P2.armR) P2.armR.rotation.z = .04 + s * .16;
-    P2.body.rotation.z = s * .02; P2.body.position.y = Math.abs(c) * .02;
-  } else {
-    const br = Math.sin(performance.now() / 700) * .006;
-    for (const n of ['legL', 'legR']) if (P2[n]) { P2[n].rotation.z *= .8; if (P2[n].userData.y0 !== undefined) P2[n].position.y += (P2[n].userData.y0 - P2[n].position.y) * .2; }
-    if (P2.armL) P2.armL.rotation.z = P2.armL.rotation.z * .85 - .01; if (P2.armR) P2.armR.rotation.z = P2.armR.rotation.z * .85 + .01;
-    P2.body.rotation.z *= .8; P2.body.position.y = br;
+  const s = Math.sin(p.ph), c = Math.cos(p.ph);
+  for (const R of [p.F, p.B]) {
+    if (!R.ready) continue; const P2 = R.parts;
+    // ileri-geri adım (x ekseni) — iki resimde de legL=-a, legR=+a aynı dünya hareketini verir
+    const a = moving ? s * .5 : 0, b = moving ? s * .45 : 0;
+    const L = (o, tx, tz, k) => { if (!o) return; o.rotation.x += (tx - o.rotation.x) * k; o.rotation.z += (tz - o.rotation.z) * k; };
+    const k = moving ? 1 : Math.min(1, dt * 8 || .2);
+    L(P2.legL, -a, 0, k); L(P2.legR, a, 0, k);
+    L(P2.armL, b, -.03, k); L(P2.armR, -b, .03, k);
+    for (const n of ['legL', 'legR']) if (P2[n]) { const y0 = P2[n].userData.y0 ??= P2[n].position.y; P2[n].position.y = y0; }
+    P2.body.position.y = moving ? Math.abs(c) * .03 : Math.sin(performance.now() / 700) * .006;
+    P2.body.rotation.x = moving ? .04 : P2.body.rotation.x * .9;
+    P2.body.rotation.z = moving ? s * .025 : P2.body.rotation.z * .9;
   }
 }
 function makePerson(id, fake) {
@@ -1069,8 +1076,18 @@ function closePaper() { $('paper').classList.add('hidden'); }
    MÜŞTERİ AKIŞI
    ===================================================================== */
 const OUT = new THREE.Vector3(3, 0, 7), DOOR_IN = new THREE.Vector3(3, 0, 3.3), DESK = new THREE.Vector3(1.15, 0, 1.45);
+// müşterinin başının üstünde isim
+function nameTag(name, fake) {
+  const cv = document.createElement('canvas'), g = cv.getContext('2d'); g.font = 'bold 30px monospace';
+  const w = Math.ceil(g.measureText(name).width) + 28; cv.width = w; cv.height = 46;
+  g.font = 'bold 30px monospace'; g.fillStyle = 'rgba(10,8,16,.72)'; g.fillRect(0, 0, w, 46); g.fillStyle = '#ffe9a8'; g.fillRect(0, 43, w, 3);
+  g.textBaseline = 'middle'; g.textAlign = 'center'; g.fillStyle = '#000'; g.fillText(name, w / 2 + 2, 25); g.fillStyle = '#fff'; g.fillText(name, w / 2, 23);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.minFilter = THREE.LinearFilter;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, fog: false })); sp.scale.set(w / 46 * .17, .17, 1); sp.renderOrder = 5; return sp;
+}
 function spawnCustomer(v) {
   const p = makePerson(v.who, v.fake); p.g.position.copy(OUT); scene.add(p.g);
+  { const def = CH[v.who], tag = nameTag(def.ad, v.fake); tag.position.y = (def.sprite ? def.sprite.h + .22 : 1.95 * (def.h || 1)); p.g.add(tag); p.tag = tag; }
   if (v.fake) p.g.traverse(o => { if (o.isMesh) o.layers.enable(1); });
   N.cust = { v, p, st: 'in', path: [DOOR_IN.clone(), DESK.clone()], bellDone: false, pi: 0, wait: 0, angry: 0 };
 }
@@ -1081,26 +1098,26 @@ function walk(c, dt) {
   if (!c.bellDone && g.position.z < 4.9 && g.position.z > 3) { c.bellDone = true; doorTarget = 1; if (!c.v.noBell) SND.bell(); setTimeout(() => { doorTarget = 0; }, 1600); }
   if (d < .05) { c.path.shift(); return c.path.length === 0; }
   const s = Math.min(d, sp * dt); g.position.x += dx / d * s; g.position.z += dz / d * s;
-  g.rotation.y = Math.atan2(dx, dz);
+  if (c.p.isSprite) turnTo(g, Math.atan2(dx, dz), .2); else g.rotation.y = Math.atan2(dx, dz);
   c.p.ph += dt * 7; const sw = Math.sin(c.p.ph) * .5;
   if (c.p.isSprite) spriteFacing(c.p, dt, true);
   c.p.legL.rotation.x = sw; c.p.legR.rotation.x = -sw; c.p.armL.rotation.x = -sw * .7; c.p.armR.rotation.x = sw * .7;
   if (Math.sin(c.p.ph) * Math.sin(c.p.ph - dt * 7) < 0 && !c.v.fake) SND.step();
   return false;
 }
+function turnTo(g, a, k) { let d = a - g.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); g.rotation.y += d * k; }
 function spriteFacing(p, dt, moving) {
   const g = p.g, toC = Math.atan2(camera.position.x - g.position.x, camera.position.z - g.position.z);
   const away = Math.cos(g.rotation.y - toC) < -.1;
-  setView(p, away, dt || .016); animRig(p, moving, dt);
-  p.sprite.rotation.z = moving ? Math.sin(p.ph) * .015 : p.sprite.rotation.z * .9;
-  faceTo(p, camera.position);
+  animRig(p, moving, dt || .016);
+  p.sprite.rotation.y = 0; p.sprite.rotation.z = 0;
   // ışığa göre parlaklık (sprite ışık almaz)
   const lit = N && N.power && !tubes.every(t => t.off) ? .92 : flashOn ? .55 : .12;
   if (Math.abs(p.lit - lit) > .01) setLit(p, lit);
 }
 function idlePose(c, now) {
   const p = c.p;
-  if (p.isSprite) { p.g.rotation.y = Math.atan2(camera.position.x - p.g.position.x, camera.position.z - p.g.position.z); spriteFacing(p, 0, false); if (c.v.fake) p.sprite.rotation.z = Math.sin(now * .7) * .06; return; } p.legL.rotation.x = p.legR.rotation.x = 0; p.armL.rotation.x = p.armR.rotation.x = Math.sin(now * 1.3) * .03;
+  if (p.isSprite) { turnTo(p.g, Math.atan2(camera.position.x - p.g.position.x, camera.position.z - p.g.position.z), .12); spriteFacing(p, .016, false); if (c.v.fake) p.sprite.rotation.z = Math.sin(now * .7) * .06; return; } p.legL.rotation.x = p.legR.rotation.x = 0; p.armL.rotation.x = p.armR.rotation.x = Math.sin(now * 1.3) * .03;
   const want = Math.atan2(camera.position.x - p.g.position.x, camera.position.z - p.g.position.z);
   p.g.rotation.y = c.v.fake ? Math.PI : want * .25 + Math.PI * .75 * Math.sign(want || 1) * 0 + (Math.abs(want) > 2 ? want : Math.PI);
   if (c.v.fake) { p.head.rotation.z = Math.sin(now * .7) * .12; p.head.rotation.y = Math.atan2(camera.position.x - p.g.position.x, camera.position.z - p.g.position.z) - p.g.rotation.y; }
@@ -1418,7 +1435,7 @@ function interact() {
       else if (N.allDone && !N.shopClosed) { N.shopClosed = true; N.closedAt = performance.now(); setShopOpen(false); SND.click(); SND.drawer(); toast('Dükkân kapandı.', 2.5); $('hint').classList.add('hidden'); hintT = 0; }
       else if (!N.allDone) toast('Daha müşteri gelecek, dükkân açık kalmalı.');
       break;
-    case 'cat': SND.purr(); toast('🐈 Prrr... Pamuk mırlıyor.', 2); break;
+    case 'cat': { const a = new Audio('dk_miyav.mp3'); a.volume = Math.min(1, SET.vol); a.play().catch(() => {}); toast('🐈 Miyav! Pamuk seviliyor.', 2); } break;
     case 'pc': openPC(); break;
     case 'fall': if (!held) { scene.remove(N.fall.m); N.fall.taken = true; setHeld(N.fall.id); SND.pick(); } break;
   }
@@ -1826,7 +1843,7 @@ function frame(now) {
   renderMirror(dt);
   if ((N && N.tvMode === 'cam') || mon.visible) { renderer.setRenderTarget(camRT); renderer.render(scene, secCam); }
   if (state === 'cam' && camIdx >= 0) {
-    const vc = CAMS[camIdx].c; if (selfP) for (const k of ['real', 'fake']) faceTo(selfP[k], vc.position);
+    const vc = CAMS[camIdx].c; if (selfP) for (const k of ['real', 'fake']) selfP[k].sprite.rotation.set(0, 0, 0);
     vc.aspect = camera.aspect; vc.updateProjectionMatrix(); postMat.uniforms.glitch.value = Math.max(glitch, .06);
     $('camClock').textContent = new Date().toLocaleTimeString('tr-TR');
     renderer.setRenderTarget(rt); renderer.render(scene, vc);
@@ -1835,7 +1852,7 @@ function frame(now) {
 }
 showMenu();
 requestAnimationFrame(frame);
-window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
+window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, spawnCustomer, get CAMERA() { return camera; }, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
 </script>
 </body>
 </html>
