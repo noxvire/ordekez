@@ -249,7 +249,7 @@ const KEY = 'sv_save';
 let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, inv: {}, eq: {}, kutular: [null, null, null, null] };
 try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; M.inv = M.inv || {}; M.eq = M.eq || {}; M.kutular = M.kutular || [null, null, null, null]; } } catch (e) {}
 
-const saveM = () => { try { localStorage.setItem(KEY, JSON.stringify(M)); } catch (e) {} };
+let saveM = () => { try { localStorage.setItem(KEY, JSON.stringify(M)); } catch (e) {} };
 const $ = id => document.getElementById(id);
 
 /* =================== KOSTÜMLER =================== */
@@ -383,6 +383,13 @@ const ITEMS = [
   { id: 'bbot',    ad: 'Bulut Botları',     s: 'ayakkabi', r: 2, ic: '👟', st: { spd: .09, mag: .1 } },
   { id: 'ibot',    ad: 'Işık Botları',      s: 'ayakkabi', r: 3, ic: '🥿', st: { spd: .13, arm: .03 } },
 ];
+// TEST MODU: survivor.html?test=1 → ayrı kayıt, sınırsız altın, dolu sandık yuvaları (1 dk kalmış)
+const TEST = /[?&]test=1/.test(location.search);
+if (TEST) { const KEYT = 'sv_test'; let o = null; try { o = JSON.parse(localStorage.getItem(KEYT) || 'null'); } catch (e) {}
+  if (o) Object.assign(M, o); else { M.inv = {}; M.eq = {}; M.up = {}; M.acik = { 0: 1 }; M.skin = 0; }
+  M.kutular = [0, 1, 2, 3].map(r => ({ r, bas: Date.now() - (CHESTS[r].sure - 60) * 1000 }));
+  saveM = () => { try { localStorage.setItem('sv_test', JSON.stringify(M)); } catch (e) {} };
+  setInterval(() => { if (M.altin < 1e8) M.altin = 1e9; }, 300); M.altin = 1e9; }
 // eski sürüm göçü: yuvaları yeni isimlere taşı, eski bedava sandıkları yuvalara koy
 (() => { const neq = {}; for (const k in M.eq) { const it = ITEMS.find(x => x.id === M.eq[k]); if (it && M.inv[it.id]) neq[it.s] = it.id; } M.eq = neq;
   for (const id in M.inv) if (!ITEMS.find(x => x.id === id)) delete M.inv[id];
@@ -807,6 +814,7 @@ function gameOver(win) {
   submitScore(win);
 }
 function submitScore(win) {
+  if (TEST) return;
   let token = null; try { token = localStorage.getItem('ordekez_token'); } catch (e) {}
   if (!token) return;
   fetch('https://servvglgsudtjouqknvx.supabase.co/rest/v1/rpc/skor_kaydet', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J' },
@@ -845,7 +853,7 @@ function renderChests() {
 }
 function tapChest(i) {
   const k = M.kutular[i]; if (!k) return; const L = left(k);
-  if (!k.bas) { if (M.kutular.some(x => x && x.bas && left(x) > 0)) { toast('Aynı anda tek sandık açılabilir ⏳'); return; } k.bas = Date.now(); saveM(); chime([523, 659], 80); return renderChests(); }
+  if (!k.bas) { if (!TEST && M.kutular.some(x => x && x.bas && left(x) > 0)) { toast('Aynı anda tek sandık açılabilir ⏳'); return; } k.bas = Date.now(); saveM(); chime([523, 659], 80); return renderChests(); }
   if (L > 0) { const c = skipCost(k); if (M.altin < c) { toast(`${c - M.altin} altın daha lazım 🥺`); return; } if (!confirm(`${c} altın harcayıp hemen açılsın mı?`)) return; M.altin -= c; }
   // ödülleri belirle
   const ch = CHESTS[k.r], loot = [];
@@ -916,6 +924,7 @@ function openItem(id) {
 $('detX').onclick = () => $('itemDet').classList.remove('on');
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.scr').classList.remove('on'); showMenu(); });
 function showMenu() {
+  if (TEST && !document.getElementById('testBand')) { const b = document.createElement('div'); b.id = 'testBand'; b.textContent = '🧪 TEST MODU — sınırsız altın (gerçek kaydına dokunmaz)'; b.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);background:#ff3d5a;color:#fff;font-weight:700;padding:3px 14px;border-radius:0 0 10px 10px;z-index:100;font-size:13px'; document.body.appendChild(b); }
   state = 'menu'; P = null; $('hud').style.display = 'none'; $('title').style.display = 'flex'; music('menu');
   ['lvup', 'pause', 'over'].forEach(id => $(id).classList.remove('on'));
   $('tGold').textContent = `🪙 ${M.altin}`;
