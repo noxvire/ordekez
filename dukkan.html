@@ -2032,11 +2032,11 @@ function endNight() {
 }
 // Gün 2 sonu: siyah ekranda kanlı "DEVAM EDECEK..." → ana menü
 function showTBC() {
-  $('hud').classList.add('hidden'); try { music.pause(); } catch (e) {}
+  $('hud').classList.add('hidden'); try { music.pause(); } catch (e) {} if ($('tbc')) $('tbc').remove();
   const el = document.createElement('div'); el.id = 'tbc';
   el.innerHTML = `<div class="tbcT">DEVAM EDECEK...${Array.from({ length: 14 }, (_, i) => `<i class="drip" style="left:${4 + i * 6.8 + Math.random() * 3}%;height:${4 + Math.random() * 14}vh;width:${.5 + Math.random() * .9}vw;animation-duration:${2 + Math.random() * 4}s"></i>`).join('')}</div><button class="mbtn" id="tbcGo">İlerle ▶</button>`;
   document.body.appendChild(el); SND.sting && SND.sting(); glitch = .8;
-  $('tbcGo').onclick = () => { S.night++; writeSave(); el.remove(); showMenu(); };
+  $('tbcGo').onclick = () => { S.flags = S.flags || {}; S.flags.tbc = true; writeSave(); el.remove(); showMenu(); };   // Gün 3'e geçmez
 }
 function renderSum() {
   const n = N, cost = Object.entries(order).reduce((s, [id, q]) => s + q * Math.round(GAMES[id].p * .5), 0);
@@ -2105,7 +2105,7 @@ function menuGo(k) {
   ac(); SND.click(); if (k === 'cont' || k === 'new') keyGuard();
   // TEST: dukkan.html?gece=2 → seçilen geceden başla
   { const gq = +new URLSearchParams(location.search).get('gece'); if (gq > 1 && (k === 'cont' || k === 'new')) { S = freshSave(); S.night = gq; S.flags = S.flags || {}; S.flags.tutDone = true; S.flags.testCash = 1; history.replaceState(null, '', location.pathname); fadeTo(startNight); return; } }
-  if (k === 'cont') { S = loadSave(); if (S) fadeTo(startNight); }
+  if (k === 'cont') { S = loadSave(); if (S && S.flags && S.flags.tbc) { showTBC(); return; } if (S) fadeTo(startNight); }
   else if (k === 'new') {
     const sv = loadSave();
     if (sv && !sv.ended) { menuPanel(`<h3>YENİ OYUN</h3><p>Kayıtlı ilerlemen (Gece ${sv.night}) silinecek. Emin misin?</p><button id="mYes">Evet, baştan başla</button> <button data-close>Vazgeç</button>`); $('mYes').onclick = () => { keyGuard(); $('mPanel').classList.add('hidden'); $('mItems').classList.remove('hidden'); S = freshSave(); fadeTo(startNight); }; }
