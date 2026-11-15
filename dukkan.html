@@ -1229,6 +1229,7 @@ function refreshShelves() {
   for (const id in shelfBoxes) shelfBoxes[id].forEach((b, k) => { b.visible = k < (N ? N.stock[id] : S.stock[id]); });
 }
 function startNight() {
+  $('hint').classList.add('hidden'); hintT = 0;   // önceki günün ipucu kalmasın
   setShopOpen(false);
   S.flags = S.flags || {}; if (!S.flags.testCash) { S.flags.testCash = 1; S.money += 5000; }   // TEST: deneme parası (sonra kaldırılacak)
   S.incoming = S.incoming || {}; S.skin = S.skin || { floor: 'dama', wall: 'yesil' }; S.owned = S.owned || { dama: 1, yesil: 1 };
@@ -1727,7 +1728,7 @@ function finale(c) {
 }
 
 function goSleep() {
-  if (N.sleeping) return; N.sleeping = true; state = 'sleep'; unlockPointer(); SND.click();
+  if (N.sleeping) return; N.sleeping = true; $('hint').classList.add('hidden'); hintT = 0; state = 'sleep'; unlockPointer(); SND.click();
   $('fade').classList.add('on'); toast('Zzz...', 2);
   setTimeout(() => { endNight(); setTimeout(() => $('fade').classList.remove('on'), 400); }, 1500);
 }
