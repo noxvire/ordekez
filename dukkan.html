@@ -444,10 +444,10 @@ box(.5, .22, .42, lam(0x2c2e30), 0, .11, 0, reg); box(.46, .06, .3, lam(0x1a1a1a
 const regScr = box(.3, .14, .03, basic({ map: signTex('0', '#0b1408', '#7aff5a', 32, 14) }), 0, .38, -.12, reg); regScr.rotation.x = -.3;
 reg.children.forEach(m => { m.userData = { kind: 'register' }; inter.push(m); });
 // CRT
-const crtCv = document.createElement('canvas'); crtCv.width = 64; crtCv.height = 48;
-const crtTex = new THREE.CanvasTexture(crtCv); crtTex.magFilter = crtTex.minFilter = THREE.NearestFilter; crtTex.generateMipmaps = false; crtTex.colorSpace = THREE.SRGBColorSpace;
+const crtCv = document.createElement('canvas'); crtCv.width = 256; crtCv.height = 192;
+const crtTex = new THREE.CanvasTexture(crtCv); crtTex.magFilter = crtTex.minFilter = THREE.LinearFilter; crtTex.generateMipmaps = false; crtTex.colorSpace = THREE.SRGBColorSpace;
 const camRT = new THREE.WebGLRenderTarget(96, 72, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
-const crt = new THREE.Group(); crt.position.set(.25, 1.05, counterZ - .05); crt.rotation.y = .5; scene.add(crt);
+const crt = new THREE.Group(); crt.position.set(.3, 1.05, counterZ - .02); crt.rotation.y = Math.PI - .45; scene.add(crt);   // bize (tezgâhın arkasına) dönük
 box(.55, .46, .5, lam(0x3a3a3c), 0, .23, 0, crt);
 const crtScreenM = new THREE.MeshBasicMaterial({ map: crtTex });
 const crtScr = plane(.42, .32, crtScreenM, 0, 0, 0); scene.remove(crtScr); crt.add(crtScr); crtScr.position.set(0, .25, .255);
@@ -704,6 +704,7 @@ const CH = {
   cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#1c2140', pants: '#1a1818', h: .78, glasses: true, frames: { src: 'dk_cocuk_yuru.png', n: 8, h: 1.42, dir: -1, headX: .58, face: [.525, .108, .215, .09] }, kid3d: 'kid' },
   teyze: { ad: 'Teyze', skin: '#d8a888', hair: '#8a8580', shirt: '#6a3a6a', pants: '#3a2a3a', old: true, glasses: true, longHair: true, frames: { src: 'dk_teyze_yuru.png', n: 8, h: 1.55, headX: .63, face: [.68, .07, .18, .13] }, kid3d: 'teyze' },
   adam:  { ad: 'Takım Elbiseli Adam', skin: '#cfc2b0', hair: '#111', shirt: '#151518', pants: '#151518', h: 1.06, eyeC: '#111' },
+  flaviano: { ad: 'Flaviano TV', skin: '#c99878', hair: '#1a1416', shirt: '#8a1c24', pants: '#3a3a40', frames: { src: 'dk_ogr_yuru.png', n: 8, h: 1.74, headX: .64, face: [.545, .075, .2, .11] }, kid3d: 'flav' },
   ogr:   { ad: 'Anatolian', skin: '#c99878', hair: '#1a1416', shirt: '#1c1a1e', pants: '#3a3a40', frames: { src: 'dk_ogr_yuru.png', n: 8, h: 1.76, headX: .64, face: [.545, .075, .2, .11] }, kid3d: 'ogr' },
   kurye: { ad: 'Kurye', skin: '#b88868', hair: '#1a1a1a', shirt: '#c03020', pants: '#222', beanie: '#c03020' },
   self:  { ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f' },
@@ -838,23 +839,23 @@ function animRig(p, moving, dt) {
 // PS1 tarzı düşük poligonlu 3B model: çizimdeki ön/arka resimler gövdeye kaplanır
 // çocuk: PS1 tarzı 3B model (çizimdeki renkler: lacivert kapüşonlu, siyah kargo, kıvırcık saç, gözlük, sırt çantası)
 function makeKidModel(id, def, fake) {
-  const st = def.kid3d, H = def.frames.h, sc = H / 1.66, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(sc); g.add(body);
+  const st = def.kid3d, og = st === 'ogr' || st === 'flav', H = def.frames.h, sc = H / 1.66, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(sc); g.add(body);
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76; drawFace(cv, def, fake);
   const noiseT = (base, dots, n = 40, w = 32, h = 32, extra) => ctex(w, h, (q, W, Hh) => { q.fillStyle = base; q.fillRect(0, 0, W, Hh); for (let i = 0; i < n; i++) { q.fillStyle = dots[i % dots.length]; q.fillRect(Math.random() * W | 0, Math.random() * Hh | 0, 2, 2); } extra && extra(q, W, Hh); });
   const floral = (base, n) => noiseT(base, ['#6a5a8a', '#8a7aa0', '#3a3050', '#9a8a70', '#5a4a6a'], n);
   const C = st === 'teyze'
     ? { top: floral(fake ? '#141018' : '#2c2638', 160), bottom: floral(fake ? '#141018' : '#2c2638', 160), shoe: '#3a2a24', skin: '#c89070', hair: null }
-    : st === 'ogr'
-    ? { top: noiseT(fake ? '#0e0e10' : '#1e1c20', ['#262428', '#151316'], 50), bottom: noiseT('#3a383c', ['#2a282c', '#4a474c', '#232124', '#55525a'], 160), shoe: '#e4e0da', skin: '#e2bca4', hair: '#151214' }
+    : og
+    ? { top: st === 'flav' ? noiseT(fake ? '#140808' : '#8a1c24', ['#9a262e', '#6a141a'], 50) : noiseT(fake ? '#0e0e10' : '#1e1c20', ['#262428', '#151316'], 50), bottom: noiseT('#3a383c', ['#2a282c', '#4a474c', '#232124', '#55525a'], 160), shoe: '#e4e0da', skin: '#e2bca4', hair: '#151214' }
     : { top: noiseT(fake ? '#141420' : '#20264a', ['#1a1f3c', '#2a3158', '#171b34']), bottom: noiseT('#181618', ['#222022', '#121012', '#2a2729'], 60), shoe: '#20243a', skin: '#f0d2bc', hair: '#2e1c14' };
   const topM = lam(C.top);
   const frontT = st === 'kid' ? noiseT(fake ? '#141420' : '#20264a', ['#1a1f3c', '#2a3158'], 30, 32, 32, (q, W, Hh) => {
       q.fillStyle = '#9a9aa8'; q.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 3.2 : 7.5; q.lineTo(W / 2 + 2 + Math.cos(a) * r, 13 + Math.sin(a) * r); } q.fill();
       q.fillStyle = '#c8c4c0'; q.fillRect(W / 2 - 4, 0, 1, 6); q.fillRect(W / 2 + 3, 0, 1, 6); })
-    : st === 'ogr' ? noiseT(fake ? '#0e0e10' : '#1e1c20', ['#262428'], 30, 32, 32, (q, W, Hh) => { q.strokeStyle = '#8a8890'; q.lineWidth = 1; q.font = 'bold 9px serif'; q.textAlign = 'center'; q.strokeText('UNIV', W / 2, 14); q.fillStyle = '#c8c4c0'; q.fillRect(W / 2 - 4, 0, 1, 5); q.fillRect(W / 2 + 3, 0, 1, 5); }) : null;
+    : og ? noiseT(st === 'flav' ? '#8a1c24' : (fake ? '#0e0e10' : '#1e1c20'), ['#262428'], 30, 32, 32, (q, W, Hh) => { q.strokeStyle = st === 'flav' ? '#ffffff' : '#8a8890'; q.lineWidth = 1; q.font = 'bold 9px serif'; q.textAlign = 'center'; q.strokeText(st === 'flav' ? '● LIVE' : 'UNIV', W / 2, 14); q.fillStyle = '#c8c4c0'; q.fillRect(W / 2 - 4, 0, 1, 5); q.fillRect(W / 2 + 3, 0, 1, 5); }) : null;
   const pantsM = lam(st === 'teyze' ? noiseT('#161216', ['#201a20', '#0e0a0e'], 30) : (() => { const t = C.bottom; return t; })());
-  const skinM = lam(fake ? '#a89a98' : C.skin), hairM = C.hair ? lam(noiseT(fake ? '#050505' : C.hair, st === 'ogr' ? ['#221c1e', '#0c0a0b', '#2a2226'] : ['#3e281c', '#1e120c', '#4a3022'], 90)) : null;
-  const shoeM = lam(noiseT(C.shoe, ['#e8e4dc'], 0, 16, 16, (q, W, Hh) => { if (st === 'teyze') { q.fillStyle = '#1e1410'; q.fillRect(0, 12, W, 4); return; } q.fillStyle = st === 'ogr' ? '#bdb8b0' : '#e8e4dc'; q.fillRect(0, 11, W, 5); q.fillStyle = st === 'ogr' ? '#222' : '#e8e4dc'; q.fillRect(3, 3, 3, 4); q.fillRect(10, 3, 3, 4); }));
+  const skinM = lam(fake ? '#a89a98' : C.skin), hairM = C.hair ? lam(noiseT(fake ? '#050505' : C.hair, og ? ['#221c1e', '#0c0a0b', '#2a2226'] : ['#3e281c', '#1e120c', '#4a3022'], 90)) : null;
+  const shoeM = lam(noiseT(C.shoe, ['#e8e4dc'], 0, 16, 16, (q, W, Hh) => { if (st === 'teyze') { q.fillStyle = '#1e1410'; q.fillRect(0, 12, W, 4); return; } q.fillStyle = og ? '#bdb8b0' : '#e8e4dc'; q.fillRect(0, 11, W, 5); q.fillStyle = og ? '#222' : '#e8e4dc'; q.fillRect(3, 3, 3, 4); q.fillRect(10, 3, 3, 4); }));
   const bagM = lam(noiseT('#141214', ['#1e1b1e', '#0c0a0c'], 50)), shirtM = lam('#dcd8d0'), blackM = lam('#0c0c10');
   const cyl = (rt, rb, h, m, x, y, z, par, sx = 1, sz = 1, seg = 8) => { const ms = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg, 2).scale(sx, 1, sz), m); ms.position.set(x, y, z); par.add(ms); return ms; };
   // gövde
@@ -895,9 +896,10 @@ function makeKidModel(id, def, fake) {
       box(.06, .14, .04, sm, .02, -.06, .12, head);   // çene altı düğüm
       const cap = new THREE.Mesh(new THREE.SphereGeometry(.142, 10, 5, 0, Math.PI * 2, 0, Math.PI * .34).scale(1.04, 1.14, 1.12), sm); cap.position.set(0, .13, .0); head.add(cap);
     } else {
-      const pts = st === 'ogr'
+      const pts = og
         ? [[0, .25, -.01, .11], [-.07, .22, .06, .065], [.07, .22, .06, .065], [-.11, .15, -.02, .065], [.11, .15, -.02, .065], [0, .18, -.09, .1], [0, .23, .1, .06], [-.04, .2, .11, .05], [.05, .2, .11, .05], [0, .1, -.11, .075], [-.1, .09, -.06, .05], [.1, .09, -.06, .05]]
         : [[0, .24, 0, .12], [-.08, .2, .05, .07], [.08, .2, .05, .07], [-.1, .14, -.03, .07], [.1, .14, -.03, .07], [0, .18, -.09, .1], [-.05, .23, .08, .06], [.05, .23, .08, .06], [0, .2, .1, .06], [-.11, .09, -.05, .055], [.11, .09, -.05, .055], [0, .1, -.11, .08], [-.07, .27, -.02, .06], [.07, .26, -.03, .06]];
+      if (st === 'flav') { const hp = new THREE.Mesh(new THREE.TorusGeometry(.15, .018, 5, 12, Math.PI), lam('#151515')); hp.position.set(0, .12, 0); head.add(hp); for (const x of [-.145, .145]) box(.05, .09, .08, lam('#e83030'), x, .1, 0, head); }
       for (const [x, y, z, r] of pts) { const hm = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), hairM); hm.position.set(x, y, z); hm.rotation.set(x * 9, y * 7, z * 5); head.add(hm); }
     } }
   // kollar
@@ -1175,10 +1177,11 @@ const NIGHTS = {
         hi: 'Kızım yine ben. Torunum korkunç bir oyun istiyor, ne verirsen.',
         thanks: 'Sağ ol kızım.',
         chat: { q: 'Dün gece saat 4\'te pencereden baktım. Sen vitrinde durmuş bana el sallıyordun. ...Dükkân kapalıydı ama kızım.', o: [['Ben değildim. Saat 3\'te kapattım.', 0, 0, '...Allah korusun. Ben gidiyorum.'], ['Evet bendim, şaka yaptım.', 1, 0, 'Böyle şaka mı olur kızım, ödüm koptu.']] } },
-      { m: 100, who: 'ogr', want: ['aysavas'], pay: 250,
-        hi: 'Selam. Götten Yemek var mı? Ödevden kaçmam lazım.',
-        thanks: 'Kurtardın beni. Ya da batırdın, sabah anlarız.',
-        chat: { q: 'Bu dükkânı hep merak ederdim. Burada önceden çalışan Necmi abi hiç kimseye depoyu göstermezdi. Sonra bir gün ortadan kayboldu.', o: [['Ben de girmedim daha.', 0, 0, 'Bence girme. Şaka şaka. ...Belki de değil.'], ['Depoda sadece koli var.', 1, 5, 'Hm. Öyle olsun.']] } },
+      { m: 100, who: 'flaviano', want: ['aysavas'], pay: 250,
+        hi: 'Selamlar chat! Şu an canlıdayız, gece yarısı oyun dükkânındayız arkadaşlar!',
+        ask: 'Abla Götten Yemek var mı? Chat bu oyunu oynamamı istiyor, bağış hedefi tamamlandı.',
+        thanks: 'Chat diyor ki teşekkürler abla! ...Bir saniye, chat neden arkanda biri var diyor?',
+        chat: { q: 'Abla yayına bir selam verir misin? Chat seni çok sevdi... yalnız bazıları "kasadaki ikinci kız kim" diye soruyor.', o: [['Selam chat!', 2, 15, 'Chat çıldırdı! Bağış geldi, al bu senin. Bahşiş!'], ['Burada sadece ben varım.', 0, 0, '...Tamam. Kameram bozuk herhalde. Yayını kapatıyorum.'], ['Kameranı kapat, burada yayın yasak.', 1, 0, 'Tamam tamam abla, kapattım. Kapattım... değil mi?']] } },
       { m: 160, who: 'erdi', want: ['futbol'], pay: 170,
         hi: 'ZEYNEP! Pro Ördek Futbol lazım, bütün mahalleye meydan okudum!',
         thanks: 'Ördekler sahada!',
@@ -1657,7 +1660,7 @@ function updateGhost(dt) {
 /* ---------- CRT görüntüsü ---------- */
 let demoPh = 0;
 function drawCRT(dt, now) {
-  const g = crtCv.getContext('2d'), w = 64, h = 48;
+  const g = crtCv.getContext('2d'), w = 64, h = 48; g.setTransform(4, 0, 0, 4, 0, 0); g.imageSmoothingEnabled = false;
   if (!N || N.tvMode === 'off') { g.fillStyle = '#050608'; g.fillRect(0, 0, w, h); crtTex.needsUpdate = true; crtScreenM.map = crtTex; crtGlow.intensity = 0; return; }
   crtGlow.intensity = 1.2 + Math.sin(now * 13) * .1;
   if (N.tvMode === 'cam') { crtScreenM.map = camRT.texture; crtScreenM.needsUpdate = true; return; }
@@ -1939,7 +1942,7 @@ function updateNight(dt, now) {
   if (!n.def.finale && n.opened && !n.cust && !n.queue.length && !dlg && !n.allDone && n.power) {
     n.allDone = true;
     toast('Bu gecelik müşteri kalmadı.', 3);
-    hint('Dükkânı kapat: kapıdaki AÇIK tabelasına bak ve E bas.', 9999);
+    hint('Dükkânı kapat: vitrin camındaki AÇIK tabelasına bak ve E bas.', 9999);
   }
   if (n.shopClosed && !n.events.length && !n.canSleep) { n.canSleep = true; hint('Dükkân kapandı. Yatak odasına git, yatağa bak ve E bas: günü bitir.', 9999); }
   updateGhost(dt);
