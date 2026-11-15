@@ -1665,7 +1665,7 @@ function getFocus() {
 function promptFor(f) {
   if (!f) return '';
   switch (f.kind) {
-    case 'shelf': return handsFull() ? `${GAMES[f.id].ad}  (elin dolu)` : `${GAMES[f.id].ad} al · ${GAMES[f.id].p} ₺  (rafta ${N.stock[f.id]})`;
+    case 'shelf': return (handsFull() ? `${GAMES[f.id].ad}  (elin dolu)` : `${GAMES[f.id].ad} al · ${GAMES[f.id].p} ₺  (rafta ${N.stock[f.id]})`) + (held ? `<br><span style="font-size:13px;color:#ffd870"><kbd>Q</kbd>${GAMES[held].ad} rafa geri koy</span>` : '');
     case 'counter': return held ? `Tezgâha koy` : '';
     case 'cItem': return handsFull() ? '' : 'Geri al';
     case 'register': return 'Kasayı aç';
