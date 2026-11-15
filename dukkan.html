@@ -1775,7 +1775,7 @@ function promptFor(f) {
     case 'bed': return N && N.canSleep ? 'Uyu (günü bitir)' : 'Yatak';
     case 'cat': return "Odin'i sev";
     case 'pc': return 'Bilgisayarı kullan';
-    case 'rack': return carryKoli ? 'Koliyi aç, raflara diz' : '';
+    case 'rack': return carryKoli ? 'Koliyi aç, raflara diz' : held ? `@Q<kbd>Q</kbd>${GAMES[held].ad} rafa geri koy` : '';
     case 'shopDoor': return doorUser ? 'Kapıyı kapat' : 'Kapıyı aç';
     case 'sign': return !N ? '' : !N.opened ? 'Dükkânı aç (tabelayı çevir: AÇIK)' : N.allDone && !N.shopClosed ? 'Dükkânı kapat (tabelayı çevir: KAPALI)' : N.shopClosed ? '' : 'Tabela: AÇIK';
     case 'fall': return handsFull() ? '' : 'Yerden al';
@@ -2210,7 +2210,7 @@ function frame(now) {
   // hud
   if (state === 'play' && N) {
     focus = dlg ? null : getFocus(); const pr = promptFor(focus);
-    if (pr !== lastPrompt) { $('prompt').innerHTML = pr ? `<kbd>E</kbd>${pr}` : ''; lastPrompt = pr; }
+    if (pr !== lastPrompt) { $('prompt').innerHTML = !pr ? '' : pr.startsWith('@Q') ? pr.slice(2) : `<kbd>E</kbd>${pr}`; lastPrompt = pr; }
     $('cross').classList.toggle('on', !!pr); updateHud();
   }
   if (hintT > 0) { hintT -= dt; if (hintT <= 0) $('hint').classList.add('hidden'); }
