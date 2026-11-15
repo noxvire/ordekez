@@ -139,13 +139,13 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 
 <script>
 /* ============ AYARLAR ============ */
-// Rarity'ler: renk + koleksiyondaki her kartın verdiği kazanç bonusu (her kopya +%50 daha)
+// Rarity'ler: renk + koleksiyondaki her kartın verdiği kazanç bonusu (her kopya +%25 daha)
 const RAR = {
-  siradan:  { ad: 'SIRADAN',  c: '#9aa0a6', bonus: .02 },
-  nadir:    { ad: 'NADİR',    c: '#3d9bff', bonus: .05 },
-  epik:     { ad: 'EPİK',     c: '#b04dff', bonus: .12 },
-  efsanevi: { ad: 'EFSANEVİ', c: '#ffb020', bonus: .30 },
-  mitik:    { ad: 'MİTİK',    c: '#ff3d5a', bonus: .75 },
+  siradan:  { ad: 'SIRADAN',  c: '#9aa0a6', bonus: .01 },
+  nadir:    { ad: 'NADİR',    c: '#3d9bff', bonus: .025 },
+  epik:     { ad: 'EPİK',     c: '#b04dff', bonus: .06 },
+  efsanevi: { ad: 'EFSANEVİ', c: '#ffb020', bonus: .15 },
+  mitik:    { ad: 'MİTİK',    c: '#ff3d5a', bonus: .35 },
 };
 const RORDER = ['siradan', 'nadir', 'epik', 'efsanevi', 'mitik'];
 // KARTLAR: fotoğraflar gelince img: 'tk_xxx.jpg' eklenecek
@@ -165,38 +165,39 @@ const CARDS = [
 ];
 // PAKETLER: fiyat + rarity olasılıkları (%), her paket 3 kart
 const PACKS = [
-  { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 2500,       a: '#3a3226', b: '#7a6a50', o: [72, 22, 5, 0.9, 0.1] },
-  { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 40000,      a: '#30384a', b: '#9fb2d0', o: [45, 35, 15, 4.5, 0.5] },
-  { id: 'altin',   ad: 'Altın Paket',   ic: '🥇', fiyat: 600000,     a: '#4a3a10', b: '#ffcf40', o: [18, 36, 30, 13, 3] },
-  { id: 'elmas',   ad: 'Elmas Paket',   ic: '💎', fiyat: 9000000,    a: '#123848', b: '#58e0ff', o: [0, 22, 42, 28, 8] },
-  { id: 'ordekez', ad: 'Ördekez Paketi', ic: '🦆', fiyat: 150000000, a: '#4a1020', b: '#ff4d6d', o: [0, 0, 35, 45, 20] },
+  { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 10000,       a: '#3a3226', b: '#7a6a50', o: [72, 22, 5, 0.9, 0.1] },
+  { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 150000,      a: '#30384a', b: '#9fb2d0', o: [45, 35, 15, 4.5, 0.5] },
+  { id: 'altin',   ad: 'Altın Paket',   ic: '🥇', fiyat: 2500000,     a: '#4a3a10', b: '#ffcf40', o: [18, 36, 30, 13, 3] },
+  { id: 'elmas',   ad: 'Elmas Paket',   ic: '💎', fiyat: 40000000,    a: '#123848', b: '#58e0ff', o: [0, 22, 42, 28, 8] },
+  { id: 'ordekez', ad: 'Ördekez Paketi', ic: '🦆', fiyat: 750000000, a: '#4a1020', b: '#ff4d6d', o: [0, 0, 35, 45, 20] },
 ];
 // GELİŞTİRMELER
 const UPS = [
-  { id: 'parmak', ad: 'Güçlü Parmak',  ic: '👆', d: 'Her tıklama +1 para',                base: 15,    k: 1.35 },
-  { id: 'oto',    ad: 'Oto Tıklayıcı', ic: '🤖', d: 'Saniyede 1 kez kendiliğinden tıklar', base: 120,   k: 1.45 },
-  { id: 'hiz',    ad: 'Hızlı Robot',   ic: '⚡', d: 'Oto tıklayıcılar %25 daha hızlı',     base: 1500,  k: 2.1, max: 12 },
-  { id: 'krit',   ad: 'Kritik Tık',    ic: '💥', d: '%3 şansla tıklama ×10 verir',          base: 800,   k: 1.9, max: 15 },
-  { id: 'altin',  ad: 'Altın Ördek',   ic: '🌟', d: 'Altın ördek daha sık çıkar (yakala: 20 sn ×7)', base: 5000, k: 2.4, max: 10 },
-  { id: 'carpan', ad: 'Ördek Çarpanı', ic: '✖️', d: 'Tüm kazanç ×2',                       base: 25000, k: 9 },
+  { id: 'parmak', ad: 'Güçlü Parmak',  ic: '👆', d: 'Her tıklama +1 para',                base: 60,     k: 1.65 },
+  { id: 'oto',    ad: 'Oto Tıklayıcı', ic: '🤖', d: 'Her 5 saniyede 1 kez kendiliğinden tıklar', base: 600, k: 1.85 },
+  { id: 'hiz',    ad: 'Hızlı Robot',   ic: '⚡', d: 'Oto tıklayıcılar %15 daha hızlı',     base: 12000,  k: 3, max: 10 },
+  { id: 'krit',   ad: 'Kritik Tık',    ic: '💥', d: '%2 şansla tıklama ×5 verir',           base: 4000,   k: 2.4, max: 10 },
+  { id: 'altin',  ad: 'Altın Ördek',   ic: '🌟', d: 'Altın ördek daha sık çıkar (yakala: 15 sn ×5)', base: 30000, k: 3.2, max: 8 },
+  { id: 'carpan', ad: 'Ördek Çarpanı', ic: '✖️', d: 'Tüm kazanç ×2',                       base: 500000, k: 18 },
 ];
 
 /* ============ KAYIT ============ */
 const KEY = 'tk_save';
 let S = { para: 0, toplam: 0, tik: 0, lv: {}, kart: {}, son: Date.now(), ses: 1 };
-try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) S = Object.assign(S, o); } catch (e) {}
+try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && o.v === 2) S = Object.assign(S, o); } catch (e) {}
+S.v = 2;   // ekonomi değişti: eski (kolay) kayıtlar sıfırlanır
 const save = () => { S.son = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
 /* ============ HESAPLAR ============ */
 const lv = id => S.lv[id] || 0;
 const upCost = u => Math.ceil(u.base * Math.pow(u.k, lv(u.id)));
-function cardBonus() { let b = 0; for (const c of CARDS) { const n = S.kart[c.id] || 0; if (n) b += RAR[c.r].bonus * (1 + .5 * (n - 1)); } return b; }
+function cardBonus() { let b = 0; for (const c of CARDS) { const n = S.kart[c.id] || 0; if (n) b += RAR[c.r].bonus * (1 + .25 * (Math.min(n, 9) - 1)); } return b; }
 let frenzyT = 0;
-const mult = () => Math.pow(2, lv('carpan')) * (1 + cardBonus()) * (frenzyT > 0 ? 7 : 1);
+const mult = () => Math.pow(2, lv('carpan')) * (1 + cardBonus()) * (frenzyT > 0 ? 5 : 1);
 const perClick = () => (1 + lv('parmak')) * mult();
-const autoRate = () => lv('oto') * (1 + .25 * lv('hiz'));            // tıklama/sn
+const autoRate = () => lv('oto') * .2 * (1 + .15 * lv('hiz'));            // tıklama/sn
 const perSec = () => autoRate() * perClick();
-const critCh = () => .03 * lv('krit');
+const critCh = () => .02 * lv('krit');
 
 function fmt(n) {
   n = Math.floor(n); if (n < 1000) return String(n);
@@ -220,7 +221,7 @@ $('muteBtn').textContent = S.ses ? '🔊' : '🔇';
 function gain(x) { S.para += x; S.toplam += x; }
 function floatText(x, y, txt, crit) { const e = document.createElement('div'); e.className = 'fl' + (crit ? ' crit' : ''); e.textContent = txt; e.style.left = (x - 20 + Math.random() * 40) + 'px'; e.style.top = (y - 30) + 'px'; document.body.appendChild(e); setTimeout(() => e.remove(), 900); }
 function doClick(x, y) {
-  let v = perClick(), crit = Math.random() < critCh(); if (crit) v *= 10;
+  let v = perClick(), crit = Math.random() < critCh(); if (crit) v *= 5;
   gain(v); S.tik++; floatText(x, y, '+' + fmt(v), crit);
   beep(crit ? 880 : 520 + Math.random() * 80, crit ? .12 : .05, 'square', crit ? .07 : .04, crit ? 1.5 : 1.2);
   const b = $('bigBtn'); b.classList.add('p'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('p'), 70);
@@ -275,7 +276,7 @@ function buyPack(p) {
     [440, 554, 659, 880, 1175].slice(0, ri + 1).forEach((fr, k) => setTimeout(() => beep(fr, .14, 'triangle', .07), k * 80));
     if (ri >= 3) flash(RAR[c.r].c);
     if (isNew[i]) { const t = document.createElement('div'); t.className = 'tag'; t.textContent = 'YENİ!'; f.parentNode.appendChild(t); }
-    else { const t = document.createElement('div'); t.className = 'tag'; t.style.background = '#a998d6'; t.textContent = 'KOPYA +%' + Math.round(RAR[c.r].bonus * 50); f.parentNode.appendChild(t); }
+    else { const t = document.createElement('div'); t.className = 'tag'; t.style.background = '#a998d6'; t.textContent = 'KOPYA +%' + (RAR[c.r].bonus * 25).toFixed(1).replace('.0', ''); f.parentNode.appendChild(t); }
     if (flipped === 3) { $('openOk').style.display = ''; $('openHint').textContent = 'Kartlar koleksiyonuna eklendi. Her kart kazancını artırır!'; }
   });
 }
@@ -293,13 +294,13 @@ $('colBtn').onclick = () => {
 
 /* ============ ALTIN ÖRDEK ============ */
 let goldT = null;
-function scheduleGolden() { clearTimeout(goldT); if (!lv('altin')) return; const sec = Math.max(25, 140 - lv('altin') * 11) * (.7 + Math.random() * .6); goldT = setTimeout(showGolden, sec * 1000); }
+function scheduleGolden() { clearTimeout(goldT); if (!lv('altin')) return; const sec = Math.max(70, 240 - lv('altin') * 20) * (.7 + Math.random() * .6); goldT = setTimeout(showGolden, sec * 1000); }
 function showGolden() {
   const g = $('golden'), m = $('mid').getBoundingClientRect();
   g.style.left = (20 + Math.random() * (m.width - 90)) + 'px'; g.style.top = (80 + Math.random() * (m.height - 180)) + 'px'; g.style.display = 'block';
   beep(1200, .2, 'sine', .05, 1.5); clearTimeout(g._t); g._t = setTimeout(() => { g.style.display = 'none'; scheduleGolden(); }, 9000);
 }
-$('golden').onclick = () => { const g = $('golden'); g.style.display = 'none'; clearTimeout(g._t); frenzyT = 20; flash('#ffd84a'); [660, 880, 1100, 1320].forEach((f, k) => setTimeout(() => beep(f, .12, 'triangle', .07), k * 70)); toast('🌟 ALTIN ÖRDEK! 20 saniye boyunca tüm kazanç ×7'); scheduleGolden(); };
+$('golden').onclick = () => { const g = $('golden'); g.style.display = 'none'; clearTimeout(g._t); frenzyT = 15; flash('#ffd84a'); [660, 880, 1100, 1320].forEach((f, k) => setTimeout(() => beep(f, .12, 'triangle', .07), k * 70)); toast('🌟 ALTIN ÖRDEK! 15 saniye boyunca tüm kazanç ×5'); scheduleGolden(); };
 
 /* ============ EKRAN ============ */
 let tt;
@@ -319,14 +320,14 @@ function refresh() {
 let last = performance.now(), acc = 0, saveAcc = 0;
 function loop(now) {
   const dt = Math.min(1, (now - last) / 1000); last = now;
-  if (frenzyT > 0) { frenzyT -= dt; $('frenzy').style.display = 'block'; $('frenzy').textContent = `🌟 ×7 — ${Math.ceil(frenzyT)} sn`; if (frenzyT <= 0) $('frenzy').style.display = 'none'; }
+  if (frenzyT > 0) { frenzyT -= dt; $('frenzy').style.display = 'block'; $('frenzy').textContent = `🌟 ×5 — ${Math.ceil(frenzyT)} sn`; if (frenzyT <= 0) $('frenzy').style.display = 'none'; }
   const ps = perSec(); if (ps) { gain(ps * dt); acc += dt; if (acc > .1) { acc = 0; refresh(); } }
   saveAcc += dt; if (saveAcc > 3) { saveAcc = 0; save(); }
   requestAnimationFrame(loop);
 }
 // çevrimdışı kazanç: en fazla 2 saat, yarı hızda
-(() => { const away = Math.min(7200, (Date.now() - (S.son || Date.now())) / 1000), ps = autoRate() * (1 + lv('parmak')) * Math.pow(2, lv('carpan')) * (1 + cardBonus());
-  if (away > 30 && ps > 0) { const x = ps * away * .5; gain(x); setTimeout(() => toast(`🤖 Sen yokken robotlar ${fmt(x)} 🪙 kazandı!`), 500); } })();
+(() => { const away = Math.min(3600, (Date.now() - (S.son || Date.now())) / 1000), ps = autoRate() * (1 + lv('parmak')) * Math.pow(2, lv('carpan')) * (1 + cardBonus());
+  if (away > 30 && ps > 0) { const x = ps * away * .25; gain(x); setTimeout(() => toast(`🤖 Sen yokken robotlar ${fmt(x)} 🪙 kazandı!`), 500); } })();
 window.addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 buildUps(); buildPacks(); refresh(); scheduleGolden(); requestAnimationFrame(loop);
 window.__tk = { S, CARDS, PACKS, refresh, buyPack, rollCard };
