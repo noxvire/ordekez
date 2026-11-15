@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Ördekez Tıkla — Ördekez</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;background:#0e0c14;color:#f1ecff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+body{background:radial-gradient(ellipse at 50% 40%,#2a1f45 0%,#120f1c 60%,#0a0910 100%)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+#app{display:grid;grid-template-columns:300px 1fr 330px;height:100%;gap:0}
+@media (max-width:980px){#mid{order:-1}#app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;overflow-y:auto;height:auto;min-height:100%}html,body{overflow:auto}}
+.panel{background:rgba(10,8,18,.72);border-right:1px solid #2c2442;padding:14px;overflow-y:auto}
+.panel.r{border-right:0;border-left:1px solid #2c2442}
+.panel h2{font-size:13px;letter-spacing:3px;color:#a998d6;margin:4px 0 10px;font-weight:800}
+/* orta */
+#mid{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-height:520px}
+#top{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px}
+.back{background:#241d38;border:1px solid #3d3360;padding:8px 14px;border-radius:10px;font-weight:700;font-size:14px}
+.back:hover{background:#30264a}
+#money{font-size:clamp(34px,6vw,58px);font-weight:900;color:#ffd84a;text-shadow:0 3px 0 #6b4a00,0 0 30px rgba(255,200,40,.35);font-variant-numeric:tabular-nums}
+#rates{opacity:.8;font-size:15px;margin-top:4px;text-align:center}
+#rates b{color:#ffd84a}
+#bonus{font-size:13px;color:#8fe39a;margin-top:2px;min-height:18px}
+#btnWrap{position:relative;margin:34px 0 20px}
+#bigBtn{width:min(280px,64vw);height:min(280px,64vw);border-radius:50%;position:relative;
+  background:radial-gradient(circle at 35% 30%,#ffe98a 0%,#ffbf1f 45%,#d98400 80%,#9b5a00 100%);
+  box-shadow:0 14px 0 #6b3d00,0 22px 40px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5);
+  transition:transform .06s,box-shadow .06s;display:flex;align-items:center;justify-content:center;font-size:min(130px,30vw)}
+#bigBtn:active,#bigBtn.p{transform:translateY(10px) scale(.97);box-shadow:0 4px 0 #6b3d00,0 8px 20px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5)}
+#bigBtn .lbl{position:absolute;bottom:18%;font-size:clamp(13px,2.4vw,18px);font-weight:900;letter-spacing:3px;color:#5a3300;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+#ring{position:absolute;inset:-18px;border-radius:50%;border:3px dashed rgba(255,216,74,.25);animation:spin 18s linear infinite;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fl{position:fixed;pointer-events:none;font-weight:900;font-size:22px;color:#fff6c2;text-shadow:0 2px 0 #7a5200;animation:fl .9s ease-out forwards;z-index:50}
+.fl.crit{color:#ff6b6b;font-size:34px;text-shadow:0 2px 0 #600}
+@keyframes fl{to{transform:translateY(-90px);opacity:0}}
+#golden{position:absolute;font-size:46px;cursor:pointer;display:none;filter:drop-shadow(0 0 14px gold);animation:bob 1s ease-in-out infinite alternate;z-index:5}
+@keyframes bob{to{transform:translateY(-10px) rotate(8deg)}}
+#frenzy{position:absolute;bottom:22px;font-weight:800;color:#ffd84a;display:none}
+/* yükseltmeler */
+.up{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:#1b1530;border:1px solid #33295a;border-radius:12px;padding:10px;margin-bottom:8px;transition:background .1s,transform .05s}
+.up:hover{background:#251d42}.up:active{transform:scale(.98)}
+.up .ic{font-size:28px;width:40px;text-align:center}
+.up .t{flex:1}.up .t b{display:block;font-size:15px}.up .t small{opacity:.7;font-size:12px;line-height:1.3;display:block}
+.up .c{text-align:right;font-weight:800;color:#ffd84a;font-size:14px;white-space:nowrap}
+.up .c .lv{display:block;color:#a998d6;font-size:11px;font-weight:700}
+.up.no{opacity:.45}.up.max .c{color:#8fe39a}
+/* paketler */
+.pk{width:100%;border-radius:14px;padding:12px;margin-bottom:10px;text-align:left;position:relative;overflow:hidden;border:2px solid var(--b);background:linear-gradient(135deg,var(--a),#140f22 85%);transition:transform .08s}
+.pk:hover{transform:translateY(-2px)}.pk.no{opacity:.5}
+.pk .hd{display:flex;justify-content:space-between;align-items:center}
+.pk .nm{font-weight:900;font-size:16px}.pk .pr{font-weight:900;color:#ffd84a}
+.pk .odds{display:flex;gap:3px;margin-top:8px;height:8px;border-radius:4px;overflow:hidden}
+.pk .odds i{display:block;height:100%}
+.pk .ol{display:flex;flex-wrap:wrap;gap:4px 9px;margin-top:6px;font-size:11px;opacity:.85}
+.pk .ol span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px;background:var(--c)}
+#colBtn{width:100%;padding:11px;border-radius:12px;background:#2d2350;border:1px solid #4a3d80;font-weight:800;margin-bottom:12px}
+/* kartlar */
+.card{--c:#9aa0a6;width:150px;aspect-ratio:3/4.2;border-radius:12px;position:relative;background:#16121f;border:3px solid var(--c);box-shadow:0 0 18px color-mix(in srgb,var(--c) 50%,transparent);overflow:hidden;flex-shrink:0}
+.card .ph{position:absolute;inset:0 0 26% 0;background:#241d38 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:900;color:rgba(255,255,255,.18)}
+.card .nm{position:absolute;left:0;right:0;bottom:0;height:26%;background:linear-gradient(transparent,rgba(0,0,0,.85) 30%);display:flex;flex-direction:column;justify-content:flex-end;padding:6px 8px}
+.card .nm b{font-size:14px;line-height:1.1}.card .nm small{font-size:10px;letter-spacing:2px;font-weight:800;color:var(--c)}
+.card .cnt{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border-radius:8px;padding:1px 7px;font-size:12px;font-weight:800}
+.card.lock{filter:grayscale(1) brightness(.35);box-shadow:none}
+.card.lock .ph{font-size:60px;color:#555}
+.card.mitik{animation:mit 2s linear infinite}
+@keyframes mit{0%,100%{box-shadow:0 0 24px #ff3d5a}50%{box-shadow:0 0 40px #ff9a3d}}
+/* modallar */
+.modal{position:fixed;inset:0;background:rgba(5,3,10,.88);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:100;padding:20px}
+.modal.on{display:flex}
+#open .row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;perspective:900px}
+.flip{width:170px;aspect-ratio:3/4.2;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.8,.3,1.2);cursor:pointer}
+.flip.on{transform:rotateY(180deg)}
+.flip>*{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flip .bk{border-radius:12px;background:repeating-linear-gradient(45deg,#3b2d6b 0 10px,#2c2152 10px 20px);border:3px solid #6a58b0;display:flex;align-items:center;justify-content:center;font-size:54px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
+.flip .bk.glow{animation:shake .4s infinite}
+@keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
+.flip .card{width:100%;transform:rotateY(180deg)}
+.tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#ffd84a;color:#3a2600;font-weight:900;font-size:12px;padding:2px 10px;border-radius:10px;z-index:3;white-space:nowrap}
+#openTitle{font-size:26px;font-weight:900;margin-bottom:22px;text-align:center}
+#openHint{margin-top:22px;opacity:.75;font-size:14px;min-height:20px}
+.mbtn{margin-top:18px;background:#ffd84a;color:#3a2600;font-weight:900;padding:12px 28px;border-radius:12px;font-size:16px}
+#col .wrap{width:min(1000px,100%);max-height:80vh;overflow-y:auto;background:#130f20;border:1px solid #33295a;border-radius:16px;padding:18px}
+#col .grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+#col h3{font-size:22px;margin-bottom:4px}
+#col .sub{opacity:.7;font-size:14px;margin-bottom:14px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#241d38;border:1px solid #4a3d80;padding:12px 18px;border-radius:12px;font-weight:700;transition:transform .3s;z-index:200;max-width:90vw;text-align:center}
+#toast.on{transform:translateX(-50%) translateY(0)}
+.burst{position:fixed;inset:0;pointer-events:none;z-index:99;opacity:0;transition:opacity .4s}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside class="panel" id="left">
+    <h2>⚙️ GELİŞTİRMELER</h2>
+    <div id="ups"></div>
+  </aside>
+
+  <main id="mid">
+    <div id="top">
+      <button class="back" onclick="location.href='index.html'">← Oyunlar</button>
+      <button class="back" id="muteBtn">🔊</button>
+    </div>
+    <div id="money">0</div>
+    <div id="rates"></div>
+    <div id="bonus"></div>
+    <div id="btnWrap"><div id="ring"></div><button id="bigBtn" aria-label="Tıkla">🦆<span class="lbl">TIKLA</span></button></div>
+    <div id="frenzy"></div>
+    <div id="golden">🌟</div>
+  </main>
+
+  <aside class="panel r" id="right">
+    <h2>🎴 PAKETLER</h2>
+    <button id="colBtn">📚 Koleksiyon</button>
+    <div id="packs"></div>
+  </aside>
+</div>
+
+<div class="modal" id="open">
+  <div id="openTitle"></div>
+  <div class="row" id="openRow"></div>
+  <div id="openHint">Kartlara tıkla ve çevir</div>
+  <button class="mbtn" id="openOk" style="display:none">Tamam</button>
+</div>
+
+<div class="modal" id="col">
+  <div class="wrap">
+    <h3>📚 Koleksiyon</h3>
+    <div class="sub" id="colSub"></div>
+    <div class="grid" id="colGrid"></div>
+    <div style="text-align:center"><button class="mbtn" onclick="document.getElementById('col').classList.remove('on')">Kapat</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+<div class="burst" id="burst"></div>
+
+<script>
+/* ============ AYARLAR ============ */
+// Rarity'ler: renk + koleksiyondaki her kartın verdiği kazanç bonusu (her kopya +%50 daha)
+const RAR = {
+  siradan:  { ad: 'SIRADAN',  c: '#9aa0a6', bonus: .02 },
+  nadir:    { ad: 'NADİR',    c: '#3d9bff', bonus: .05 },
+  epik:     { ad: 'EPİK',     c: '#b04dff', bonus: .12 },
+  efsanevi: { ad: 'EFSANEVİ', c: '#ffb020', bonus: .30 },
+  mitik:    { ad: 'MİTİK',    c: '#ff3d5a', bonus: .75 },
+};
+const RORDER = ['siradan', 'nadir', 'epik', 'efsanevi', 'mitik'];
+// KARTLAR: fotoğraflar gelince img: 'tk_xxx.jpg' eklenecek
+const CARDS = [
+  { id: 'k1',  ad: 'Kart 1',  r: 'siradan' },
+  { id: 'k2',  ad: 'Kart 2',  r: 'siradan' },
+  { id: 'k3',  ad: 'Kart 3',  r: 'siradan' },
+  { id: 'k4',  ad: 'Kart 4',  r: 'siradan' },
+  { id: 'k5',  ad: 'Kart 5',  r: 'nadir' },
+  { id: 'k6',  ad: 'Kart 6',  r: 'nadir' },
+  { id: 'k7',  ad: 'Kart 7',  r: 'nadir' },
+  { id: 'k8',  ad: 'Kart 8',  r: 'epik' },
+  { id: 'k9',  ad: 'Kart 9',  r: 'epik' },
+  { id: 'k10', ad: 'Kart 10', r: 'efsanevi' },
+  { id: 'k11', ad: 'Kart 11', r: 'efsanevi' },
+  { id: 'k12', ad: 'Kart 12', r: 'mitik' },
+];
+// PAKETLER: fiyat + rarity olasılıkları (%), her paket 3 kart
+const PACKS = [
+  { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 2500,       a: '#3a3226', b: '#7a6a50', o: [72, 22, 5, 0.9, 0.1] },
+  { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 40000,      a: '#30384a', b: '#9fb2d0', o: [45, 35, 15, 4.5, 0.5] },
+  { id: 'altin',   ad: 'Altın Paket',   ic: '🥇', fiyat: 600000,     a: '#4a3a10', b: '#ffcf40', o: [18, 36, 30, 13, 3] },
+  { id: 'elmas',   ad: 'Elmas Paket',   ic: '💎', fiyat: 9000000,    a: '#123848', b: '#58e0ff', o: [0, 22, 42, 28, 8] },
+  { id: 'ordekez', ad: 'Ördekez Paketi', ic: '🦆', fiyat: 150000000, a: '#4a1020', b: '#ff4d6d', o: [0, 0, 35, 45, 20] },
+];
+// GELİŞTİRMELER
+const UPS = [
+  { id: 'parmak', ad: 'Güçlü Parmak',  ic: '👆', d: 'Her tıklama +1 para',                base: 15,    k: 1.35 },
+  { id: 'oto',    ad: 'Oto Tıklayıcı', ic: '🤖', d: 'Saniyede 1 kez kendiliğinden tıklar', base: 120,   k: 1.45 },
+  { id: 'hiz',    ad: 'Hızlı Robot',   ic: '⚡', d: 'Oto tıklayıcılar %25 daha hızlı',     base: 1500,  k: 2.1, max: 12 },
+  { id: 'krit',   ad: 'Kritik Tık',    ic: '💥', d: '%3 şansla tıklama ×10 verir',          base: 800,   k: 1.9, max: 15 },
+  { id: 'altin',  ad: 'Altın Ördek',   ic: '🌟', d: 'Altın ördek daha sık çıkar (yakala: 20 sn ×7)', base: 5000, k: 2.4, max: 10 },
+  { id: 'carpan', ad: 'Ördek Çarpanı', ic: '✖️', d: 'Tüm kazanç ×2',                       base: 25000, k: 9 },
+];
+
+/* ============ KAYIT ============ */
+const KEY = 'tk_save';
+let S = { para: 0, toplam: 0, tik: 0, lv: {}, kart: {}, son: Date.now(), ses: 1 };
+try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) S = Object.assign(S, o); } catch (e) {}
+const save = () => { S.son = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+/* ============ HESAPLAR ============ */
+const lv = id => S.lv[id] || 0;
+const upCost = u => Math.ceil(u.base * Math.pow(u.k, lv(u.id)));
+function cardBonus() { let b = 0; for (const c of CARDS) { const n = S.kart[c.id] || 0; if (n) b += RAR[c.r].bonus * (1 + .5 * (n - 1)); } return b; }
+let frenzyT = 0;
+const mult = () => Math.pow(2, lv('carpan')) * (1 + cardBonus()) * (frenzyT > 0 ? 7 : 1);
+const perClick = () => (1 + lv('parmak')) * mult();
+const autoRate = () => lv('oto') * (1 + .25 * lv('hiz'));            // tıklama/sn
+const perSec = () => autoRate() * perClick();
+const critCh = () => .03 * lv('krit');
+
+function fmt(n) {
+  n = Math.floor(n); if (n < 1000) return String(n);
+  const u = ['', 'B', 'M', 'Mr', 'T', 'Kt', 'Kn']; let i = 0; let x = n;
+  while (x >= 1000 && i < u.length - 1) { x /= 1000; i++; }
+  return (x < 10 ? x.toFixed(2) : x < 100 ? x.toFixed(1) : Math.floor(x)) + ' ' + u[i];
+}
+
+/* ============ SES ============ */
+let AC = null;
+function beep(f, d = .06, type = 'square', v = .05, slide = 0) {
+  if (!S.ses) return;
+  try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; if (slide) o.frequency.exponentialRampToValueAtTime(f * slide, AC.currentTime + d);
+    g.gain.setValueAtTime(v, AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime + d); } catch (e) {}
+}
+const $ = id => document.getElementById(id);
+$('muteBtn').onclick = () => { S.ses = S.ses ? 0 : 1; $('muteBtn').textContent = S.ses ? '🔊' : '🔇'; save(); };
+$('muteBtn').textContent = S.ses ? '🔊' : '🔇';
+
+/* ============ TIKLAMA ============ */
+function gain(x) { S.para += x; S.toplam += x; }
+function floatText(x, y, txt, crit) { const e = document.createElement('div'); e.className = 'fl' + (crit ? ' crit' : ''); e.textContent = txt; e.style.left = (x - 20 + Math.random() * 40) + 'px'; e.style.top = (y - 30) + 'px'; document.body.appendChild(e); setTimeout(() => e.remove(), 900); }
+function doClick(x, y) {
+  let v = perClick(), crit = Math.random() < critCh(); if (crit) v *= 10;
+  gain(v); S.tik++; floatText(x, y, '+' + fmt(v), crit);
+  beep(crit ? 880 : 520 + Math.random() * 80, crit ? .12 : .05, 'square', crit ? .07 : .04, crit ? 1.5 : 1.2);
+  const b = $('bigBtn'); b.classList.add('p'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('p'), 70);
+  refresh();
+}
+$('bigBtn').addEventListener('pointerdown', e => { e.preventDefault(); doClick(e.clientX, e.clientY); });
+document.addEventListener('keydown', e => { if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat && !document.querySelector('.modal.on')) { e.preventDefault(); const r = $('bigBtn').getBoundingClientRect(); doClick(r.left + r.width / 2, r.top + r.height / 3); } });
+
+/* ============ GELİŞTİRMELER ============ */
+function buildUps() {
+  $('ups').innerHTML = UPS.map(u => `<button class="up" data-u="${u.id}"><span class="ic">${u.ic}</span><span class="t"><b>${u.ad}</b><small>${u.d}</small></span><span class="c"><span class="pr"></span><span class="lv"></span></span></button>`).join('');
+  $('ups').querySelectorAll('.up').forEach(b => b.onclick = () => buyUp(UPS.find(u => u.id === b.dataset.u)));
+}
+function buyUp(u) {
+  if (u.max && lv(u.id) >= u.max) return;
+  const c = upCost(u); if (S.para < c) { beep(140, .12, 'sawtooth', .04); return; }
+  S.para -= c; S.lv[u.id] = lv(u.id) + 1; beep(660, .09, 'triangle', .07, 1.6); setTimeout(() => beep(990, .1, 'triangle', .06), 70);
+  if (u.id === 'altin') scheduleGolden(); save(); refresh();
+}
+
+/* ============ PAKETLER ============ */
+function buildPacks() {
+  $('packs').innerHTML = PACKS.map(p => `<button class="pk" data-p="${p.id}" style="--a:${p.a};--b:${p.b}">
+    <div class="hd"><span class="nm">${p.ic} ${p.ad}</span><span class="pr">${fmt(p.fiyat)}</span></div>
+    <div class="odds">${p.o.map((x, i) => x ? `<i style="width:${x}%;background:${RAR[RORDER[i]].c}"></i>` : '').join('')}</div>
+    <div class="ol">${p.o.map((x, i) => x ? `<span style="--c:${RAR[RORDER[i]].c}">${RAR[RORDER[i]].ad} %${x}</span>` : '').join('')}</div>
+    <div style="font-size:11px;opacity:.6;margin-top:4px">3 kart</div></button>`).join('');
+  $('packs').querySelectorAll('.pk').forEach(b => b.onclick = () => buyPack(PACKS.find(p => p.id === b.dataset.p)));
+}
+function rollRarity(o) { let r = Math.random() * 100; for (let i = 0; i < o.length; i++) { r -= o[i]; if (r < 0) return RORDER[i]; } return RORDER[o.findIndex(x => x > 0)]; }
+function rollCard(o) { let r = rollRarity(o), pool = CARDS.filter(c => c.r === r);
+  for (let i = RORDER.indexOf(r); !pool.length && i >= 0; i--) pool = CARDS.filter(c => c.r === RORDER[i]);
+  return pool[Math.floor(Math.random() * pool.length)]; }
+function cardHTML(c, n, lock) {
+  const R = RAR[c.r];
+  return `<div class="card ${lock ? 'lock' : ''} ${c.r === 'mitik' && !lock ? 'mitik' : ''}" style="--c:${R.c}">
+    <div class="ph" style="${c.img && !lock ? `background-image:url('${c.img}')` : ''}">${lock ? '?' : c.img ? '' : c.ad.replace(/\D/g, '') || '★'}</div>
+    ${n > 1 ? `<span class="cnt">×${n}</span>` : ''}
+    <div class="nm"><small>${R.ad}</small><b>${lock ? '???' : c.ad}</b></div></div>`;
+}
+function buyPack(p) {
+  if (S.para < p.fiyat) { beep(140, .12, 'sawtooth', .04); toast(`Bu paket için ${fmt(p.fiyat - S.para)} daha lazım.`); return; }
+  S.para -= p.fiyat; const got = [0, 1, 2].map(() => rollCard(p.o));
+  const isNew = got.map(c => !S.kart[c.id]); got.forEach(c => S.kart[c.id] = (S.kart[c.id] || 0) + 1); save(); refresh();
+  $('openTitle').textContent = `${p.ic} ${p.ad}`;
+  $('openRow').innerHTML = got.map((c, i) => `<div style="position:relative"><div class="flip" data-i="${i}"><div class="bk ${RORDER.indexOf(c.r) >= 3 ? 'glow' : ''}">🦆</div>${cardHTML(c, 0, false)}</div></div>`).join('');
+  $('openOk').style.display = 'none'; $('openHint').textContent = 'Kartlara tıkla ve çevir'; $('open').classList.add('on');
+  let flipped = 0;
+  $('openRow').querySelectorAll('.flip').forEach(f => f.onclick = () => {
+    if (f.classList.contains('on')) return; f.classList.add('on'); flipped++;
+    const i = +f.dataset.i, c = got[i], ri = RORDER.indexOf(c.r);
+    [440, 554, 659, 880, 1175].slice(0, ri + 1).forEach((fr, k) => setTimeout(() => beep(fr, .14, 'triangle', .07), k * 80));
+    if (ri >= 3) flash(RAR[c.r].c);
+    if (isNew[i]) { const t = document.createElement('div'); t.className = 'tag'; t.textContent = 'YENİ!'; f.parentNode.appendChild(t); }
+    else { const t = document.createElement('div'); t.className = 'tag'; t.style.background = '#a998d6'; t.textContent = 'KOPYA +%' + Math.round(RAR[c.r].bonus * 50); f.parentNode.appendChild(t); }
+    if (flipped === 3) { $('openOk').style.display = ''; $('openHint').textContent = 'Kartlar koleksiyonuna eklendi. Her kart kazancını artırır!'; }
+  });
+}
+$('openOk').onclick = () => $('open').classList.remove('on');
+function flash(c) { const b = $('burst'); b.style.background = `radial-gradient(circle,${c}aa,transparent 70%)`; b.style.opacity = 1; setTimeout(() => b.style.opacity = 0, 350); }
+
+/* ============ KOLEKSİYON ============ */
+$('colBtn').onclick = () => {
+  const have = CARDS.filter(c => S.kart[c.id]).length;
+  $('colSub').innerHTML = `${have} / ${CARDS.length} kart toplandı · Kart bonusu: <b style="color:#8fe39a">+%${Math.round(cardBonus() * 100)}</b> kazanç`;
+  const sorted = [...CARDS].sort((a, b) => RORDER.indexOf(a.r) - RORDER.indexOf(b.r));
+  $('colGrid').innerHTML = sorted.map(c => cardHTML(c, S.kart[c.id] || 0, !S.kart[c.id])).join('');
+  $('col').classList.add('on');
+};
+
+/* ============ ALTIN ÖRDEK ============ */
+let goldT = null;
+function scheduleGolden() { clearTimeout(goldT); if (!lv('altin')) return; const sec = Math.max(25, 140 - lv('altin') * 11) * (.7 + Math.random() * .6); goldT = setTimeout(showGolden, sec * 1000); }
+function showGolden() {
+  const g = $('golden'), m = $('mid').getBoundingClientRect();
+  g.style.left = (20 + Math.random() * (m.width - 90)) + 'px'; g.style.top = (80 + Math.random() * (m.height - 180)) + 'px'; g.style.display = 'block';
+  beep(1200, .2, 'sine', .05, 1.5); clearTimeout(g._t); g._t = setTimeout(() => { g.style.display = 'none'; scheduleGolden(); }, 9000);
+}
+$('golden').onclick = () => { const g = $('golden'); g.style.display = 'none'; clearTimeout(g._t); frenzyT = 20; flash('#ffd84a'); [660, 880, 1100, 1320].forEach((f, k) => setTimeout(() => beep(f, .12, 'triangle', .07), k * 70)); toast('🌟 ALTIN ÖRDEK! 20 saniye boyunca tüm kazanç ×7'); scheduleGolden(); };
+
+/* ============ EKRAN ============ */
+let tt;
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2600); }
+function refresh() {
+  $('money').textContent = fmt(S.para) + ' 🪙';
+  const ps = perSec();
+  $('rates').innerHTML = `Tıklama başı <b>${fmt(perClick())}</b>${ps ? ` · Saniyede <b>${fmt(ps)}</b>` : ''}`;
+  const cb = cardBonus(); $('bonus').textContent = cb ? `🎴 Kart bonusu +%${Math.round(cb * 100)}${lv('carpan') ? ` · ✖️ ×${Math.pow(2, lv('carpan'))}` : ''}` : (lv('carpan') ? `✖️ ×${Math.pow(2, lv('carpan'))}` : '');
+  document.querySelectorAll('.up').forEach(b => { const u = UPS.find(x => x.id === b.dataset.u), L = lv(u.id), mx = u.max && L >= u.max;
+    b.querySelector('.pr').textContent = mx ? 'MAKS' : fmt(upCost(u)); b.querySelector('.lv').textContent = 'Seviye ' + L + (u.max ? ' / ' + u.max : '');
+    b.classList.toggle('no', !mx && S.para < upCost(u)); b.classList.toggle('max', !!mx); });
+  document.querySelectorAll('.pk').forEach(b => b.classList.toggle('no', S.para < PACKS.find(p => p.id === b.dataset.p).fiyat));
+}
+
+/* ============ DÖNGÜ ============ */
+let last = performance.now(), acc = 0, saveAcc = 0;
+function loop(now) {
+  const dt = Math.min(1, (now - last) / 1000); last = now;
+  if (frenzyT > 0) { frenzyT -= dt; $('frenzy').style.display = 'block'; $('frenzy').textContent = `🌟 ×7 — ${Math.ceil(frenzyT)} sn`; if (frenzyT <= 0) $('frenzy').style.display = 'none'; }
+  const ps = perSec(); if (ps) { gain(ps * dt); acc += dt; if (acc > .1) { acc = 0; refresh(); } }
+  saveAcc += dt; if (saveAcc > 3) { saveAcc = 0; save(); }
+  requestAnimationFrame(loop);
+}
+// çevrimdışı kazanç: en fazla 2 saat, yarı hızda
+(() => { const away = Math.min(7200, (Date.now() - (S.son || Date.now())) / 1000), ps = autoRate() * (1 + lv('parmak')) * Math.pow(2, lv('carpan')) * (1 + cardBonus());
+  if (away > 30 && ps > 0) { const x = ps * away * .5; gain(x); setTimeout(() => toast(`🤖 Sen yokken robotlar ${fmt(x)} 🪙 kazandı!`), 500); } })();
+window.addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+buildUps(); buildPacks(); refresh(); scheduleGolden(); requestAnimationFrame(loop);
+window.__tk = { S, CARDS, PACKS, refresh, buyPack, rollCard };
+</script>
+</body>
+</html>
