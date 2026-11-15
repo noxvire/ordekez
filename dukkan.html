@@ -703,10 +703,10 @@ const CH = {
                    legR: [[6, 80, 252, 512], [76, 148, 252, 512]], legL: [[80, 162, 252, 512], [2, 77, 252, 512]] } } },
   cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#1c2140', pants: '#1a1818', h: .78, glasses: true, frames: { src: 'dk_cocuk_yuru.png', n: 8, h: 1.42, dir: -1, headX: .58, face: [.525, .108, .215, .09] }, kid3d: 'kid' },
   teyze: { ad: 'Teyze', skin: '#d8a888', hair: '#8a8580', shirt: '#6a3a6a', pants: '#3a2a3a', old: true, glasses: true, longHair: true, frames: { src: 'dk_teyze_yuru.png', n: 8, h: 1.55, headX: .63, face: [.68, .07, .18, .13] }, kid3d: 'teyze' },
-  adam:  { ad: 'Takım Elbiseli Adam', skin: '#cfc2b0', hair: '#111', shirt: '#151518', pants: '#151518', h: 1.06, eyeC: '#111' },
-  flaviano: { ad: 'Flaviano TV', skin: '#c99878', hair: '#1a1416', shirt: '#8a1c24', pants: '#3a3a40', frames: { src: 'dk_ogr_yuru.png', n: 8, h: 1.74, headX: .64, face: [.545, .075, .2, .11] }, kid3d: 'flav' },
+  adam:  { ad: 'Takım Elbiseli Adam', skin: '#cfc2b0', hair: '#111', shirt: '#151518', pants: '#151518', frames: { src: 'dk_adam_yuru.png', n: 8, h: 1.8, headX: .5, face: [.37, .085, .29, .105] }, kid3d: 'adam' },
+  flaviano: { ad: 'Flaviano TV', skin: '#d0a080', hair: '#1a1416', shirt: '#1c1a1e', pants: '#222', frames: { src: 'dk_flaviano_yuru.png', n: 8, h: 1.78, headX: .5, face: [.36, .1, .29, .095] }, kid3d: 'flav' },
   ogr:   { ad: 'Anatolian', skin: '#c99878', hair: '#1a1416', shirt: '#1c1a1e', pants: '#3a3a40', frames: { src: 'dk_ogr_yuru.png', n: 8, h: 1.76, headX: .64, face: [.545, .075, .2, .11] }, kid3d: 'ogr' },
-  kurye: { ad: 'Kurye', skin: '#b88868', hair: '#1a1a1a', shirt: '#c03020', pants: '#222', beanie: '#c03020' },
+  kurye: { ad: 'Kurye', skin: '#d8b090', hair: '#1a1a1a', shirt: '#b02428', pants: '#222', frames: { src: 'dk_kurye_yuru.png', n: 8, h: 1.74, headX: .5, face: [.37, .085, .32, .105] }, kid3d: 'kurye' },
   self:  { ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f' },
   zeynep:{ ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f', shoes: '#e8e4dc', print: 'cat', longHair: true, eyes: [[21, 32], [46, 32]], mouth: [35, 52],
            sprite: { on: 'dk_zeynep_on.png', arka: 'dk_zeynep_arka.png', yuru: 'dk_zeynep_yuru.png', yuruN: 8, h: 1.7, eyes: [[76, 46], [96, 46]], mouth: [85, 63],
@@ -839,81 +839,100 @@ function animRig(p, moving, dt) {
 // PS1 tarzı düşük poligonlu 3B model: çizimdeki ön/arka resimler gövdeye kaplanır
 // çocuk: PS1 tarzı 3B model (çizimdeki renkler: lacivert kapüşonlu, siyah kargo, kıvırcık saç, gözlük, sırt çantası)
 function makeKidModel(id, def, fake) {
-  const st = def.kid3d, og = st === 'ogr' || st === 'flav', H = def.frames.h, sc = H / 1.66, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(sc); g.add(body);
+  const st = def.kid3d, H = def.frames.h, sc = H / 1.66, g = new THREE.Group(), body = new THREE.Group(); body.scale.setScalar(sc); g.add(body);
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 76; drawFace(cv, def, fake);
   const noiseT = (base, dots, n = 40, w = 32, h = 32, extra) => ctex(w, h, (q, W, Hh) => { q.fillStyle = base; q.fillRect(0, 0, W, Hh); for (let i = 0; i < n; i++) { q.fillStyle = dots[i % dots.length]; q.fillRect(Math.random() * W | 0, Math.random() * Hh | 0, 2, 2); } extra && extra(q, W, Hh); });
   const floral = (base, n) => noiseT(base, ['#6a5a8a', '#8a7aa0', '#3a3050', '#9a8a70', '#5a4a6a'], n);
-  const C = st === 'teyze'
-    ? { top: floral(fake ? '#141018' : '#2c2638', 160), bottom: floral(fake ? '#141018' : '#2c2638', 160), shoe: '#3a2a24', skin: '#c89070', hair: null }
-    : og
-    ? { top: st === 'flav' ? noiseT(fake ? '#140808' : '#8a1c24', ['#9a262e', '#6a141a'], 50) : noiseT(fake ? '#0e0e10' : '#1e1c20', ['#262428', '#151316'], 50), bottom: noiseT('#3a383c', ['#2a282c', '#4a474c', '#232124', '#55525a'], 160), shoe: '#e4e0da', skin: '#e2bca4', hair: '#151214' }
-    : { top: noiseT(fake ? '#141420' : '#20264a', ['#1a1f3c', '#2a3158', '#171b34']), bottom: noiseT('#181618', ['#222022', '#121012', '#2a2729'], 60), shoe: '#20243a', skin: '#f0d2bc', hair: '#2e1c14' };
-  const topM = lam(C.top);
-  const frontT = st === 'kid' ? noiseT(fake ? '#141420' : '#20264a', ['#1a1f3c', '#2a3158'], 30, 32, 32, (q, W, Hh) => {
-      q.fillStyle = '#9a9aa8'; q.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 3.2 : 7.5; q.lineTo(W / 2 + 2 + Math.cos(a) * r, 13 + Math.sin(a) * r); } q.fill();
-      q.fillStyle = '#c8c4c0'; q.fillRect(W / 2 - 4, 0, 1, 6); q.fillRect(W / 2 + 3, 0, 1, 6); })
-    : og ? noiseT(st === 'flav' ? '#8a1c24' : (fake ? '#0e0e10' : '#1e1c20'), ['#262428'], 30, 32, 32, (q, W, Hh) => { q.strokeStyle = st === 'flav' ? '#ffffff' : '#8a8890'; q.lineWidth = 1; q.font = 'bold 9px serif'; q.textAlign = 'center'; q.strokeText(st === 'flav' ? '● LIVE' : 'UNIV', W / 2, 14); q.fillStyle = '#c8c4c0'; q.fillRect(W / 2 - 4, 0, 1, 5); q.fillRect(W / 2 + 3, 0, 1, 5); }) : null;
-  const pantsM = lam(st === 'teyze' ? noiseT('#161216', ['#201a20', '#0e0a0e'], 30) : (() => { const t = C.bottom; return t; })());
-  const skinM = lam(fake ? '#a89a98' : C.skin), hairM = C.hair ? lam(noiseT(fake ? '#050505' : C.hair, og ? ['#221c1e', '#0c0a0b', '#2a2226'] : ['#3e281c', '#1e120c', '#4a3022'], 90)) : null;
-  const shoeM = lam(noiseT(C.shoe, ['#e8e4dc'], 0, 16, 16, (q, W, Hh) => { if (st === 'teyze') { q.fillStyle = '#1e1410'; q.fillRect(0, 12, W, 4); return; } q.fillStyle = og ? '#bdb8b0' : '#e8e4dc'; q.fillRect(0, 11, W, 5); q.fillStyle = og ? '#222' : '#e8e4dc'; q.fillRect(3, 3, 3, 4); q.fillRect(10, 3, 3, 4); }));
+  const F = fake;
+  // karakter ayarları (çizimlerden)
+  const K = {
+    kid:   { top: ['#20264a', ['#1a1f3c', '#2a3158', '#171b34']], pants: ['#181618', ['#222022', '#121012', '#2a2729']], shoe: '#20243a', sole: '#e8e4dc', skin: '#f0d2bc', hair: '#2e1c14', hood: 1, bag: 'okul', curly: 1, pocket: 1, front: 'star' },
+    ogr:   { top: ['#1e1c20', ['#262428', '#151316']], pants: ['#3a383c', ['#2a282c', '#4a474c', '#232124', '#55525a']], shoe: '#e4e0da', sole: '#bdb8b0', skin: '#e2bca4', hair: '#151214', hood: 1, bag: 'okul', spiky: 1, front: 'univ' },
+    teyze: { top: null, shoe: '#3a2a24', skin: '#c89070', scarf: 1 },
+    kurye: { top: ['#a82226', ['#b82c30', '#8a1a1e']], pants: ['#1c1a1c', ['#262326', '#121012', '#2c292c']], shoe: '#e8e4dc', sole: '#c8c4bc', skin: '#e0b898', hair: '#121014', hood: 1, bag: 'kutu', cap: 1, front: 'kurye', stripes: 1 },
+    adam:  { top: ['#141316', ['#1c1a1e', '#0e0d10']], pants: ['#141316', ['#1c1a1e', '#0e0d10']], shoe: '#1a1614', sole: '#0c0a0a', skin: '#e2bca4', hair: '#1e1614', spiky: 1, front: 'suit', suit: 1 },
+    flav:  { top: ['#1a181c', ['#222024', '#121014']], pants: ['#1e1c20', ['#262428', '#141216', '#2c2a2e']], shoe: '#1e1a18', sole: '#100c0a', skin: '#d6a888', bald: 1, front: 'tshirt', suit: 1 },
+  }[st];
+  const topM = K.top ? lam(noiseT(F ? '#0e0e10' : K.top[0], K.top[1], 50, 32, 32, K.stripes ? (q, W, Hh) => { q.fillStyle = '#b8b8b8'; q.fillRect(0, 12, W, 2); q.fillRect(0, 16, W, 2); } : null)) : null;
+  const fronts = {
+    star: (q, W) => { q.fillStyle = '#9a9aa8'; q.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 3.2 : 7.5; q.lineTo(W / 2 + 2 + Math.cos(a) * r, 13 + Math.sin(a) * r); } q.fill(); q.fillStyle = '#c8c4c0'; q.fillRect(W / 2 - 4, 0, 1, 6); q.fillRect(W / 2 + 3, 0, 1, 6); },
+    univ: (q, W) => { q.strokeStyle = '#8a8890'; q.lineWidth = 1; q.font = 'bold 9px serif'; q.textAlign = 'center'; q.strokeText('UNIV', W / 2, 14); q.fillStyle = '#c8c4c0'; q.fillRect(W / 2 - 4, 0, 1, 5); q.fillRect(W / 2 + 3, 0, 1, 5); },
+    kurye: (q, W) => { q.fillStyle = '#3a3a3a'; q.fillRect(W / 2, 0, 1, 32); q.fillStyle = '#eeeae4'; q.beginPath(); q.moveTo(21, 9); q.lineTo(27, 11); q.lineTo(21, 13); q.closePath(); q.fill(); q.fillStyle = '#1a1a1a'; q.fillRect(W / 2 - 4, 0, 1, 6); q.fillRect(W / 2 + 3, 0, 1, 6); },
+    suit: (q, W) => { q.fillStyle = '#e8e6e2'; q.beginPath(); q.moveTo(W / 2 - 6, 0); q.lineTo(W / 2 + 6, 0); q.lineTo(W / 2, 22); q.closePath(); q.fill(); q.fillStyle = '#0c0c0e'; q.fillRect(W / 2 - 1, 2, 3, 18); q.fillStyle = '#2a2a2e'; q.fillRect(W / 2 - 6, 26, 12, 3); q.fillStyle = '#9a9aa0'; q.fillRect(W / 2 - 2, 26, 4, 3); },
+    tshirt: (q, W) => { q.fillStyle = '#3a3638'; q.beginPath(); q.moveTo(W / 2 - 7, 0); q.lineTo(W / 2 + 7, 0); q.lineTo(W / 2 + 5, 32); q.lineTo(W / 2 - 5, 32); q.closePath(); q.fill(); },
+  };
+  const frontT = K.front ? noiseT(F ? '#0e0e10' : K.top[0], [K.top[1][0]], 30, 32, 32, fronts[K.front]) : null;
+  const pantsM = st === 'teyze' ? lam(noiseT('#161216', ['#201a20', '#0e0a0e'], 30)) : lam(noiseT(K.pants[0], K.pants[1], 120, 32, 32, (q) => { q.fillStyle = 'rgba(0,0,0,.35)'; q.fillRect(2, 12, 9, 9); }));
+  const skinM = lam(F ? '#a89a98' : K.skin), hairM = K.hair ? lam(noiseT(F ? '#050505' : K.hair, ['#2a2224', '#0c0a0b', '#3a2c26'], 90)) : null;
+  const shoeM = lam(noiseT(K.shoe, [K.sole], 0, 16, 16, (q, W) => { q.fillStyle = K.sole; q.fillRect(0, 11, W, 5); }));
   const bagM = lam(noiseT('#141214', ['#1e1b1e', '#0c0a0c'], 50)), shirtM = lam('#dcd8d0'), blackM = lam('#0c0c10');
   const cyl = (rt, rb, h, m, x, y, z, par, sx = 1, sz = 1, seg = 8) => { const ms = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg, 2).scale(sx, 1, sz), m); ms.position.set(x, y, z); par.add(ms); return ms; };
   // gövde
   const torso = new THREE.Group(); torso.position.y = .78; body.add(torso);
-  if (st === 'teyze') torso.rotation.x = .1;   // hafif kambur
-  { const t = new THREE.Mesh(new THREE.CylinderGeometry(.2, .19, .5, 8, 3).scale(1, 1, .68), topM); t.position.y = .25; torso.add(t);
-    if (frontT) { const f = new THREE.Mesh(new THREE.PlaneGeometry(.26, .3), lam(frontT)); f.position.set(0, .3, .132); torso.add(f); }
-    if (st === 'teyze') {   // siyah yelek (önü açık)
-      const vm = lam(noiseT('#121014', ['#1a171c', '#0a080a'], 30));
-      box(.4, .44, .08, vm, 0, .26, -.1, torso); box(.13, .44, .05, vm, -.13, .26, .12, torso); box(.13, .44, .05, vm, .13, .26, .12, torso);
-      box(.06, .44, .24, vm, -.2, .26, 0, torso); box(.06, .44, .24, vm, .2, .26, 0, torso);
-    } else {
-      cyl(.205, .2, .07, topM, 0, .02, 0, torso, 1, .7);
-      box(.3, .03, .1, shirtM, 0, -.02, .02, torso);
-      const hood = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.25, .9, .8), topM); hood.position.set(0, .5, -.07); hood.rotation.x = -.3; torso.add(hood);
-      box(.12, .05, .06, shirtM, 0, .5, .07, torso);
+  if (st === 'teyze') {
+    torso.rotation.x = .1;
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(.2, .19, .5, 8, 3).scale(1, 1, .68), lam(floral(F ? '#141018' : '#2c2638', 160))); t.position.y = .25; torso.add(t);
+    const vm = lam(noiseT('#121014', ['#1a171c', '#0a080a'], 30));
+    box(.4, .44, .08, vm, 0, .26, -.1, torso); box(.13, .44, .05, vm, -.13, .26, .12, torso); box(.13, .44, .05, vm, .13, .26, .12, torso);
+    box(.06, .44, .24, vm, -.2, .26, 0, torso); box(.06, .44, .24, vm, .2, .26, 0, torso);
+  } else {
+    const wide = K.suit ? 1.08 : 1;
+    const t = new THREE.Mesh(new THREE.CylinderGeometry(.2 * wide, .19, .5, 8, 3).scale(1, 1, .68), topM); t.position.y = .25; torso.add(t);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(.26, .3), lam(frontT)); f.position.set(0, .3, .132); torso.add(f);
+    cyl(.205, .2, .07, topM, 0, .02, 0, torso, 1, .7);
+    if (K.suit) { box(.34, .04, .24, blackM, 0, -.01, 0, torso); if (K.front === 'suit') box(.1, .05, .06, shirtM, 0, .5, .07, torso); }
+    else box(.3, .03, .1, shirtM, 0, -.02, .02, torso);
+    if (K.hood) { const hood = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.25, .9, .8), topM); hood.position.set(0, .5, -.07); hood.rotation.x = -.3; torso.add(hood); if (st !== 'kurye') box(.12, .05, .06, shirtM, 0, .5, .07, torso); }
+    if (K.bag) {
       const bg = new THREE.Group(); bg.position.set(0, .32, -.17); torso.add(bg);
-      box(.3, .36, .14, bagM, 0, 0, -.04, bg); box(.24, .16, .05, bagM, 0, -.08, -.13, bg);
+      if (K.bag === 'kutu') { const bm = lam(noiseT('#a01c20', ['#b42a2e', '#801418'], 40)); box(.4, .42, .3, bm, 0, .06, -.1, bg); box(.41, .03, .31, lam('#1a1a1a'), 0, .27, -.1, bg); }
+      else { box(.3, .36, .14, bagM, 0, 0, -.04, bg); box(.24, .16, .05, bagM, 0, -.08, -.13, bg); }
       box(.035, .34, .03, blackM, -.11, .06, .07, bg); box(.035, .34, .03, blackM, .11, .06, .07, bg);
       if (st === 'kid') { const sk = new THREE.Mesh(new THREE.SphereGeometry(.03, 6, 5), lam('#eeeae2')); sk.position.set(-.17, -.08, 0); bg.add(sk); }
-    } }
-  // kafa
+    }
+  }
+  // kafa: yüz çizimden
   const head = new THREE.Group(); head.position.set(0, 1.3, st === 'teyze' ? .05 : 0); body.add(head);
   cyl(.045, .05, .08, skinM, 0, -.04, 0, head);
   { const fcv = document.createElement('canvas'); fcv.width = 64; fcv.height = 64; const ft = new THREE.CanvasTexture(fcv); ft.colorSpace = THREE.SRGBColorSpace;
-    const fq = fcv.getContext('2d'); fq.fillStyle = C.skin; fq.fillRect(0, 0, 64, 64);
+    const fq = fcv.getContext('2d'); fq.fillStyle = K.skin; fq.fillRect(0, 0, 64, 64);
     const [fx, fy, fw2, fh] = def.frames.face;
     loadImg(def.frames.src, im => { const fw = im.width / def.frames.n;
       fq.drawImage(im, fw * fx, im.height * fy, fw * fw2, im.height * fh, 0, 0, 64, 64);
-      if (fake) { fq.fillStyle = '#000'; fq.fillRect(14, 22, 12, 9); fq.fillRect(38, 22, 12, 9); fq.fillStyle = '#ff2a1a'; fq.fillRect(19, 26, 2, 2); fq.fillRect(43, 26, 2, 2); }
+      if (F) { fq.fillStyle = '#000'; fq.fillRect(14, 22, 12, 9); fq.fillRect(38, 22, 12, 9); fq.fillStyle = '#ff2a1a'; fq.fillRect(19, 26, 2, 2); fq.fillRect(43, 26, 2, 2); }
       ft.needsUpdate = true; const cg = cv.getContext('2d'); cg.fillStyle = '#2a2430'; cg.fillRect(0, 0, 64, 76); const hx = def.frames.headX || .5; cg.drawImage(im, fw * hx - fw * .23, 2, fw * .46, fw * .46 * 76 / 64, 0, 0, 64, 76); });
     const skull = new THREE.Mesh(new THREE.SphereGeometry(.12, 9, 7).scale(1, 1.12, 1.05), skinM); skull.position.y = .12; head.add(skull);
     const face = new THREE.Mesh(new THREE.SphereGeometry(.121, 9, 7, Math.PI * .18, Math.PI * .64, Math.PI * .3, Math.PI * .45).scale(1, 1.12, 1.05), lam({ map: ft })); face.position.y = .12; head.add(face);
-    if (st === 'teyze') {   // çiçekli beyaz yazma: kafayı sarar, enseden aşağı iner
+    if (K.scarf) {
       const sm = lam(noiseT('#ddd8de', ['#b8a8c8', '#9a8aa8', '#c8b8a0', '#ffffff'], 70));
       const sc1 = new THREE.Mesh(new THREE.SphereGeometry(.14, 9, 7, Math.PI * .72, Math.PI * 1.56, 0, Math.PI * .62).scale(1.02, 1.12, 1.12), sm); sc1.position.set(0, .13, -.005); head.add(sc1);
       const tail = new THREE.Mesh(new THREE.ConeGeometry(.15, .3, 6).scale(1.2, 1, .5), sm); tail.position.set(0, -.02, -.1); tail.rotation.x = .25; head.add(tail);
-      box(.06, .14, .04, sm, .02, -.06, .12, head);   // çene altı düğüm
-      const cap = new THREE.Mesh(new THREE.SphereGeometry(.142, 10, 5, 0, Math.PI * 2, 0, Math.PI * .34).scale(1.04, 1.14, 1.12), sm); cap.position.set(0, .13, .0); head.add(cap);
-    } else {
-      const pts = og
-        ? [[0, .25, -.01, .11], [-.07, .22, .06, .065], [.07, .22, .06, .065], [-.11, .15, -.02, .065], [.11, .15, -.02, .065], [0, .18, -.09, .1], [0, .23, .1, .06], [-.04, .2, .11, .05], [.05, .2, .11, .05], [0, .1, -.11, .075], [-.1, .09, -.06, .05], [.1, .09, -.06, .05]]
-        : [[0, .24, 0, .12], [-.08, .2, .05, .07], [.08, .2, .05, .07], [-.1, .14, -.03, .07], [.1, .14, -.03, .07], [0, .18, -.09, .1], [-.05, .23, .08, .06], [.05, .23, .08, .06], [0, .2, .1, .06], [-.11, .09, -.05, .055], [.11, .09, -.05, .055], [0, .1, -.11, .08], [-.07, .27, -.02, .06], [.07, .26, -.03, .06]];
-      if (st === 'flav') { const hp = new THREE.Mesh(new THREE.TorusGeometry(.15, .018, 5, 12, Math.PI), lam('#151515')); hp.position.set(0, .12, 0); head.add(hp); for (const x of [-.145, .145]) box(.05, .09, .08, lam('#e83030'), x, .1, 0, head); }
+      box(.06, .14, .04, sm, .02, -.06, .12, head);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(.142, 10, 5, 0, Math.PI * 2, 0, Math.PI * .34).scale(1.04, 1.14, 1.12), sm); cap.position.set(0, .13, 0); head.add(cap);
+    } else if (!K.bald) {
+      const pts = K.curly
+        ? [[0, .24, 0, .12], [-.08, .2, .05, .07], [.08, .2, .05, .07], [-.1, .14, -.03, .07], [.1, .14, -.03, .07], [0, .18, -.09, .1], [-.05, .23, .08, .06], [.05, .23, .08, .06], [0, .2, .1, .06], [-.11, .09, -.05, .055], [.11, .09, -.05, .055], [0, .1, -.11, .08], [-.07, .27, -.02, .06], [.07, .26, -.03, .06]]
+        : [[0, .25, -.01, .11], [-.07, .22, .06, .065], [.07, .22, .06, .065], [-.11, .15, -.02, .065], [.11, .15, -.02, .065], [0, .18, -.09, .1], [0, .23, .1, .06], [-.04, .2, .11, .05], [.05, .2, .11, .05], [0, .1, -.11, .075], [-.1, .09, -.06, .05], [.1, .09, -.06, .05]];
       for (const [x, y, z, r] of pts) { const hm = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), hairM); hm.position.set(x, y, z); hm.rotation.set(x * 9, y * 7, z * 5); head.add(hm); }
+      if (K.cap) {   // kırmızı kep + siper
+        const cm = lam(noiseT('#a01c20', ['#b02428'], 20, 16, 16, (q) => { q.fillStyle = '#eee'; q.beginPath(); q.moveTo(5, 6); q.lineTo(11, 8); q.lineTo(5, 10); q.closePath(); q.fill(); }));
+        const capM = new THREE.Mesh(new THREE.SphereGeometry(.135, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.05, 1.0, 1.1), cm); capM.position.set(0, .17, -.005); head.add(capM);
+        const brim = new THREE.Mesh(new THREE.CylinderGeometry(.11, .11, .015, 10, 1, false, -Math.PI / 2, Math.PI).scale(1.2, 1, 1), lam('#901a1e')); brim.position.set(0, .18, .1); brim.rotation.x = .1; head.add(brim);
+      }
     } }
   // kollar
-  const arm = (x) => { const piv = new THREE.Group(); piv.position.set(x, 1.24, st === 'teyze' ? .03 : 0); body.add(piv); const a = cyl(.06, .055, .42, topM, 0, -.21, 0, piv); a.rotation.z = st === 'kid' ? (x > 0 ? .12 : -.12) : 0;
-    if (st === 'kid') cyl(.062, .062, .07, topM, x > 0 ? -.03 : .03, -.43, .02, piv);
-    else { const hd = new THREE.Mesh(new THREE.SphereGeometry(.045, 6, 5).scale(1, 1.3, 1), skinM); hd.position.set(0, -.46, 0); piv.add(hd); }
+  const sleeveM = topM || lam(floral(F ? '#141018' : '#2c2638', 160));
+  const arm = (x) => { const piv = new THREE.Group(); piv.position.set(x * (K.suit ? 1.05 : 1), 1.24, st === 'teyze' ? .03 : 0); body.add(piv); const a = cyl(.06, .055, .42, sleeveM, 0, -.21, 0, piv); a.rotation.z = K.pocket ? (x > 0 ? .12 : -.12) : 0;
+    if (K.pocket) cyl(.062, .062, .07, sleeveM, x > 0 ? -.03 : .03, -.43, .02, piv);
+    else { if (K.suit) cyl(.05, .05, .03, shirtM, 0, -.42, 0, piv); const hd = new THREE.Mesh(new THREE.SphereGeometry(.045, 6, 5).scale(1, 1.3, 1), skinM); hd.position.set(0, -.47, 0); piv.add(hd); }
     return piv; };
   const armL = arm(-.24), armR = arm(.24);
   // bacaklar
   const leg = (x) => { const piv = new THREE.Group(); piv.position.set(x, .8, 0); body.add(piv);
-    if (st === 'teyze') cyl(.05, .045, .74, pantsM, 0, -.37, 0, piv); else cyl(.1, .115, .74, pantsM, 0, -.37, 0, piv, 1, .95);
+    if (st === 'teyze') cyl(.05, .045, .74, pantsM, 0, -.37, 0, piv); else cyl(K.suit ? .085 : .1, K.suit ? .09 : .115, .74, pantsM, 0, -.37, 0, piv, 1, .95);
     const sh = new THREE.Mesh(new THREE.BoxGeometry(st === 'teyze' ? .1 : .13, .09, st === 'teyze' ? .22 : .25), shoeM); sh.position.set(0, -.76, .04); piv.add(sh); return piv; };
   const legL = leg(st === 'teyze' ? -.07 : -.1), legR = leg(st === 'teyze' ? .07 : .1);
-  if (st === 'teyze') { const sk = new THREE.Mesh(new THREE.CylinderGeometry(.2, .27, .5, 9, 2).scale(1, 1, .8), lam(C.bottom)); sk.position.set(0, .56, 0); body.add(sk); }
+  if (st === 'teyze') { const sk = new THREE.Mesh(new THREE.CylinderGeometry(.2, .27, .5, 9, 2).scale(1, 1, .8), lam(floral(F ? '#141018' : '#2c2638', 160))); sk.position.set(0, .56, 0); body.add(sk); }
   g.traverse(o => { if (o.isMesh) o.userData = { kind: 'cust' }; });
   return { g, head, armL, armR, legL, legR, cv, ph: 0, isModel: true };
 }
@@ -1177,7 +1196,7 @@ const NIGHTS = {
         hi: 'Kızım yine ben. Torunum korkunç bir oyun istiyor, ne verirsen.',
         thanks: 'Sağ ol kızım.',
         chat: { q: 'Dün gece saat 4\'te pencereden baktım. Sen vitrinde durmuş bana el sallıyordun. ...Dükkân kapalıydı ama kızım.', o: [['Ben değildim. Saat 3\'te kapattım.', 0, 0, '...Allah korusun. Ben gidiyorum.'], ['Evet bendim, şaka yaptım.', 1, 0, 'Böyle şaka mı olur kızım, ödüm koptu.']] } },
-      { m: 100, who: 'flaviano', want: ['aysavas'], pay: 250,
+      { m: 100, who: 'flaviano', want: ['aysavas'], pay: 250, onThanks: 'skeleton',
         hi: 'Selamlar chat! Şu an canlıdayız, gece yarısı oyun dükkânındayız arkadaşlar!',
         ask: 'Abla Götten Yemek var mı? Chat bu oyunu oynamamı istiyor, bağış hedefi tamamlandı.',
         thanks: 'Chat diyor ki teşekkürler abla! ...Bir saniye, chat neden arkanda biri var diyor?',
@@ -1270,6 +1289,7 @@ function refreshShelves() {
   for (const id in shelfBoxes) shelfBoxes[id].forEach((b, k) => { b.visible = k < (N ? N.stock[id] : S.stock[id]); });
 }
 function startNight() {
+  skel = null; skelG.visible = false;
   $('hint').classList.add('hidden'); hintT = 0; doorUser = 0;   // önceki günün ipucu kalmasın
   S.koli = S.koli || {}; setCarryKoli(false);
   setShopOpen(false);
@@ -1542,9 +1562,9 @@ $('tOk').onclick = () => {
     if (v.chat) say(v.who, v.chat.q, v.chat.o.map(o => o[0]), i => {
       const o = v.chat.o[i]; S.rel[v.who] = (S.rel[v.who] || 0) + o[1];
       const tip = Math.round(o[2] * (S.upg.neon ? 1.3 : 1)); if (tip) { S.money += tip; N.tips += tip; SND.coin(); }
-      say(v.who, o[3] + (tip ? `  (+${tip} ₺ bahşiş)` : ''), null, () => { say(v.who, v.thanks, null, () => leave(c)); });
+      say(v.who, o[3] + (tip ? `  (+${tip} ₺ bahşiş)` : ''), null, () => { if (v.onThanks) EV[v.onThanks](); say(v.who, v.thanks, null, () => leave(c)); });
     });
-    else say(v.who, v.thanks, null, () => leave(c));
+    else { if (v.onThanks) EV[v.onThanks](); say(v.who, v.thanks, null, () => leave(c)); }
   };
   after();
 };
@@ -1610,10 +1630,23 @@ function takeFromCounter(mesh) {
 /* =====================================================================
    PARANORMAL OLAYLAR
    ===================================================================== */
-let glitch = 0, darkness = 0, ghost = null;
+let glitch = 0, darkness = 0, ghost = null, skel = null;
+const skelG = new THREE.Group(); skelG.position.set(-1.6, 0, 4.3); skelG.visible = false; scene.add(skelG);
+const skelTex = spriteTex('dk_iskelet_yuru.png'); skelTex.magFilter = THREE.LinearFilter; skelTex.minFilter = THREE.LinearFilter; skelTex.repeat.set(1 / 8, 1);
+const skelMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).translate(0, .5, 0), new THREE.MeshBasicMaterial({ map: skelTex, alphaTest: .5, side: THREE.DoubleSide, color: 0xb8b8c0 })); skelG.add(skelMesh);
+loadImg('dk_iskelet_yuru.png', im => { skelMesh.scale.set(1.6 * (im.width / 8) / im.height, 1.6, 1); });
+function updateSkel(dt) {
+  if (!skel) return; skel.t += dt;
+  skelG.rotation.y = Math.atan2(camera.position.x - skelG.position.x, camera.position.z - skelG.position.z);
+  skelTex.offset.x = (Math.floor(skel.t * 2.5) % 8) / 8; skelG.position.y = .5 + Math.sin(skel.t * 2) * .02;
+  const d = Math.hypot(camera.position.x - skelG.position.x, camera.position.z - skelG.position.z);
+  if (d < 2.6 || skel.t > 90) { skelG.visible = false; skel = null; glitch = .5; SND.static && SND.static(.4); }
+}
 const EV = {
   // dükkân kapanır kapanmaz kapı kendiliğinden açılıp sertçe çarpar
   doorSlam() { doorCust = 1; SND.creak && SND.creak(); setTimeout(() => { doorCust = 0; setTimeout(() => { doorOpen = 0; SND.slam(); glitch = .35; setTimeout(() => toast('...Kapı kendi kendine çarptı. Dışarıda kimse yok.', 3.5), 500); }, 260); }, 1300); },
+  // vitrin camının dışında iskelet belirir; yaklaşınca kaybolur
+  skeleton() { if (skel) return; skel = { t: 0 }; skelG.visible = true; SND.static && SND.static(.6); },
   ghostBell() { doorCust = 1; SND.bell(); setTimeout(() => { doorCust = 0; }, 1400); setTimeout(() => toast('...Kimse yok. Rüzgâr olmalı.'), 1500); },
   boxFall() {
     const ids = Object.keys(shelfBoxes).filter(id => N.stock[id] > 0), id = pick(ids), b = shelfBoxes[id][N.stock[id] - 1];
@@ -2143,7 +2176,7 @@ function frame(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
   if (state === 'menu') { menuT += dt; camera.position.set(-1.2 + Math.sin(menuT * .15) * .4, 1.55, 2.6); camera.rotation.set(-.06, -2.5 + Math.sin(menuT * .1) * .25, 0); }
   else { updatePlayer(dt); if (N && state !== 'pause' && state !== 'sum' && state !== 'pc' && state !== 'cam') { updateNight(dt, t); } }
-  updateDlg(dt);
+  updateDlg(dt); updateSkel(dt);
   // kapılar
   doorTarget = Math.max(doorUser, doorCust); { const i = solids.indexOf(shopDoorSolid); if (doorTarget && i >= 0) solids.splice(i, 1); else if (!doorTarget && i < 0 && !(P.pos.x > 2.1 && P.pos.x < 3.9 && P.pos.z > 3.6 && P.pos.z < 4.5)) solids.push(shopDoorSolid); }
   doorOpen += (doorTarget - doorOpen) * Math.min(1, dt * 5); doorPivot.rotation.y = -doorOpen * 1.3;
