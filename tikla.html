@@ -308,7 +308,7 @@ function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('on
 function refresh() {
   $('money').textContent = fmt(S.para) + ' 🪙';
   const ps = perSec();
-  $('rates').innerHTML = `Tıklama başı <b>${fmt(perClick())}</b>${ps ? ` · Saniyede <b>${fmt(ps)}</b>` : ''}`;
+  const ar = autoRate(); $('rates').innerHTML = `Tıklama başı <b>${fmt(perClick())}</b>${ar ? ` · 🤖 ${(1 / ar).toFixed(1).replace('.0', '')} sn'de bir <b>${fmt(perClick())}</b>` : ''}`;
   const cb = cardBonus(); $('bonus').textContent = cb ? `🎴 Kart bonusu +%${Math.round(cb * 100)}${lv('carpan') ? ` · ✖️ ×${Math.pow(2, lv('carpan'))}` : ''}` : (lv('carpan') ? `✖️ ×${Math.pow(2, lv('carpan'))}` : '');
   document.querySelectorAll('.up').forEach(b => { const u = UPS.find(x => x.id === b.dataset.u), L = lv(u.id), mx = u.max && L >= u.max;
     b.querySelector('.pr').textContent = mx ? 'MAKS' : fmt(upCost(u)); b.querySelector('.lv').textContent = 'Seviye ' + L + (u.max ? ' / ' + u.max : '');
@@ -317,11 +317,12 @@ function refresh() {
 }
 
 /* ============ DÖNGÜ ============ */
-let last = performance.now(), acc = 0, saveAcc = 0;
+let last = performance.now(), autoAcc = 0, saveAcc = 0;
 function loop(now) {
   const dt = Math.min(1, (now - last) / 1000); last = now;
   if (frenzyT > 0) { frenzyT -= dt; $('frenzy').style.display = 'block'; $('frenzy').textContent = `🌟 ×5 — ${Math.ceil(frenzyT)} sn`; if (frenzyT <= 0) $('frenzy').style.display = 'none'; }
-  const ps = perSec(); if (ps) { gain(ps * dt); acc += dt; if (acc > .1) { acc = 0; refresh(); } }
+  // oto tıklayıcı: gerçek tıklama gibi aralıklı çalışır (5 sn'de 1 tık / robot)
+  const ar = autoRate(); if (ar) { autoAcc += ar * dt; while (autoAcc >= 1) { autoAcc -= 1; const v = perClick(); gain(v); const r = $('bigBtn').getBoundingClientRect(); floatText(r.left + r.width * (.2 + Math.random() * .6), r.top + r.height * .25, '🤖 +' + fmt(v)); refresh(); } }
   saveAcc += dt; if (saveAcc > 3) { saveAcc = 0; save(); }
   requestAnimationFrame(loop);
 }
