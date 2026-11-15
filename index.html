@@ -558,6 +558,7 @@
       <button class="card" id="playFW"><span class="ic-duo"><img src="ates.png" alt=""><img src="su.png" alt=""></span>Ateşli Erdi ve Zeynepsu</button>
       <button class="card" id="playBR"><img class="ic-img mon" src="zeynep_canavar.png" alt=""><span>Backrooms: <b class="red">Zeynep</b></span></button>
       <button class="card" id="playDK" onclick="location.href='dukkan.html'"><img class="ic-img" src="dk_zeynep.png" alt="" style="image-rendering:pixelated;border-radius:8px"><span>Zeynep'in <b class="red">Dükkânı</b></span></button>
+      <button class="card" id="playNI" onclick="location.href='insan.html'"><span class="ic-img" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#16120e;border-radius:8px">🚪</span><span>Kapıyı <b class="red">Açma</b></span></button>
       <button class="card" id="playAY" onclick="location.href='uzay.html'"><img class="ic-img" src="erdivur_ikon.webp" alt="" style="image-rendering:auto;border-radius:50%"><span>Erdiyi <b class="vur">Vur</b></span></button>
     </div>
     <button class="back" data-go="menu">← Geri</button>
@@ -3271,7 +3272,7 @@ const SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
 const TOK = 'ordekez_token', USR = 'ordekez_user';
 const ls = window.localStorage;
 const rawSet = Storage.prototype.setItem, rawRemove = Storage.prototype.removeItem;
-const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_'));
+const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_') || k.startsWith('ni_'));
 
 async function rpc(fn, args){
   const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) });

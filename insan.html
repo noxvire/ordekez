@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kapıyı Açma — Ördekez</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b0907;overflow:hidden;font-family:"Courier New",ui-monospace,monospace;color:#e9dfc8;user-select:none}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #stage{position:relative;width:min(100vw,177.78vh);height:min(56.25vw,100vh)}
+  canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:auto;cursor:default}
+  #ui{position:absolute;inset:0;pointer-events:none;font-size:min(1.9vw,3.3vh)}
+  #ui > *{pointer-events:auto}
+  .hidden{display:none!important}
+  /* el çizimi kutular */
+  .box{background:#16120e;border:3px solid #e9dfc8;border-radius:4px 9px 5px 11px/9px 4px 10px 5px;box-shadow:4px 5px 0 #000}
+  #dlg{position:absolute;left:4%;right:4%;bottom:4%;padding:1.1em 1.4em 1.2em;min-height:4.2em;line-height:1.45}
+  #dlg .nm{font-weight:900;letter-spacing:.12em;color:#f1c470;margin-bottom:.3em;font-size:.9em}
+  #dlg .tx{white-space:pre-wrap}
+  #dlg .more{position:absolute;right:1em;bottom:.4em;font-size:.7em;opacity:.6}
+  #choices{position:absolute;right:4%;bottom:4%;display:flex;flex-direction:column;align-items:flex-end;gap:.45em}
+  .btn{font:inherit;font-weight:700;color:#e9dfc8;background:#16120e;border:3px solid #e9dfc8;border-radius:5px 11px 6px 10px/10px 5px 11px 6px;padding:.45em 1em;cursor:pointer;box-shadow:3px 4px 0 #000;transform:rotate(-.4deg)}
+  .btn:nth-child(2n){transform:rotate(.5deg)}
+  .btn:hover{background:#e9dfc8;color:#16120e}
+  .btn:disabled{opacity:.35;cursor:default;background:#16120e;color:#e9dfc8}
+  .btn.red{border-color:#d0463a;color:#ff8a7a}.btn.red:hover{background:#d0463a;color:#16120e}
+  .btn.green{border-color:#8fc46a;color:#bfe39d}.btn.green:hover{background:#8fc46a;color:#16120e}
+  #hud{position:absolute;left:2%;top:2.5%;display:flex;gap:.6em;align-items:center;font-weight:700}
+  #hud .pill{padding:.25em .7em}
+  #topR{position:absolute;right:2%;top:2.5%;display:flex;gap:.5em}
+  #note{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-.6deg);width:52%;padding:1.2em 1.6em;background:#e9dfc8;color:#1a140e;border:3px solid #1a140e;box-shadow:8px 9px 0 #000;line-height:1.5}
+  #note h3{margin:.1em 0 .5em;letter-spacing:.1em}
+  #note li{margin:.25em 0}
+  #note .x{text-decoration:line-through;opacity:.5}
+  #title{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7em}
+  #title h1{font:900 min(8vw,13vh)/1 "Courier New",monospace;margin:0 0 .1em;letter-spacing:.06em;color:#e9dfc8;text-shadow:5px 6px 0 #000,-2px 0 #7a1a12;transform:rotate(-1.5deg)}
+  #title .sub{opacity:.7;margin-bottom:1.2em;font-size:.9em}
+  #title .btn{min-width:13em;text-align:center}
+  #back{position:fixed;left:12px;top:12px;z-index:9;font:700 13px "Courier New";color:#e9dfc8;background:#16120e;border:2px solid #e9dfc8;padding:5px 10px;text-decoration:none}
+  #toast{position:absolute;left:50%;top:14%;transform:translateX(-50%);padding:.5em 1em;font-weight:700;transition:opacity .4s}
+  #panel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60%;padding:1.3em 1.6em;line-height:1.55;text-align:center}
+  #panel h2{margin:.1em 0 .5em;letter-spacing:.08em}
+  #panel .row{display:flex;gap:.6em;justify-content:center;flex-wrap:wrap;margin-top:1em}
+</style>
+</head>
+<body>
+<a id="back" href="index.html">← Ördekez</a>
+<div id="wrap"><div id="stage">
+  <canvas id="c" width="960" height="540"></canvas>
+  <div id="ui">
+    <div id="hud" class="hidden"><div class="pill box" id="hNight">GECE 1</div><div class="pill box" id="hEnergy">⚡ 2</div><div class="pill box" id="hAmmo">🔫 2</div><div class="pill box" id="hGuests">🏠 0</div></div>
+    <div id="topR" class="hidden"><button class="btn" id="bNote">📓 İşaretler</button></div>
+    <div id="choices"></div>
+    <div id="dlg" class="box hidden"><div class="nm"></div><div class="tx"></div><div class="more">tıkla ▶</div></div>
+    <div id="note" class="hidden"></div>
+    <div id="panel" class="box hidden"></div>
+    <div id="toast" class="box hidden"></div>
+    <div id="title">
+      <h1>KAPIYI AÇMA</h1>
+      <div class="sub">Gündüz güneş öldürür. Gece kapını çalanlar... herkes insan değil.</div>
+      <button class="btn" id="tNew">Yeni Oyun</button>
+      <button class="btn" id="tCont">Devam Et</button>
+      <button class="btn" id="tHow">Nasıl Oynanır</button>
+    </div>
+  </div>
+</div></div>
+<script>
+'use strict';
+/* =====================================================================
+   KAPIYI AÇMA — "No, I'm Not a Human" tarzı, 2D el çizimi
+   Gece: kapıya gelenlerle konuş, içeri al ya da gönder.
+   Gündüz: TV'den yeni işareti öğren, misafirleri incele (enerji), gerekirse vur.
+   ===================================================================== */
+const cv = document.getElementById('c'), g = cv.getContext('2d'), W = 960, H = 540;
+const $ = id => document.getElementById(id);
+const INK = '#17110c', PAPER = '#e9dfc8';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- el çizimi yardımcıları (çizgiler 140 ms'de bir "kaynar") ---------- */
+let sd = 1, boil = 0;
+function R() { sd = (sd * 16807) % 2147483647; return sd / 2147483647; }
+function seedFor(k) { sd = ((boil * 7919 + k * 104729) % 2147483646) + 1; R(); R(); }
+const jt = a => (R() - .5) * a;
+function rline(x1, y1, x2, y2, w = 2.2, col = INK) {
+  for (let k = 0; k < 2; k++) { g.beginPath(); g.moveTo(x1 + jt(2.2), y1 + jt(2.2)); g.quadraticCurveTo((x1 + x2) / 2 + jt(3.5), (y1 + y2) / 2 + jt(3.5), x2 + jt(2.2), y2 + jt(2.2)); g.lineWidth = w * (k ? .55 : 1); g.strokeStyle = col; g.lineCap = 'round'; g.stroke(); }
+}
+function rpoly(pts, fill, w = 2.4, col = INK) {
+  g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x + jt(1.6), y + jt(1.6)) : g.moveTo(x + jt(1.6), y + jt(1.6))); g.closePath();
+  if (fill) { g.fillStyle = fill; g.fill(); } if (w) { g.lineWidth = w; g.strokeStyle = col; g.lineJoin = 'round'; g.stroke(); }
+}
+function rell(cx, cy, rx, ry, fill, w = 2.4, col = INK, a0 = 0, a1 = Math.PI * 2, n = 22) {
+  const pts = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; pts.push([cx + Math.cos(a) * rx * (1 + jt(.05)), cy + Math.sin(a) * ry * (1 + jt(.05))]); }
+  if (a1 - a0 < 6.28) { g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); if (fill) { g.fillStyle = fill; g.fill(); } g.lineWidth = w; g.strokeStyle = col; g.stroke(); return; }
+  rpoly(pts, fill, w, col);
+}
+function hatch(x, y, w, h, step = 7, col = 'rgba(23,17,12,.45)', ang = 1) {
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.strokeStyle = col; g.lineWidth = 1.3;
+  for (let i = -h; i < w + h; i += step) { g.beginPath(); g.moveTo(x + i + jt(2), y + jt(2)); g.lineTo(x + i - h * ang + jt(2), y + h + jt(2)); g.stroke(); }
+  g.restore();
+}
+function rrect(x, y, w, h, fill, lw = 2.4) { rpoly([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], fill, lw); }
+function txt(s, x, y, size = 22, col = PAPER, align = 'center', font = 'bold') { g.font = `${font} ${size}px "Courier New",monospace`; g.textAlign = align; g.fillStyle = col; g.fillText(s, x, y); }
+// kağıt dokusu + film grenli üst katman
+const grain = []; for (let k = 0; k < 4; k++) { const c = document.createElement('canvas'); c.width = 240; c.height = 135; const q = c.getContext('2d'), d = q.createImageData(240, 135); for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = Math.random() < .5 ? 22 : 0; } q.putImageData(d, 0, 0); grain.push(c); }
+function overlay(t) {
+  g.save(); g.globalAlpha = .55; g.imageSmoothingEnabled = false; g.drawImage(grain[boil % 4], 0, 0, W, H); g.restore();
+  const vg = g.createRadialGradient(W / 2, H / 2, H * .35, W / 2, H / 2, H * .85); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.65)'); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  if (flash > 0) { g.fillStyle = `rgba(255,240,210,${flash})`; g.fillRect(0, 0, W, H); }
+  if (shake > 0) cv.style.transform = `translate(${jt(shake * 14)}px,${jt(shake * 14)}px)`; else cv.style.transform = '';
+}
+
+/* ---------- ses ---------- */
+let AC = null, master = null;
+function ac() { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .8; master.connect(AC.destination); } if (AC.state === 'suspended') AC.resume(); return AC; }
+function tone(f1, f2, dur, vol, type = 'sine', delay = 0) { const c = ac(), t = c.currentTime + delay, o = c.createOscillator(), q = c.createGain(); o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(Math.max(1, f2), t + dur); q.gain.setValueAtTime(0, t); q.gain.linearRampToValueAtTime(vol, t + .01); q.gain.exponentialRampToValueAtTime(.0005, t + dur); o.connect(q); q.connect(master); o.start(t); o.stop(t + dur + .05); }
+function noise(dur, vol, freq = 1200, type = 'lowpass', delay = 0) { const c = ac(), n = c.sampleRate * dur, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n); const s = c.createBufferSource(); s.buffer = b; const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq; const q = c.createGain(); q.gain.value = vol; s.connect(f); f.connect(q); q.connect(master); s.start(c.currentTime + delay); }
+const SND = {
+  knock() { for (let i = 0; i < 3; i++) { tone(140, 60, .12, .7, 'sine', i * .28); noise(.08, .5, 700, 'lowpass', i * .28); } },
+  click() { tone(900, 500, .04, .12, 'square'); },
+  door() { noise(.6, .25, 500); tone(220, 90, .5, .15, 'sawtooth'); },
+  slam() { tone(95, 38, .45, .9); noise(.35, .9, 900); },
+  tv() { noise(1.2, .12, 5000, 'highpass'); },
+  shot() { noise(.5, 1.2, 2400); tone(160, 40, .4, .9); },
+  sting() { noise(.9, .5, 1800, 'bandpass'); tone(900, 120, .9, .18, 'sawtooth'); },
+  look() { tone(300, 420, .15, .08, 'triangle'); },
+};
+let amb = null;
+function ambStart() { if (amb) return; const c = ac(), o1 = c.createOscillator(), o2 = c.createOscillator(), q = c.createGain(); o1.frequency.value = 52; o2.frequency.value = 52.6; o1.type = o2.type = 'sawtooth'; const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 160; q.gain.value = .045; o1.connect(f); o2.connect(f); f.connect(q); q.connect(master); o1.start(); o2.start(); amb = { o1, o2, q }; }
+
+/* ---------- işaretler ---------- */
+const SIGNS = {
+  dis:    { ad: 'Dişler', tv: 'Ziyaretçilerin dişleri kusursuz, bembeyazdır. Fazla kusursuz.', check: 'Dişlerine bak', at: 'mouth' },
+  goz:    { ad: 'Gözler', tv: 'Ziyaretçilerin gözleri kıpkırmızıdır, damarlar patlamış gibidir.', check: 'Gözlerine bak', at: 'eyes' },
+  tirnak: { ad: 'Tırnaklar', tv: 'Ziyaretçilerin tırnak altları kapkara ve kirlidir.', check: 'Ellerine bak', at: 'hands' },
+  koltuk: { ad: 'Koltuk altı', tv: 'Ziyaretçilerin koltuk altında hiç kıl yoktur; deri kızarık ve tahrişlidir.', check: 'Koltuk altına bak', at: 'arm' },
+};
+const SIGN_ORDER = ['dis', 'goz', 'tirnak', 'koltuk'];   // gece 1 öncesi, sabah 1, 2, 3
+
+/* ---------- karakterler (geçici çizimler; sonra kullanıcının çizimleriyle değişecek) ---------- */
+// v: ziyaretçi mi; s: gösterdiği işaretler (insanlarda yanıltıcı tek işaret olabilir)
+const CHARS = {
+  remzi:  { ad: 'Remzi', look: { skin: '#d9b08c', hair: '#9a948a', style: 'cap', cap: '#3a4a6a', shirt: '#4a5a7a', old: 1, mustache: 1 }, v: 0, s: [],
+            who: 'Remzi. Mahallenin postacısıyım, beni tanırsın.', why: 'Evime yetişemedim. Güneş doğmadan bir yere sığınmam lazım. Bir gece... sadece bir gece.',
+            yes: 'Allah razı olsun evladım. Ayakkabılarımı çıkarırım, merak etme.', no: 'Anlıyorum... Herkes korkuyor. Kendine iyi bak.', talk: 'Kırk yıl mektup taşıdım. Hiçbir mektup bu kadar korkutmadı beni.' },
+  selin:  { ad: 'Selin', look: { skin: '#e6c2a4', hair: '#2a1a14', style: 'long', shirt: '#a8322c', young: 1 }, v: 1, s: ['dis', 'koltuk'],
+            who: 'Selin. Karşı apartmandan. Hatırlamadın mı? Hatırlamadın mı?', why: 'Evim artık güvenli değil. İçeri al beni. Lütfen. Lütfen. Lütfen.',
+            yes: 'Teşekkürler. Burası çok... sıcak. Çok güzel.', no: '...Kapını hatırlayacağım.', talk: 'Uyuyamıyorum. Hiç uyumadım aslında. Sen uyurken izleyebilir miyim?' },
+  doruk:  { ad: 'Doruk', look: { skin: '#f0cfb0', hair: '#5a3a1c', style: 'messy', shirt: '#3a7a4a', kid: 1 }, v: 0, s: [],
+            who: 'Doruk... Annem "kapıları çal" dedi. Sonra gitti.', why: 'Dışarısı çok karanlık. Biri beni takip ediyor gibi.',
+            yes: 'Teşekkür ederim abi... Burada uyuyabilir miyim?', no: '(Ağlamaya başlıyor. Adımları uzaklaşıyor.)', talk: 'Annem gelecek mi sence? Pencereye bakıp duruyorum.' },
+  kadir:  { ad: 'Kadir', look: { skin: '#c8956a', hair: '#1a1410', style: 'short', shirt: '#5a5a3a', beard: 1 }, v: 0, s: ['tirnak'],
+            who: 'Kadir, sanayideki tamirci. Ellerime bakma, bütün gün motor söktüm.', why: 'Dükkânın kepenkleri kapanmıyor. Orada kalırsam sabahı görmem.',
+            yes: 'Sağ ol usta. Bir şey bozulursa bana söyle, tamir ederim.', no: 'Peki. Kapını sağlam kilitle bari.', talk: 'Tırnaklarımdaki yağ çıkmıyor işte. Otuz yıldır çıkmıyor.' },
+  nilay:  { ad: 'Nilay', look: { skin: '#e8d0bc', hair: '#c8a060', style: 'bun', shirt: '#e8ecee', nurse: 1, young: 1 }, v: 1, s: ['goz', 'dis', 'tirnak'],
+            who: 'Hemşire Nilay. Hastanede... herkes gitti. Herkes.', why: 'Yaralılara bakmam lazım. Evinde yaralı var mı? Varsa bana göster.',
+            yes: 'Harika. Herkesi tek tek muayene edeceğim. Tek tek.', no: 'Hastalar beni bekliyor. Seni de bekleyeceğim.', talk: 'Nabzını ölçebilir miyim? Kalbin... çok güzel atıyor.' },
+  cizgi:  { ad: 'Uzun Adam', look: { skin: '#d8ccc0', hair: '#0e0c0a', style: 'slick', shirt: '#1e1c22', tall: 1, suit: 1 }, v: 1, s: ['goz', 'koltuk'],
+            who: 'Benim. Her zaman bendim.', why: 'Yalnız mısın? Evde başka kimse var mı? Söyle. Yalnız mısın?',
+            yes: 'Güzel. Çok güzel bir ev.', no: 'Yalnız olduğunu biliyorum.', talk: '...' },
+  baris:  { ad: 'Barış', look: { skin: '#c9a07c', hair: '#2a2418', style: 'buzz', shirt: '#4a5a32', army: 1 }, v: 0, s: ['goz'],
+            who: 'Er Barış. Birliğim dağıldı.', why: 'Üç gündür uyumadım, gözlerim ondan böyle. Yemin ederim insanım.',
+            yes: 'Sağ ol. Nöbeti ben tutarım istersen.', no: 'Anlaşıldı. Başka kapı denerim.', talk: 'Birlikte bir tane vardı... gülümsemesi hiç bozulmadı. Sonra herkesi...' },
+  fikriye:{ ad: 'Fikriye', look: { skin: '#d8b498', hair: '#c8c4bc', style: 'scarf', scarf: '#6a4a7a', shirt: '#5a3a4a', old: 1 }, v: 0, s: [],
+            who: 'Fikriye. Yan sokakta otururum. Kedimi arıyordum...', why: 'Kedim bulunmadı. Ben de kayboldum gibi oldu evladım.',
+            yes: 'Sağ ol yavrum. Sana kek yapardım ama un kalmadı.', no: 'Peki... Kedimi görürsen içeri al bari.', talk: 'Kedim ziyaretçilere hep tıslardı. Keşke burada olsaydı.' },
+  mert:   { ad: 'Mert', look: { skin: '#dcb898', hair: '#3a2a1c', style: 'short', shirt: '#2a4a6a', young: 1 }, v: 1, s: ['dis', 'tirnak', 'koltuk'],
+            who: 'Mert, alt kat komşun. Hep selamlaşırız ya.', why: 'Benim dairede... bir şey var. Bende değil. Bende değil.',
+            yes: 'Teşekkürler komşu. Komşuluk böyle olur.', no: 'Alt kattayım. Hep alt kattayım.', talk: 'Bu gece çok sessiz, değil mi? Kimse uyanmayacak gibi.' },
+};
+const NIGHTS = [null,
+  { visits: ['remzi', 'selin', 'doruk'] },
+  { visits: ['kadir', 'nilay', 'cizgi'] },
+  { visits: ['baris', 'fikriye', 'mert'] },
+];
+const LAST = 3;
+
+/* ---------- karakter çizimi ---------- */
+function drawPerson(id, cx, cy, sc = 1, opt = {}) {
+  const c = CHARS[id], L = c.look, k = sc * (L.kid ? .78 : L.tall ? 1.12 : 1), wrong = c.v && opt.wrong;
+  seedFor(id.length * 31 + (opt.k || 0));
+  const tilt = c.v ? Math.sin(performance.now() / 900) * .03 : 0;
+  g.save(); g.translate(cx, cy); g.rotate(tilt);
+  // gövde
+  const sh = L.suit ? '#1e1c22' : L.shirt;
+  rpoly([[-78 * k, 92 * k], [78 * k, 92 * k], [104 * k, 260 * k], [-104 * k, 260 * k]], sh);
+  hatch(-104 * k, 92 * k, 208 * k, 168 * k, 9, 'rgba(0,0,0,.28)');
+  if (L.suit) { rpoly([[-18 * k, 92 * k], [18 * k, 92 * k], [0, 150 * k]], '#e8e4dc', 2); rline(0, 100 * k, 0, 160 * k, 5 * k, '#0c0b0e'); }
+  if (L.nurse) { rline(-30 * k, 120 * k, -30 * k, 150 * k, 4, '#c0302a'); rline(-45 * k, 135 * k, -15 * k, 135 * k, 4, '#c0302a'); }
+  if (L.army) { for (let i = 0; i < 6; i++) rell(jt(150) * k, (120 + R() * 120) * k, 14 * k, 9 * k, '#3a4a26', 0); }
+  // boyun + kafa
+  rrect(-17 * k, 52 * k, 34 * k, 44 * k, L.skin, 2);
+  if (L.style === 'long') rpoly([[-58 * k, -40 * k], [58 * k, -40 * k], [66 * k, 110 * k], [-66 * k, 110 * k]], L.hair);
+  if (L.style === 'scarf') rpoly([[-66 * k, -30 * k], [66 * k, -30 * k], [74 * k, 96 * k], [-74 * k, 96 * k]], L.scarf);
+  rell(0, 0, 50 * k, 62 * k, L.skin);
+  // saç
+  if (L.style === 'short' || L.style === 'messy' || L.style === 'buzz' || L.style === 'slick') {
+    const hh = L.style === 'buzz' ? 18 : 30; rell(0, -40 * k, 52 * k, hh * k, L.hair, 2.4, INK, Math.PI, Math.PI * 2);
+    if (L.style === 'messy') for (let i = 0; i < 7; i++) rline((-40 + i * 13) * k, -55 * k, (-44 + i * 13 + jt(10)) * k, -78 * k, 4, L.hair);
+    if (L.style === 'slick') rline(-40 * k, -48 * k, 40 * k, -30 * k, 3, '#444');
+  }
+  if (L.style === 'long') rell(0, -38 * k, 54 * k, 34 * k, L.hair, 2.4, INK, Math.PI, Math.PI * 2);
+  if (L.style === 'bun') { rell(0, -40 * k, 52 * k, 28 * k, L.hair, 2.4, INK, Math.PI, Math.PI * 2); rell(0, -70 * k, 20 * k, 16 * k, L.hair); rpoly([[-34 * k, -60 * k], [34 * k, -60 * k], [30 * k, -44 * k], [-30 * k, -44 * k]], '#fafafa', 2); }
+  if (L.style === 'cap') { rell(0, -36 * k, 54 * k, 32 * k, L.cap, 2.4, INK, Math.PI, Math.PI * 2); rpoly([[-10 * k, -40 * k], [74 * k, -40 * k], [70 * k, -30 * k], [-10 * k, -32 * k]], L.cap); }
+  if (L.style === 'scarf') { rell(0, -26 * k, 58 * k, 50 * k, L.scarf, 2.4, INK, Math.PI * 1.02, Math.PI * 1.98); for (let i = 0; i < 9; i++) rell(jt(90) * k, (-40 + R() * 30) * k, 3, 3, '#e8d8a0', 0); }
+  // yüz
+  const ey = -6 * k, red = wrong && c.s.includes('goz');
+  for (const sx of [-1, 1]) {
+    rell(sx * 19 * k, ey, 10 * k, 6.5 * k, red ? '#e8a8a0' : '#f6f2ea', 1.8);
+    rell(sx * 19 * k + (c.v ? jt(1.2) : 0), ey, 3.8 * k, 3.8 * k, c.v ? '#0a0806' : '#2a2018', 0);
+    rline(sx * 30 * k, ey - 14 * k, sx * 9 * k, ey - 16 * k + (c.v ? -3 * k : 0), 3, INK);
+  }
+  if (L.old) { rline(-34 * k, ey + 10 * k, -24 * k, ey + 13 * k, 1.2); rline(34 * k, ey + 10 * k, 24 * k, ey + 13 * k, 1.2); rline(-20 * k, -36 * k, 20 * k, -36 * k, 1.2); }
+  rline(0, ey + 6 * k, -5 * k, ey + 24 * k, 2); rline(-5 * k, ey + 24 * k, 4 * k, ey + 25 * k, 2);
+  const smile = c.v ? 1.8 : 1;
+  if (wrong && c.s.includes('dis')) { rell(0, 34 * k, 18 * k * smile, 8 * k, '#fdfdfd', 2); for (let i = -3; i <= 3; i++) rline(i * 5 * k, 27 * k, i * 5 * k, 41 * k, .8, '#bbb'); }
+  else rell(0, 30 * k, 14 * k * smile, 6 * k * smile, null, 2.2, INK, .2, Math.PI - .2, 10);
+  if (L.mustache) rpoly([[-18 * k, 24 * k], [0, 20 * k], [18 * k, 24 * k], [0, 28 * k]], L.hair, 1.6);
+  if (L.beard) { g.save(); g.beginPath(); g.ellipse(0, 10 * k, 52 * k, 56 * k, 0, .15, Math.PI - .15); g.clip(); hatch(-52 * k, 18 * k, 104 * k, 50 * k, 4, 'rgba(26,20,16,.7)'); g.restore(); }
+  if (L.glasses) for (const sx of [-1, 1]) rell(sx * 19 * k, ey, 14 * k, 11 * k, null, 2);
+  // gölge taraması (sol yan)
+  g.save(); g.beginPath(); g.ellipse(0, 0, 50 * k, 62 * k, 0, 0, 7); g.clip(); hatch(-50 * k, -62 * k, 26 * k, 124 * k, 6, 'rgba(23,17,12,.35)'); g.restore();
+  g.restore();
+}
+
+/* ---------- yakın plan (inceleme) çizimleri ---------- */
+function drawCloseup(id, sign) {
+  const c = CHARS[id], has = c.s.includes(sign), L = c.look; seedFor(77 + sign.length);
+  rrect(250, 70, 460, 330, '#2a221a');
+  g.save(); g.beginPath(); g.rect(250, 70, 460, 330); g.clip();
+  if (sign === 'goz') {
+    for (const sx of [-1, 1]) {
+      const x = 480 + sx * 110; rell(x, 235, 95, 60, L.skin, 3);
+      rell(x, 235, 80, 40, has ? '#e8a090' : '#f4efe4', 3);
+      if (has) for (let i = 0; i < 9; i++) { const a = R() * 6.28; rline(x + Math.cos(a) * 78, 235 + Math.sin(a) * 36, x + Math.cos(a) * 30, 235 + Math.sin(a) * 14, 1.6, '#b0201a'); }
+      else for (let i = 0; i < 2; i++) { const a = R() * 6.28; rline(x + Math.cos(a) * 76, 235 + Math.sin(a) * 34, x + Math.cos(a) * 52, 235 + Math.sin(a) * 22, 1, '#d08880'); }
+      rell(x, 235, 26, 26, '#4a3a28', 2.4); rell(x, 235, 12, 12, '#050403', 0); rell(x - 8, 227, 4, 4, '#fff', 0);
+      rline(x - 92, 172, x + 88, 160, 7, L.hair || '#333');
+    }
+  } else if (sign === 'dis') {
+    rell(480, 240, 230, 150, L.skin, 0);
+    rell(480, 240, 170, 80, '#3a0e0c', 3);
+    const n = 8;
+    for (let row = 0; row < 2; row++) for (let i = 0; i < n; i++) {
+      const x = 340 + i * 35, y = row ? 262 : 196, hgt = 40 + (has ? 0 : jt(14)), col = has ? '#ffffff' : ['#e8dcb0', '#d8c890', '#efe4c4'][i % 3];
+      rrect(x + (has ? 0 : jt(4)), y, 32, row ? hgt - 8 : hgt, col, 2);
+    }
+    rell(480, 240, 170, 80, null, 6, '#a04a40');
+  } else if (sign === 'tirnak') {
+    rpoly([[300, 400], [330, 250], [640, 250], [660, 400]], L.skin);
+    for (let i = 0; i < 4; i++) { const x = 340 + i * 72; rpoly([[x, 260], [x + 54, 260], [x + 50, 100], [x + 4, 100]], L.skin); rpoly([[x + 8, 150], [x + 46, 150], [x + 44, 104], [x + 10, 104]], has ? '#efc8b8' : '#f2d0c0', 2); if (has) rpoly([[x + 8, 104], [x + 44, 104], [x + 44, 116], [x + 8, 118]], '#1a120a', 1.5); else rline(x + 10, 106, x + 42, 106, 1.5, '#f8eae0'); }
+    if (id === 'kadir') { for (let i = 0; i < 18; i++) rell(330 + R() * 300, 170 + R() * 200, 6 + R() * 8, 4, 'rgba(30,24,16,.55)', 0); }
+  } else if (sign === 'koltuk') {
+    rpoly([[260, 400], [330, 120], [470, 90], [520, 260], [700, 300], [700, 400]], L.suit ? '#1e1c22' : L.shirt);
+    rell(470, 250, 70, 46, L.skin, 3);
+    if (has) for (let i = 0; i < 16; i++) rell(430 + R() * 80, 230 + R() * 40, 4, 3, '#c0402a', 0);
+    else for (let i = 0; i < 26; i++) { const x = 420 + R() * 100, y = 225 + R() * 50; rline(x, y, x + jt(16), y + 10 + R() * 8, 1.4, '#2a1e14'); }
+  }
+  g.restore();
+}
+
+/* ---------- sahneler ---------- */
+function drawHall(t) {
+  seedFor(1);
+  g.fillStyle = '#1c1712'; g.fillRect(0, 0, W, H);
+  rpoly([[0, 0], [300, 60], [300, 470], [0, 540]], '#2a221a'); rpoly([[W, 0], [660, 60], [660, 470], [W, 540]], '#2a221a');
+  hatch(0, 0, 300, 540, 10, 'rgba(0,0,0,.35)'); hatch(660, 0, 300, 540, 10, 'rgba(0,0,0,.35)', -1);
+  rpoly([[300, 470], [660, 470], [W, 540], [0, 540]], '#14100c');
+  // kapı
+  rrect(360, 90, 240, 380, '#4a3420'); hatch(360, 90, 240, 380, 12, 'rgba(0,0,0,.25)');
+  rrect(380, 115, 200, 150, null, 2); rrect(380, 290, 200, 160, null, 2);
+  rell(560, 290, 10, 10, '#b89a50'); rell(480, 175, 13, 13, '#0a0806', 2.5); // gözetleme deliği
+  // kapının altından sızan ışık
+  const lg = g.createLinearGradient(0, 455, 0, 470); lg.addColorStop(0, 'rgba(255,190,120,0)'); lg.addColorStop(1, `rgba(255,170,100,${.15 + Math.sin(t * 3) * .05})`); g.fillStyle = lg; g.fillRect(362, 455, 236, 15);
+  if (G.knocking) { txt('TAK TAK TAK', 480 + jt(8), 70 + jt(6), 34, '#f1c470'); }
+  for (let i = 0; i < 3; i++) rline(300, 60 + i * 140, 660, 60 + i * 140, 1, 'rgba(0,0,0,.4)');
+}
+function drawPeep(t) {
+  g.fillStyle = '#050403'; g.fillRect(0, 0, W, H);
+  g.save(); g.beginPath(); g.arc(480, 260, 230, 0, 7); g.clip();
+  g.fillStyle = '#2a2e3a'; g.fillRect(0, 0, W, H);
+  seedFor(3); hatch(250, 30, 460, 460, 14, 'rgba(0,0,0,.25)');
+  rrect(250, 340, 460, 200, '#1e1e24');
+  const id = G.cur; if (id) { const bob = Math.sin(t * 1.3) * 3; drawPerson(id, 480, 210 + bob, 1.25, { wrong: G.peek, k: 5 }); }
+  const rg = g.createRadialGradient(480, 260, 120, 480, 260, 235); rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(0,0,0,.92)'); g.fillStyle = rg; g.fillRect(0, 0, W, H);
+  g.restore();
+  seedFor(4); rell(480, 260, 232, 232, null, 6, '#2a221a');
+}
+function guestPos(i, n) { const span = Math.min(620, n * 170), x0 = 480 - span / 2 + span / (n * 2); return [x0 + i * (span / n), 268]; }
+function drawRoom(t) {
+  seedFor(10);
+  g.fillStyle = '#2c2418'; g.fillRect(0, 0, W, H); hatch(0, 0, W, 360, 16, 'rgba(0,0,0,.18)');
+  rpoly([[0, 360], [W, 360], [W, H], [0, H]], '#1a140e');
+  // tahtalarla kapatılmış pencere, aralardan ölümcül güneş
+  rrect(70, 70, 200, 170, '#ffcf80'); for (let i = 0; i < 5; i++) rpoly([[60, 82 + i * 34], [282, 74 + i * 34 + jt(6)], [282, 98 + i * 34], [60, 104 + i * 34]], '#5a3e24');
+  const sg = g.createLinearGradient(170, 150, 330, 470); sg.addColorStop(0, 'rgba(255,200,120,.22)'); sg.addColorStop(1, 'rgba(255,200,120,0)'); g.fillStyle = sg; g.beginPath(); g.moveTo(80, 120); g.lineTo(270, 110); g.lineTo(420, 470); g.lineTo(150, 470); g.fill();
+  // kanepe
+  rpoly([[180, 300], [780, 300], [790, 400], [170, 400]], '#5a3a3a'); rrect(160, 250, 640, 70, '#6a4444'); hatch(160, 250, 640, 150, 11, 'rgba(0,0,0,.25)');
+  // TV
+  rrect(800, 250, 130, 110, '#3a3026'); rrect(812, 262, 106, 76, G.tvOn ? '#9ab0b0' : '#1a2020', 2.5);
+  if (G.tvOn) for (let i = 0; i < 18; i++) rline(812, 264 + i * 4, 918, 264 + i * 4, 1, `rgba(255,255,255,${R() * .3})`);
+  rline(840, 250, 820, 210, 2); rline(890, 250, 912, 206, 2);
+  if (!G.tvSeen) txt('📺', 865, 236, 22);
+  // misafirler
+  const gs = G.guests;
+  gs.forEach((id, i) => { const [x, y] = guestPos(i, gs.length); const hv = G.hover === i; drawPerson(id, x, y + Math.sin(t * 1.1 + i) * 2, .62, { k: i + 20 }); txt(CHARS[id].ad, x, 452, 18, hv ? '#f1c470' : PAPER); if (hv) { seedFor(99); rell(x, 340, 90, 140, null, 2, '#f1c470'); } });
+  if (!gs.length) txt('Ev bomboş. Sadece sen varsın.', 480, 300, 20, '#bba98a');
+}
+function drawTV(t) {
+  g.fillStyle = '#0c0a08'; g.fillRect(0, 0, W, H); seedFor(20);
+  rrect(160, 50, 640, 430, '#3a3026'); rrect(190, 80, 580, 330, '#0e1414', 3);
+  g.save(); g.beginPath(); g.rect(190, 80, 580, 330); g.clip();
+  for (let i = 0; i < 140; i++) { g.fillStyle = `rgba(200,220,220,${Math.random() * .18})`; g.fillRect(190 + Math.random() * 580, 80 + Math.random() * 330, 3, 2); }
+  g.fillStyle = 'rgba(160,30,24,.85)'; g.fillRect(190, 80, 580, 40); txt('ACİL DURUM YAYINI', 480, 108, 22, '#fff');
+  // sunucu silueti
+  rell(480, 250, 60, 74, '#3a4044', 2); rpoly([[380, 410], [400, 320], [560, 320], [580, 410]], '#2a3034', 2);
+  g.restore();
+  for (let i = 0; i < 40; i++) rline(190, 80 + i * 8.3, 770, 80 + i * 8.3, .6, 'rgba(0,0,0,.25)');
+  rell(250, 445, 12, 12, '#8a7a5a'); rell(300, 445, 12, 12, '#8a7a5a');
+}
+function drawInspect(t) {
+  g.fillStyle = '#100c08'; g.fillRect(0, 0, W, H);
+  if (G.close) { drawCloseup(G.insp, G.close); return; }
+  drawPerson(G.insp, 400, 200, .95, { k: 7 });
+}
+function drawTitle(t) {
+  g.fillStyle = '#120e0a'; g.fillRect(0, 0, W, H); seedFor(30);
+  rrect(380, 120, 200, 330, '#3a2818'); rell(480, 210, 12, 12, '#0a0806', 2.5); rell(555, 300, 9, 9, '#b89a50');
+  const lg = g.createLinearGradient(0, 430, 0, 452); lg.addColorStop(0, 'rgba(255,170,90,0)'); lg.addColorStop(1, `rgba(255,170,90,${.3 + Math.sin(t * 2) * .1})`); g.fillStyle = lg; g.fillRect(382, 430, 196, 20);
+  if (Math.sin(t * .7) > .93) { txt('tak tak tak', 480 + jt(6), 100, 22, '#7a6a50'); }
+}
+function drawEnd(t) {
+  g.fillStyle = G.endGood ? '#2a2016' : '#0a0606'; g.fillRect(0, 0, W, H); seedFor(40);
+  if (G.endGood) { rell(480, 560, 420, 200, '#ffcf80', 0); }
+  else for (let i = 0; i < 8; i++) { const x = 140 + i * 95; drawEyesInDark(x, 220 + Math.sin(t + i) * 10); }
+}
+function drawEyesInDark(x, y) { for (const s of [-1, 1]) rell(x + s * 14, y, 7, 4, '#d8d0b0', 0); }
+
+/* ---------- oyun durumu ---------- */
+const SAVE = 'ni_save';
+let G = null, flash = 0, shake = 0;
+function fresh() { return { night: 1, phase: 'intro', guests: [], dead: [], shot: [], known: [], energy: 2, ammo: 2, vi: 0, karma: 0, log: [] }; }
+function save() { try { const s = { ...G }; for (const k of ['knocking', 'cur', 'peek', 'hover', 'insp', 'close', 'tvOn', 'tvSeen', 'asked', 'scene']) delete s[k]; localStorage.setItem(SAVE, JSON.stringify(s)); } catch (e) {} }
+function load() { try { return JSON.parse(localStorage.getItem(SAVE) || 'null'); } catch (e) { return null; } }
+
+/* ---------- arayüz yardımcıları ---------- */
+let dlgQ = null;
+function say(name, text, cb) { const d = $('dlg'); d.classList.remove('hidden'); $('choices').style.bottom = 'calc(4% + 8.4em)'; d.querySelector('.nm').textContent = name || ''; d.querySelector('.tx').textContent = ''; dlgQ = { text, i: 0, cb, done: false }; }
+function sayMany(list, cb) { const next = i => i >= list.length ? (cb && cb()) : say(list[i][0], list[i][1], () => next(i + 1)); next(0); }
+$('dlg').onclick = () => { if (!dlgQ) return; if (!dlgQ.done) { dlgQ.i = dlgQ.text.length; return; } const cb = dlgQ.cb; dlgQ = null; $('dlg').classList.add('hidden'); $('choices').style.bottom = ''; SND.click(); cb && cb(); };
+function choices(list) { const c = $('choices'); c.innerHTML = ''; for (const o of list) { const b = document.createElement('button'); b.className = 'btn ' + (o.cls || ''); b.textContent = o.t; b.disabled = !!o.dis; b.onclick = () => { SND.click(); o.f(); }; c.appendChild(b); } }
+function clearChoices() { $('choices').innerHTML = ''; }
+let toastT = 0; function toast(s, d = 2.5) { const el = $('toast'); el.textContent = s; el.classList.remove('hidden'); el.style.opacity = 1; toastT = d; }
+function panel(html) { const p = $('panel'); p.innerHTML = html; p.classList.remove('hidden'); return p; }
+function hidePanel() { $('panel').classList.add('hidden'); }
+function hud() {
+  const on = G && G.scene !== 'title' && G.scene !== 'end';
+  $('hud').classList.toggle('hidden', !on); $('topR').classList.toggle('hidden', !on); $('back').style.display = on ? 'none' : '';
+  if (!on) return;
+  $('hNight').textContent = (G.phase === 'day' ? 'GÜN ' : 'GECE ') + G.night;
+  $('hEnergy').textContent = '⚡ ' + G.energy; $('hAmmo').textContent = '🔫 ' + G.ammo; $('hGuests').textContent = '🏠 ' + G.guests.length;
+  $('hEnergy').style.display = G.phase === 'day' ? '' : 'none';
+}
+$('bNote').onclick = () => {
+  const n = $('note'); if (!n.classList.contains('hidden')) { n.classList.add('hidden'); return; }
+  n.innerHTML = `<h3>📓 ZİYARETÇİ İŞARETLERİ</h3><ol>${SIGN_ORDER.map(s => G.known.includes(s) ? `<li><b>${SIGNS[s].ad}:</b> ${SIGNS[s].tv}</li>` : `<li class="x">??? (henüz duyulmadı)</li>`).join('')}</ol>
+    <p style="font-size:.85em">Unutma: tek bir işaret yetmez. İnsanlar da yorgun, kirli, bitkin olabilir. Ziyaretçilerde genelde <b>birden fazla</b> işaret olur.</p><p style="font-size:.8em;opacity:.7">Kapatmak için tekrar bas.</p>`;
+  n.classList.remove('hidden');
+};
+
+/* ---------- akış ---------- */
+function setScene(s) { G.scene = s; hud(); }
+function startGame(g0) {
+  ac(); ambStart(); G = g0; $('title').classList.add('hidden');
+  if (G.phase === 'intro') return introTV();
+  if (G.phase === 'night') return startNight();
+  if (G.phase === 'day') return startDay();
+}
+function introTV() {
+  setScene('tv'); SND.tv(); G.phase = 'intro';
+  sayMany([
+    ['TV', 'SON DAKİKA. Güneş fırtınası sürüyor. Gün ışığında dışarıda kalmak ölümcül.'],
+    ['TV', 'Geceleri kapınızı çalanların hepsi insan değil. Yetkililer onlara "Ziyaretçi" diyor.'],
+    ['TV', 'Kimseyi tanıdığınız için içeri almayın. Konuşun. Bakın. Emin olun.'],
+    ['TV', 'İLK İŞARET: ' + SIGNS.dis.tv],
+    ['', '(İşaretleri sol üstteki 📓 defterinden her zaman okuyabilirsin.)'],
+  ], () => { G.known = ['dis']; G.phase = 'night'; G.vi = 0; save(); startNight(); });
+}
+function startNight() {
+  setScene('hall'); G.phase = 'night'; hud();
+  const list = NIGHTS[G.night].visits;
+  if (G.vi >= list.length) return endNight();
+  G.cur = list[G.vi]; G.peek = false; G.asked = {};
+  setTimeout(() => { G.knocking = true; SND.knock(); setTimeout(() => G.knocking = false, 1400);
+    choices([{ t: '👁️ Gözetleme deliğinden bak', f: () => { clearChoices(); peep(); } }]); }, 1200);
+}
+function peep() {
+  setScene('peep'); SND.look(); const c = CHARS[G.cur];
+  say('???', c.v && G.night >= 2 ? '...Merhaba. Merhaba. İçeri alır mısın?' : 'Merhaba! Orada biri var mı? Lütfen kapıyı aç...', doorMenu);
+}
+function doorMenu() {
+  const c = CHARS[G.cur], A = G.asked, nm = A.who ? c.ad : '???';
+  const ask = (k, line, extra) => () => { A[k] = 1; clearChoices(); const after = () => doorMenu(); if (extra) extra(); say(k === 'who' ? c.ad : nm, line, after); };
+  choices([
+    { t: 'Kimsin?', dis: A.who, f: ask('who', c.who) },
+    { t: 'Neden geldin?', dis: A.why, f: ask('why', c.why) },
+    { t: 'Gülümse bakalım', dis: A.smile, f: () => { A.smile = 1; G.peek = true; clearChoices(); say(nm, c.s.includes('dis') ? '(Gülümsüyor. Dişleri bembeyaz, kusursuz. Fazla kusursuz.)' : '(Gülümsüyor. Dişleri biraz sararmış, çarpık. Sıradan bir gülümseme.)', doorMenu); } },
+    { t: 'Yaklaş, gözlerine bakayım', dis: A.eyes, f: () => { A.eyes = 1; G.peek = true; clearChoices(); say(nm, c.s.includes('goz') ? '(Deliğe yaklaşıyor. Gözleri kıpkırmızı, damarlar patlamış.)' : '(Deliğe yaklaşıyor. Gözleri yorgun ama normal.)', doorMenu); } },
+    { t: '🚪 İçeri al', cls: 'green', f: () => decide(true) },
+    { t: '✋ Git buradan', cls: 'red', f: () => decide(false) },
+  ]);
+}
+function decide(letIn) {
+  clearChoices(); const id = G.cur, c = CHARS[id];
+  if (letIn) { SND.door(); G.guests.push(id); say(c.ad, c.yes, next); }
+  else { say(G.asked.who ? c.ad : '???', c.no, () => { SND.slam(); shake = .3; next(); }); if (!c.v) G.karma--; }
+  function next() { G.vi++; G.cur = null; save(); setScene('hall'); const list = NIGHTS[G.night].visits; if (G.vi >= list.length) setTimeout(endNight, 900); else setTimeout(startNight, 600); }
+}
+function endNight() {
+  // gece: evdeki her ziyaretçi bir insanı alır
+  const vis = G.guests.filter(id => CHARS[id].v), hum = G.guests.filter(id => !CHARS[id].v), gone = [];
+  for (const v of vis) { const left = hum.filter(h => !gone.includes(h)); if (!left.length) break; const h = left[Math.floor(Math.random() * left.length)]; gone.push(h); }
+  G.guests = G.guests.filter(id => !gone.includes(id)); G.dead.push(...gone);
+  setScene('room'); clearChoices();
+  const lines = [['', 'Gece uzun sürdü. Sabaha karşı salondan bir ses geldi... sonra sessizlik.']];
+  if (gone.length) for (const h of gone) lines.push(['', `Sabah ${CHARS[h].ad} yerinde yoktu. Kanepede sadece ıslak, simsiyah bir iz kalmıştı.`]);
+  else lines.push(['', 'Sabah herkes yerindeydi. Şimdilik.']);
+  if (vis.length && !G.guests.some(id => !CHARS[id].v) && G.night >= 2) { sayMany(lines, () => ending('yalniz_degil')); return; }
+  sayMany(lines, () => { G.phase = 'day'; G.energy = 2; save(); startDay(); });
+}
+function startDay() {
+  setScene('room'); G.phase = 'day'; G.tvOn = true; G.tvSeen = false; hud();
+  const newSign = SIGN_ORDER[G.night];
+  say('', `GÜN ${G.night}. Güneş pencere tahtalarının arasından sızıyor. Televizyon kendi kendine açıldı.`, () => {
+    if (newSign && !G.known.includes(newSign)) {
+      SND.tv(); setScene('tv');
+      sayMany([['TV', 'Acil durum yayını devam ediyor.'], ['TV', 'YENİ İŞARET: ' + SIGNS[newSign].tv], ['TV', 'Tek bir işarete güvenmeyin. Yorgunluk, kir ve hastalık da benzer belirtiler gösterebilir.']], () => { G.known.push(newSign); G.tvSeen = true; G.tvOn = false; save(); roomMenu(); });
+    } else roomMenu();
+  });
+}
+function roomMenu() {
+  setScene('room'); hud();
+  choices([
+    { t: G.night >= LAST ? '🌙 Son gece... Kurtarma ekibini bekle' : '🌙 Akşam olsun (Gece ' + (G.night + 1) + ')', f: () => { clearChoices(); if (G.night >= LAST) return finale(); G.night++; G.vi = 0; G.phase = 'night'; save(); startNight(); } },
+  ]);
+  if (G.guests.length) toast('Bir misafire tıkla: konuş, incele ya da...', 3);
+}
+function openGuest(i) {
+  const id = G.guests[i]; if (!id) return; $('toast').classList.add('hidden'); toastT = 0; G.insp = id; G.close = null; setScene('inspect'); clearChoices();
+  inspectMenu();
+}
+function inspectMenu() {
+  const id = G.insp, c = CHARS[id];
+  const opts = [{ t: '💬 Konuş', f: () => { clearChoices(); say(c.ad, c.talk, inspectMenu); } }];
+  for (const s of SIGN_ORDER) opts.push({ t: `🔍 ${SIGNS[s].check} (⚡1)`, dis: G.energy <= 0, f: () => {
+    G.energy--; hud(); G.close = s; SND.look(); clearChoices();
+    const has = c.s.includes(s);
+    const msg = { goz: has ? 'Gözleri kıpkırmızı. Damarlar patlamış.' : 'Gözleri normal. Biraz yorgun.', dis: has ? 'Dişleri bembeyaz ve kusursuz. Tek bir çatlak, tek bir leke yok.' : 'Dişleri sararmış, biri biraz çarpık. Sıradan.', tirnak: has ? 'Tırnak altları kapkara.' : 'Tırnakları temiz.', koltuk: has ? 'Koltuk altında hiç kıl yok. Deri kızarmış, pul pul.' : 'Kıllı, sıradan bir koltuk altı. İğrenç ama insanca.' }[s];
+    say('', msg + (G.known.includes(s) ? '' : '  (Bu işaret hakkında henüz bir şey duymadın.)'), () => { G.close = null; save(); inspectMenu(); });
+  } });
+  opts.push({ t: `🔫 Vur (${G.ammo})`, cls: 'red', dis: G.ammo <= 0, f: () => confirmShoot() });
+  opts.push({ t: '← Geri', f: () => { G.insp = null; clearChoices(); roomMenu(); } });
+  choices(opts);
+}
+function confirmShoot() {
+  const id = G.insp, c = CHARS[id];
+  choices([{ t: `Evet, ${c.ad}'i vur`, cls: 'red', f: () => {
+    clearChoices(); G.ammo--; SND.shot(); flash = 1; shake = .6;
+    G.guests = G.guests.filter(x => x !== id); G.shot.push(id);
+    if (c.v) { setTimeout(() => SND.sting(), 300); say('', `${c.ad} yere yığıldı. Yüzü... yüzü eriyip kayıyor. Altındaki şey insan değildi.`, () => { G.insp = null; save(); roomMenu(); }); }
+    else { G.karma -= 3; say('', `${c.ad} yere yığıldı. Kan kırmızıydı. Sıcaktı. ...O bir insandı.`, () => { G.insp = null; save(); roomMenu(); }); }
+  } }, { t: 'Vazgeç', f: inspectMenu }]);
+}
+function finale() {
+  const vis = G.guests.filter(id => CHARS[id].v), hum = G.guests.filter(id => !CHARS[id].v);
+  setScene('hall'); SND.knock();
+  sayMany([['', 'Üçüncü gecenin sonunda kapı çalındı. Bu sefer farklı: düzenli, sert vuruşlar.'], ['DIŞARIDAN', 'Kurtarma ekibi! Evde insan varsa kapıyı açın!']], () => {
+    if (vis.length) ending('kotu', vis); else if (hum.length) ending('iyi', hum); else ending('yalniz');
+  });
+}
+function ending(kind, list = []) {
+  clearChoices(); setScene('end'); G.endGood = kind === 'iyi' || kind === 'yalniz';
+  const names = list.map(id => CHARS[id].ad).join(', ');
+  const T = {
+    iyi: ['🌅 SABAH', `Kapıyı açtın. Ekip evdekileri tek tek kontrol etti: ${names}. Hepsi insan. Hepsi hayatta.${G.karma < 0 ? '<br><br>Ama kapıdan çevirdiklerini ve vurduklarını unutamayacaksın.' : ''}`],
+    yalniz: ['🕯️ YALNIZ', 'Kapıyı açtın. Ekip boş evi gördü. Hayattaydın. Ama yanında kimse yoktu. Belki de en güvenlisi buydu.'],
+    kotu: ['👁️ KAPIYI AÇMA', `Kapıyı açtığında arkandan bir ses geldi. ${names} gülümsüyordu. Kusursuz, bembeyaz dişlerle.<br><br>Kurtarma ekibi içeri girdiğinde evde kimse yoktu. İnsan olan kimse.`],
+    yalniz_degil: ['👁️ SABAH OLMADI', 'Evde artık senden başka insan kalmamıştı. Gece yarısı salondan sesler geldi. Kapını çalan yoktu bu sefer; zaten içerideydiler.'],
+  }[kind];
+  localStorage.removeItem(SAVE);
+  setTimeout(() => { kind === 'iyi' ? SND.door() : SND.sting();
+    panel(`<h2>${T[0]}</h2><p>${T[1]}</p><p style="opacity:.7;font-size:.85em">Kurtulanlar: ${G.guests.filter(id => !CHARS[id].v).length} · Kaybedilenler: ${G.dead.length} · Vurulanlar: ${G.shot.length}</p><div class="row"><button class="btn" id="eMenu">Ana Menü</button><button class="btn" id="eAgain">Tekrar Oyna</button></div>`);
+    $('eMenu').onclick = () => { hidePanel(); toTitle(); }; $('eAgain').onclick = () => { hidePanel(); startGame(fresh()); }; }, 600);
+}
+function toTitle() { G = null; $('title').classList.remove('hidden'); $('dlg').classList.add('hidden'); clearChoices(); hud(); $('tCont').disabled = !load(); }
+
+/* ---------- menü ---------- */
+$('tNew').onclick = () => { localStorage.removeItem(SAVE); startGame(fresh()); };
+$('tCont').onclick = () => { const s = load(); if (s) startGame(s); };
+$('tHow').onclick = () => { panel(`<h2>NASIL OYNANIR</h2><p style="text-align:left">🌙 <b>Gece</b> kapın çalınır. Gözetleme deliğinden bak, konuş, gülümsemesini ve gözlerini kontrol et. Sonra <b>içeri al</b> ya da <b>gönder</b>.<br>☀️ <b>Gündüz</b> televizyon yeni bir işaret söyler. Misafirlerine tıkla: konuş ya da enerji harcayıp incele. Emin olduğunda... tüfeğin var.<br>⚠️ Evde ziyaretçi varsa geceleri insanlar kaybolur. Üç gece dayan.</p><div class="row"><button class="btn" id="hOk">Tamam</button></div>`); $('hOk').onclick = hidePanel; };
+$('tCont').disabled = !load();
+
+/* ---------- tıklama (misafir seçimi) ---------- */
+function toCanvas(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
+cv.addEventListener('mousemove', e => {
+  if (!G || G.scene !== 'room' || G.phase !== 'day' || dlgQ) { if (G) G.hover = -1; cv.style.cursor = 'default'; return; }
+  const [x, y] = toCanvas(e); G.hover = -1;
+  G.guests.forEach((id, i) => { const [gx, gy] = guestPos(i, G.guests.length); if (Math.abs(x - gx) < 80 && y > gy - 70 && y < gy + 190) G.hover = i; });
+  cv.style.cursor = G.hover >= 0 ? 'pointer' : 'default';
+});
+cv.addEventListener('click', () => { if (G && G.scene === 'room' && G.phase === 'day' && !dlgQ && G.hover >= 0) { SND.click(); openGuest(G.hover); } });
+
+/* ---------- döngü ---------- */
+let last = performance.now();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  boil = Math.floor(now / 140);
+  if (dlgQ && !dlgQ.done) { dlgQ.i = Math.min(dlgQ.text.length, dlgQ.i + dt * 48); $('dlg').querySelector('.tx').textContent = dlgQ.text.slice(0, Math.floor(dlgQ.i)); if (dlgQ.i >= dlgQ.text.length) dlgQ.done = true; }
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').style.opacity = 0, setTimeout(() => toastT <= 0 && $('toast').classList.add('hidden'), 400); }
+  flash = Math.max(0, flash - dt * 2.5); shake = Math.max(0, shake - dt * 1.6);
+  const sc = G ? G.scene : 'title';
+  if (sc === 'title' || !G) drawTitle(t);
+  else if (sc === 'hall') drawHall(t);
+  else if (sc === 'peep') drawPeep(t);
+  else if (sc === 'room') drawRoom(t);
+  else if (sc === 'tv') drawTV(t);
+  else if (sc === 'inspect') drawInspect(t);
+  else if (sc === 'end') drawEnd(t);
+  overlay(t);
+}
+requestAnimationFrame(frame);
+window.__ni = { get G() { return G; }, startGame, fresh, CHARS };
+</script>
+</body>
+</html>
