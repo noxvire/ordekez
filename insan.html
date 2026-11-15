@@ -302,7 +302,7 @@ const gun = new THREE.Group(); gun.position.set(5.92, 1.5, -.5); gun.rotation.y 
    v: ziyaretçi, s: üzerinde görünen işaretler (insanlarda yanıltıcı tek işaret olabilir)
    ===================================================================== */
 const CHARS = {
-  remzi:  { ad: 'Remzi', h: 1.76, hi: 'Ehm... merhaba?', peep: 'ni_peep_remzi.jpg', look: { skin: '#c8a088', hair: '#1a1410', style: 'bald', top: '#141414', bot: '#1e1e22', shoe: '#1a1410', beard: 1, eye: '#2a1e14' }, v: 0, s: [],
+  remzi:  { ad: 'Remzi', h: 1.76, hi: 'Ehm... merhaba?', peep: 'ni_peep_remzi.png', look: { skin: '#c8a088', hair: '#1a1410', style: 'bald', top: '#141414', bot: '#1e1e22', shoe: '#1a1410', beard: 1, eye: '#2a1e14' }, v: 0, s: [],
             who: 'Remzi. Mahallenin postacısıyım, beni tanırsın.', why: 'Evime yetişemedim. Güneş doğmadan bir yere sığınmam lazım. Bir gece... sadece bir gece.',
             yes: 'Allah razı olsun evladım. Ayakkabılarımı çıkarırım, merak etme.', no: 'Anlıyorum... Herkes korkuyor. Kendine iyi bak.', talk: 'Kırk yıl mektup taşıdım. Hiçbir mektup bu kadar korkutmadı beni.' },
   selin:  { ad: 'Selin', h: 1.66, look: { skin: '#e3bfa2', hair: '#2a1a14', style: 'long', top: '#8a2a26', bot: '#20202a', shoe: '#101010', eye: '#3a2a1a', lips: '#b0605a' }, v: 1, s: ['dis', 'koltuk'],
@@ -648,15 +648,16 @@ const peepPhotos = {};
 function drawPeep(t) {
   const g = peepCv.getContext('2d'), W = 1280, Hh = 720, id = visitorP && visitorP.id, c = id && CHARS[id];
   postMat.uniforms.lens.value = 1;
-  if (c && c.peep) {   // ziyaretçinin kendi fotoğrafı (kapı deliğinden yakın çekim)
+  g.drawImage(peepBg, 0, 0);
+  if (c && c.peep) {   // ziyaretçinin kesilmiş fotoğrafı, gece arka planının önünde
     let im = peepPhotos[id]; if (!im) { im = peepPhotos[id] = new Image(); im.src = c.peep; }
     if (im.complete && im.naturalWidth) {
-      const z = 1 + visitorP.near * .3 + Math.sin(t * .7) * .006, sc = Hh / im.height * z, w = im.width * sc, h = im.height * sc;
-      g.fillStyle = '#000'; g.fillRect(0, 0, W, Hh); g.drawImage(im, W * .36 - w / 2 + Math.sin(t * .9) * 3, (Hh - h) / 2 - visitorP.near * 80, w, h);
-      postMat.uniforms.lens.value = 0; peepTex.needsUpdate = true; return;
+      const near = visitorP.near, z = (1 + near * .35) * (1 + Math.sin(t * .7) * .006), h = Hh * .8 * z, w = h * im.width / im.height;
+      const x = W * .31 - w / 2 + Math.sin(t * .9) * 3, y = Hh + 30 - h + near * 40;
+      g.save(); g.filter = 'brightness(1.15) contrast(1.1)'; g.drawImage(im, x, y, w, h); g.restore();
+      peepTex.needsUpdate = true; return;
     }
   }
-  g.drawImage(peepBg, 0, 0);
   if (c && figCache[id]) {   // yakın çekim: baş ve gövde deliği doldurur
     const f = figCache[id], near = visitorP.near, hgt = 1650 * (1 + near * .5), w = hgt * f.width / f.height;
     const x = W * .42 - w / 2 + Math.sin(t * .9) * 4 * (c.v ? 2 : 1), y = 70 - near * 260 - hgt * .02;
