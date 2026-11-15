@@ -83,6 +83,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .x{position:absolute;top:10px;right:14px;font-size:22px;color:#e04f95;font-weight:700}
 /* sandıklar */
 .chests{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.cc .bt{margin-top:6px}
+.cc .own{font-size:14px}
 .cc{background:#fff;border:4px solid var(--c);border-radius:22px;padding:12px 10px;box-shadow:0 6px 0 var(--c);transition:transform .12s}
 .cc:hover{transform:translateY(-4px)}
 .cc b{display:block;font-size:19px;color:var(--d);margin-top:6px}
@@ -124,6 +126,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .spark{position:fixed;pointer-events:none;z-index:60;font-size:22px;animation:sp 1s ease-out forwards}
 @keyframes sp{to{transform:translate(var(--dx),var(--dy)) rotate(200deg) scale(.4);opacity:0}}
 /* eşyalar */
+.slots{gap:12px!important}
 .it{position:relative;width:88px;height:88px;border-radius:18px;border:4px solid var(--c);background:radial-gradient(circle at 50% 35%,#fff,var(--bg));display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 4px 0 var(--c)}
 .it .lv{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--c);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:0 7px;border:2px solid #fff;white-space:nowrap}
 .it .eqm{position:absolute;top:-8px;right:-8px;background:#ff6fae;color:#fff;font-size:12px;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
@@ -195,7 +198,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 
 <div class="scr" id="chestScr"><div class="card">
   <button class="x" data-close>✕</button>
-  <h2>🎁 Sandıklar</h2><div class="sub">Sandıklardan giyilebilir eşyalar çıkar. Patronları yenince bedava sandık kazanırsın! <span class="gold" id="gC"></span></div>
+  <h2>🎁 Sandıklar</h2><div class="sub">Savaşta düşmanlardan nadiren sandık düşer ve buraya gelir (4 yuva). Açmaya başla, süre dolunca aç: her sandıktan 5 eşya çıkar! <span class="gold" id="gC"></span></div>
   <div class="chests" id="chestList"></div>
 </div></div>
 
@@ -243,8 +246,9 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 'use strict';
 /* =================== KAYIT =================== */
 const KEY = 'sv_save';
-let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, inv: {}, eq: {}, kutu: [0, 0, 0, 0] };
-try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; M.inv = M.inv || {}; M.eq = M.eq || {}; M.kutu = M.kutu || [0, 0, 0, 0]; } } catch (e) {}
+let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, inv: {}, eq: {}, kutular: [null, null, null, null] };
+try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; M.inv = M.inv || {}; M.eq = M.eq || {}; M.kutular = M.kutular || [null, null, null, null]; } } catch (e) {}
+
 const saveM = () => { try { localStorage.setItem(KEY, JSON.stringify(M)); } catch (e) {} };
 const $ = id => document.getElementById(id);
 
@@ -335,40 +339,60 @@ const RAR = [
   { ad: 'Efsanevi', c: '#ffb020', d: '#c47a00', bg: '#fff3d6', ch: ['#ffd25e', '#d08a10'] },
 ];
 // görseller gelince img: 'zs_chest_X.png' (kapalı) ve imgOpen eklenecek
+// savaşta düşen sandıklar 4 yuvada bekler; açılma süresi dolunca 5 eşya verir
 const CHESTS = [
-  { ad: 'Sıradan Sandık',  img: 'zs_chest_0.webp', r: 0, fiyat: 150,  o: [80, 18, 2, 0] },
-  { ad: 'Nadir Sandık',    img: 'zs_chest_1.webp', r: 1, fiyat: 500,  o: [45, 45, 9, 1] },
-  { ad: 'Epik Sandık',     img: 'zs_chest_2.webp', r: 2, fiyat: 1500, o: [10, 50, 35, 5] },
-  { ad: 'Efsanevi Sandık', img: 'zs_chest_3.webp', r: 3, fiyat: 4000, o: [0, 30, 50, 20] },
+  { ad: 'Sıradan Sandık',  img: 'zs_chest_0.webp', r: 0, sure: 3 * 60,    altin: 30,  o: [80, 18, 2, 0] },
+  { ad: 'Nadir Sandık',    img: 'zs_chest_1.webp', r: 1, sure: 20 * 60,   altin: 100, o: [45, 45, 9, 1] },
+  { ad: 'Epik Sandık',     img: 'zs_chest_2.webp', r: 2, sure: 60 * 60,   altin: 300, o: [10, 50, 35, 5] },
+  { ad: 'Efsanevi Sandık', img: 'zs_chest_3.webp', r: 3, sure: 3 * 3600,  altin: 800, o: [0, 30, 50, 20] },
 ];
-const SLOTS = { bas: 'Başlık', zirh: 'Zırh', pelerin: 'Pelerin', silah: 'Silah' };
-// st: hp (can), arm (hasar azaltma), spd (hız), mag (çekim), dmg (hasar), cd (saldırı hızı), crit (kritik)
+// düşmanlardan sandık düşme şansı (öldürme başına)
+const CHEST_DROP = [.0005, .00015, .00004, .00001];
+const CHEST_ITEMS = 5, CHEST_SLOTS = 4;
+const SLOTS = { kask: 'Kask', kolye: 'Kolye', zirh: 'Zırh', pelerin: 'Pelerin', silah: 'Silah', yuzuk: 'Yüzük', ayakkabi: 'Ayakkabı' };
+// st: hp (can), arm (hasar azaltma), spd (hız), mag (çekim), dmg (hasar), cd (saldırı hızı), crit (kritik), xp
 const ITEMS = [
-  { id: 'toka',    ad: 'Kedi Kulaklı Toka', s: 'bas', r: 0, ic: '🎀', st: { hp: 15 } },
-  { id: 'kask',    ad: 'Pembe Kask',        s: 'bas', r: 1, ic: '🪖', st: { hp: 28 } },
-  { id: 'migfer',  ad: 'Ay Miğferi',        s: 'bas', r: 2, ic: '⛑️', st: { hp: 42, arm: .03 } },
-  { id: 'tac',     ad: 'Kraliçe Tacı',      s: 'bas', r: 3, ic: '👑', st: { hp: 70, arm: .05 } },
+  { id: 'toka',    ad: 'Kedi Kulaklı Toka', s: 'kask', r: 0, ic: '🎀', st: { hp: 15 } },
+  { id: 'kask',    ad: 'Pembe Kask',        s: 'kask', r: 1, ic: '🪖', st: { hp: 28 } },
+  { id: 'migfer',  ad: 'Ay Miğferi',        s: 'kask', r: 2, ic: '⛑️', st: { hp: 42, arm: .03 } },
+  { id: 'tac',     ad: 'Kraliçe Tacı',      s: 'kask', r: 3, ic: '👑', st: { hp: 70, arm: .05 } },
   { id: 'hirka',   ad: 'Pamuk Hırka',       s: 'zirh', r: 0, ic: '👚', st: { arm: .04 } },
   { id: 'kzirh',   ad: 'Kurdele Zırhı',     s: 'zirh', r: 1, ic: '🥋', st: { arm: .07 } },
   { id: 'kristal', ad: 'Kristal Zırh',      s: 'zirh', r: 2, ic: '🛡️', st: { arm: .10, hp: 15 } },
   { id: 'kimono',  ad: 'Sakura Kimonosu',   s: 'zirh', r: 3, ic: '👘', st: { arm: .15, hp: 25 } },
-  { id: 'atki',    ad: 'Pembe Atkı',        s: 'pelerin', r: 0, ic: '🧣', st: { spd: .04, mag: .1 } },
-  { id: 'kpel',    ad: 'Kedi Pelerini',     s: 'pelerin', r: 1, ic: '🧥', st: { spd: .06, mag: .18 } },
-  { id: 'ypel',    ad: 'Yıldız Pelerini',   s: 'pelerin', r: 2, ic: '🌌', st: { spd: .09, mag: .28 } },
-  { id: 'kanat',   ad: 'Melek Kanatları',   s: 'pelerin', r: 3, ic: '🪽', st: { spd: .14, mag: .45 } },
+  { id: 'atki',    ad: 'Pembe Atkı',        s: 'pelerin', r: 0, ic: '🧣', st: { mag: .12 } },
+  { id: 'kpel',    ad: 'Kedi Pelerini',     s: 'pelerin', r: 1, ic: '🧥', st: { mag: .2, spd: .02 } },
+  { id: 'ypel',    ad: 'Yıldız Pelerini',   s: 'pelerin', r: 2, ic: '🌌', st: { mag: .3, spd: .04 } },
+  { id: 'kanat',   ad: 'Melek Kanatları',   s: 'pelerin', r: 3, ic: '🪽', st: { mag: .45, spd: .07 } },
   { id: 'tkilic',  ad: 'Tahta Kılıç',       s: 'silah', r: 0, ic: '🗡️', st: { dmg: .08 } },
   { id: 'sasa',    ad: 'Şeker Asa',         s: 'silah', r: 1, ic: '🍭', st: { cd: .07, dmg: .05 } },
   { id: 'mizrak',  ad: 'Pati Mızrağı',      s: 'silah', r: 1, ic: '🔱', st: { crit: .05, dmg: .07 } },
   { id: 'ayasa',   ad: 'Ay Asası',          s: 'silah', r: 2, ic: '🪄', st: { cd: .10, dmg: .12 } },
   { id: 'ykilic',  ad: 'Yıldız Kılıcı',     s: 'silah', r: 2, ic: '⚔️', st: { dmg: .2, crit: .03 } },
   { id: 'ekatana', ad: 'Ejder Katana',      s: 'silah', r: 3, ic: '🐉', st: { dmg: .3, cd: .08, crit: .06 } },
+  { id: 'pyuzuk',  ad: 'Plastik Yüzük',     s: 'yuzuk', r: 0, ic: '💍', st: { crit: .02 } },
+  { id: 'kyuzuk',  ad: 'Kalpli Yüzük',      s: 'yuzuk', r: 1, ic: '💗', st: { crit: .04, hp: 10 } },
+  { id: 'ayuzuk',  ad: 'Ay Taşı Yüzük',     s: 'yuzuk', r: 2, ic: '🌙', st: { crit: .06, cd: .03 } },
+  { id: 'eyuzuk',  ad: 'Elmas Yüzük',       s: 'yuzuk', r: 3, ic: '💎', st: { crit: .09, cd: .06 } },
+  { id: 'can',     ad: 'Çan Kolye',         s: 'kolye', r: 0, ic: '🔔', st: { xp: .05 } },
+  { id: 'inci',    ad: 'İnci Kolye',        s: 'kolye', r: 1, ic: '📿', st: { xp: .08, hp: 10 } },
+  { id: 'kgoz',    ad: 'Kedi Gözü Kolye',   s: 'kolye', r: 2, ic: '🧿', st: { xp: .12, mag: .1 } },
+  { id: 'madalyon',ad: 'Kalp Madalyonu',    s: 'kolye', r: 3, ic: '💖', st: { xp: .18, hp: 30 } },
+  { id: 'terlik',  ad: 'Pamuk Terlik',      s: 'ayakkabi', r: 0, ic: '🩴', st: { spd: .04 } },
+  { id: 'pbot',    ad: 'Pembe Botlar',      s: 'ayakkabi', r: 1, ic: '👢', st: { spd: .06 } },
+  { id: 'bbot',    ad: 'Bulut Botları',     s: 'ayakkabi', r: 2, ic: '👟', st: { spd: .09, mag: .1 } },
+  { id: 'ibot',    ad: 'Işık Botları',      s: 'ayakkabi', r: 3, ic: '🥿', st: { spd: .13, arm: .03 } },
 ];
+// eski sürüm göçü: yuvaları yeni isimlere taşı, eski bedava sandıkları yuvalara koy
+(() => { const neq = {}; for (const k in M.eq) { const it = ITEMS.find(x => x.id === M.eq[k]); if (it && M.inv[it.id]) neq[it.s] = it.id; } M.eq = neq;
+  for (const id in M.inv) if (!ITEMS.find(x => x.id === id)) delete M.inv[id];
+  if (M.kutu) { M.kutu.forEach((n, r) => { for (let i = 0; i < n; i++) { const f = M.kutular.indexOf(null); if (f >= 0) M.kutular[f] = { r, bas: null }; } }); delete M.kutu; } })();
 const STN = { hp: ['Can', v => '+' + Math.round(v)], arm: ['Hasar azaltma', v => '%' + Math.round(v * 100)], spd: ['Hız', v => '+%' + Math.round(v * 100)], mag: ['Çekim', v => '+%' + Math.round(v * 100)],
-  dmg: ['Hasar', v => '+%' + Math.round(v * 100)], cd: ['Saldırı hızı', v => '+%' + Math.round(v * 100)], crit: ['Kritik', v => '+%' + Math.round(v * 100)] };
+  dmg: ['Hasar', v => '+%' + Math.round(v * 100)], cd: ['Saldırı hızı', v => '+%' + Math.round(v * 100)], crit: ['Kritik', v => '+%' + Math.round(v * 100)], xp: ['XP', v => '+%' + Math.round(v * 100)] };
 const ITEM_MAX = 10;
 const itemMul = lv => 1 + .18 * (lv - 1);
 const itemCost = (it, lv) => ({ altin: Math.round([60, 160, 400, 1000][it.r] * Math.pow(lv, 1.45)), parca: lv });
-function eqStats() { const t = { hp: 0, arm: 0, spd: 0, mag: 0, dmg: 0, cd: 0, crit: 0 };
+function eqStats() { const t = { hp: 0, arm: 0, spd: 0, mag: 0, dmg: 0, cd: 0, crit: 0, xp: 0 };
   for (const sl in SLOTS) { const id = M.eq[sl], o = id && M.inv[id], it = ITEMS.find(x => x.id === id); if (!o || !it) continue; for (const k in it.st) t[k] += it.st[k] * itemMul(o.lv); }
   t.arm = Math.min(.6, t.arm); t.cd = Math.min(.5, t.cd); return t; }
 
@@ -489,7 +513,7 @@ function startGame() {
   P = { x: 0, y: 0, r: 20, skin: M.skin,
     maxHp: 100 + 10 * mlv('can'), hp: 0, spd: 215 * (1 + .04 * mlv('hiz')), dmgMul: 1 + .06 * mlv('guc'), magnet: 90 * (1 + .15 * mlv('mik')), xpMul: 1 + .08 * mlv('xp'),
     lv: 1, xp: 0, next: 4, fx: 1, fy: 0, face: 1, inv: 0, revive: mlv('dir'), w: { katana: 1 }, p: {}, cds: {}, hitT: 0, walk: 0 };
-  const E = eqStats(); P.maxHp += Math.round(E.hp); P.spd *= 1 + E.spd; P.magnet *= 1 + E.mag; P.dmgMul *= 1 + E.dmg; P.eqCd = E.cd; P.eqCrit = E.crit; P.eqArm = E.arm;
+  const E = eqStats(); P.maxHp += Math.round(E.hp); P.spd *= 1 + E.spd; P.magnet *= 1 + E.mag; P.dmgMul *= 1 + E.dmg; P.eqCd = E.cd; P.eqCrit = E.crit; P.eqArm = E.arm; P.xpMul *= 1 + E.xp; P.chests = [];
   P.hp = P.maxHp;
   enemies = []; projs = []; gems = []; picks = []; fx = []; texts = []; pets = []; T = 0; kills = 0; coins = 0; spawnAcc = 0; bossIdx = 0; curBoss = null; cam = { x: 0, y: 0 }; levelQueue = 0; won = false;
   M.oyun++; saveM();
@@ -543,7 +567,9 @@ function kill(e) {
   gems.push({ x: e.x, y: e.y, v: e.xp, ph: Math.random() * 7 });
   const r = Math.random();
   if (e.final && !won) { won = true; setTimeout(() => { if (state === 'play' || state === 'lvup') gameOver(true); }, 1200); }
-  if (e.boss) { const br = e.tier || 1; M.kutu[br]++; saveM(); setTimeout(() => toast(`🎁 ${CHESTS[br].ad} kazandın!`), 900); picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
+  if (e.boss && Math.random() < .3) picks.push({ x: e.x + 40, y: e.y, k: 'kutu', r: e.tier || 1 });
+  if (!e.boss) { const cr = Math.random(); let acc = 0; for (let r = 3; r >= 0; r--) { acc += CHEST_DROP[r] * (e.xp >= 4 ? 3 : 1); if (cr < acc) { picks.push({ x: e.x, y: e.y, k: 'kutu', r }); break; } } }
+  if (e.boss) { picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
   else if (r < .025) picks.push({ x: e.x, y: e.y, k: 'coin' });
   else if (r < .033) picks.push({ x: e.x, y: e.y, k: 'cilek' });      // nadiren can
   else if (r < .036) picks.push({ x: e.x, y: e.y, k: 'balik' });      // nadiren mıknatıs
@@ -640,7 +666,10 @@ function update(dt) {
       if (k.k === 'cilek') { P.hp = Math.min(P.maxHp, P.hp + 30); toast('❤️ +30 can'); chime([784, 988], 70); fx.push({ k: 'kalpcik', x: P.x, y: P.y - 40, vy: -70, t: .8 }); }
       if (k.k === 'balik') { gems.forEach(g => g.pull = true); toast('🧲 Bütün kalpler sana geliyor!'); chime([523, 784, 1046], 60, 'sine'); }
       if (k.k === 'sevgi') { for (const e of onScreen()) if (!e.boss) hurt(e, 99999); fx.push({ k: 'flash', t: .4 }); chime([1046, 1318, 1568, 2093], 70); }
-      if (k.k === 'sandik') openChest(); } }
+      if (k.k === 'sandik') openChest();
+      if (k.k === 'kutu') { const free = M.kutular.filter(x => !x).length - P.chests.length;
+        if (free > 0) { P.chests.push(k.r); toast(`🎁 ${CHESTS[k.r].ad} buldun!`); chime([523, 784, 1046, 1568], 80); }
+        else toast('🎁 Sandık yuvaların dolu! Sandık kayboldu 🥺'); } } }
   picks = picks.filter(k => !k.got);
   enemies = enemies.filter(e => !e.dead);
   for (const f of fx) { f.t -= dt; if (f.k === 'kalpcik') f.y += f.vy * dt; } fx = fx.filter(f => f.t > 0);
@@ -700,7 +729,8 @@ function draw(dt) {
   if (pl('mik')) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]); ctx.lineDashOffset = T * 20; ctx.beginPath(); ctx.arc(P.x, P.y, magNow(), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const g of gems) { if (!vis(g.x, g.y, 20)) continue; const ty = g.v >= 20 ? 2 : g.v >= 4 ? 1 : 0, c = gemSprite(ty), pul = 1 + Math.sin(T * 7 + g.ph) * .08, b = Math.sin(T * 5 + g.ph) * 2.5;
     ctx.drawImage(c, g.x - c.width * pul / 2, g.y + b - c.height * pul / 2, c.width * pul, c.height * pul); }
-  for (const k of picks) if (vis(k.x, k.y, 30)) { const e = { coin: '🪙', cilek: '❤️', balik: '🧲', sevgi: '💝', sandik: '🎁' }[k.k], s = k.k === 'sandik' ? 38 : k.k === 'coin' ? 24 : 30, c = emo(e, s); ctx.drawImage(c, k.x - c.width / 2, k.y - c.height / 2 + Math.sin(T * 4 + k.x) * 3); }
+  for (const k of picks) if (k.k === 'kutu' && vis(k.x, k.y, 60)) { const im = img(CHESTS[k.r].img); if (im.complete && im.naturalWidth) { const w = 64, h = w * im.height / im.width, b = Math.sin(T * 4) * 4; ctx.save(); ctx.globalAlpha = .55 + Math.sin(T * 6) * .25; ctx.fillStyle = RAR[k.r].c; ctx.beginPath(); ctx.ellipse(k.x, k.y + 18, 34, 12, 0, 0, 7); ctx.fill(); ctx.restore(); ctx.drawImage(im, k.x - w / 2, k.y - h / 2 + b, w, h); } }
+  for (const k of picks) if (k.k !== 'kutu' && vis(k.x, k.y, 30)) { const e = { coin: '🪙', cilek: '❤️', balik: '🧲', sevgi: '💝', sandik: '🎁' }[k.k], s = k.k === 'sandik' ? 38 : k.k === 'coin' ? 24 : 30, c = emo(e, s); ctx.drawImage(c, k.x - c.width / 2, k.y - c.height / 2 + Math.sin(T * 4 + k.x) * 3); }
   for (const f of fx) if (f.k === 'patiIn') { const k = 1 - f.t / .45; ctx.fillStyle = `rgba(255,120,180,${.15 + k * .25})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.stroke(); ctx.setLineDash([]); }
   const vEn = enemies.filter(e => vis(e.x, e.y, e.r * 1.4)).sort((a, b) => a.y - b.y);
   for (const e of vEn) {
@@ -767,11 +797,12 @@ function gameOver(win) {
   state = 'over'; joy = null; $('joy').style.display = 'none'; $('lvup').classList.remove('on'); $('pause').classList.remove('on');
   const earned = Math.round((coins + kills / 25 + Math.floor(T / 30) * 2 + (win ? 150 : 0)) * (1 + .15 * mlv('altin')));
   MUS.savas.volume = .28; music(win ? 'menu' : 'menu');
+  for (const r of P.chests) { const f = M.kutular.indexOf(null); if (f >= 0) M.kutular[f] = { r, bas: null }; }
   M.altin += earned; if (T > M.best) M.best = T; if (kills > M.bestKill) M.bestKill = kills; if (win) M.kazandi++; saveM();
   $('overImg').src = skinSrc(P.skin); $('overImg').style.transform = win ? '' : 'rotate(-8deg)';
   $('overT').textContent = win ? '🏆 HAYATTA KALDIN!' : '💔 Yoruldun…';
   $('oStats').innerHTML = `<span>Süre</span><b>${fmtT(T)}</b><span>Seviye</span><b>${P.lv}</b><span>Yenilen</span><b>${kills}</b><span>Toplanan altın</span><b>${coins}</b><span>En iyi süre</span><b>${fmtT(M.best)}</b>`;
-  $('earned').textContent = `+${earned} 🪙`;
+  $('earned').innerHTML = `+${earned} 🪙` + (P.chests.length ? `<div style="font-size:17px;color:#d0407f;margin-top:4px">🎁 ${P.chests.map(r => CHESTS[r].ad).join(', ')} yuvalarına eklendi!</div>` : '');
   $('over').classList.add('on'); chime(win ? [523, 659, 784, 1046, 1318] : [523, 440, 349, 262], 140);
   submitScore(win);
 }
@@ -795,49 +826,67 @@ $('hInv').onclick = () => { renderInv(); $('invScr').classList.add('on'); };
 function chestHTML(c, big) { const R0 = RAR[c.r];
   if (c.img) return `<div class="chest ${big ? 'big' : ''}" style="--g:${R0.c}"><img src="${c.img}" alt=""></div>`;
   return `<div class="chest ${big ? 'big' : ''}" style="--c:${R0.ch[0]};--d:${R0.ch[1]}"><div class="lid"></div><div class="bd"></div><div class="lock"></div></div>`; }
+const fmtD = sec => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), ss = sec % 60; return h ? `${h} sa ${m} dk` : m ? `${m} dk ${String(ss).padStart(2, '0')} sn` : `${ss} sn`; };
+const left = k => k.bas ? CHESTS[k.r].sure - (Date.now() - k.bas) / 1000 : CHESTS[k.r].sure;
+const skipCost = k => Math.max(10, Math.ceil(left(k) / 60) * 6);
+let chestTimer = null;
 function renderChests() {
   $('gC').textContent = `🪙 ${M.altin}`;
-  $('chestList').innerHTML = CHESTS.map((c, i) => `<button class="cc" data-i="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b>
-    <div class="od">${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div>
-    <span class="bt">${M.kutu[i] ? `Aç (${M.kutu[i]} adet)` : `🪙 ${c.fiyat}`}</span>${M.kutu[i] ? `<span class="own">🎁 Bedava sandığın var!</span>` : ''}</button>`).join('');
-  $('chestList').querySelectorAll('.cc').forEach(b => b.onclick = () => buyChest(+b.dataset.i));
+  const opening = M.kutular.some(k => k && k.bas && left(k) > 0);
+  $('chestList').innerHTML = M.kutular.map((k, i) => { if (!k) return `<div class="cc" style="--c:#e8cfe0;--d:#b07a9a;opacity:.75"><div class="chest" style="display:flex;align-items:center;justify-content:center;font-size:40px;opacity:.4">🔒</div><b>Boş yuva</b><div class="od">Savaşta düşen sandıklar buraya gelir</div></div>`;
+    const c = CHESTS[k.r], L = left(k), ready = k.bas && L <= 0;
+    let st;
+    if (ready) st = `<span class="bt" style="background:#2fbf6a">🎉 AÇ!</span>`;
+    else if (k.bas) st = `<span class="own" style="color:${RAR[k.r].d}">⏳ ${fmtD(L)}</span><span class="bt">🪙 ${skipCost(k)} ile hemen aç</span>`;
+    else st = `<span class="own" style="color:#8a4a70">⏱ ${fmtD(c.sure)}</span><span class="bt" ${opening ? 'style="opacity:.5"' : ''}>${opening ? 'Sırada bekliyor' : 'Açmaya başla'}</span>`;
+    return `<button class="cc" data-i="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b><div class="od">${CHEST_ITEMS} eşya · ${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div>${st}</button>`; }).join('');
+  $('chestList').querySelectorAll('.cc[data-i]').forEach(b => b.onclick = () => tapChest(+b.dataset.i));
+  clearInterval(chestTimer); chestTimer = setInterval(() => { if (!$('chestScr').classList.contains('on')) return clearInterval(chestTimer); if (!$('opening').classList.contains('on')) renderChests(); }, 1000);
 }
-function buyChest(i) {
-  const c = CHESTS[i];
-  if (M.kutu[i] > 0) M.kutu[i]--;
-  else { if (M.altin < c.fiyat) { toast(`${c.fiyat - M.altin} altın daha lazım 🥺`); snd(200, .15, 'triangle', .04); return; } M.altin -= c.fiyat; }
-  // ödülü şimdi belirle, animasyon sonra
-  let r = Math.random() * 100, rar = 0; for (let j = 0; j < 4; j++) { r -= c.o[j]; if (r < 0) { rar = j; break; } }
-  const pool = ITEMS.filter(it => it.r === rar), it = pool[(Math.random() * pool.length) | 0], o = M.inv[it.id], yeni = !o;
-  if (o) o.parca++; else M.inv[it.id] = { lv: 1, parca: 0 };
-  saveM(); renderChests(); playChest(i, it, yeni);
+function tapChest(i) {
+  const k = M.kutular[i]; if (!k) return; const L = left(k);
+  if (!k.bas) { if (M.kutular.some(x => x && x.bas && left(x) > 0)) { toast('Aynı anda tek sandık açılabilir ⏳'); return; } k.bas = Date.now(); saveM(); chime([523, 659], 80); return renderChests(); }
+  if (L > 0) { const c = skipCost(k); if (M.altin < c) { toast(`${c - M.altin} altın daha lazım 🥺`); return; } if (!confirm(`${c} altın harcayıp hemen açılsın mı?`)) return; M.altin -= c; }
+  // ödülleri belirle
+  const ch = CHESTS[k.r], loot = [];
+  for (let n = 0; n < CHEST_ITEMS; n++) { let r = Math.random() * 100, rar = 0; for (let j = 0; j < 4; j++) { r -= ch.o[j]; if (r < 0) { rar = j; break; } }
+    const pool = ITEMS.filter(it => it.r === rar), it = pool[(Math.random() * pool.length) | 0], yeni = !M.inv[it.id];
+    if (yeni) M.inv[it.id] = { lv: 1, parca: 0 }; else M.inv[it.id].parca++; loot.push({ it, yeni }); }
+  loot.sort((a, b) => a.it.r - b.it.r);   // en iyisi en sonda
+  M.altin += ch.altin; M.kutular[i] = null; saveM(); renderChests(); playChest(k.r, loot);
 }
 let opBusy = false;
-function playChest(i, it, yeni) {
-  const c = CHESTS[i], sc = $('opening'), ch = $('opChest'), R0 = RAR[it.r];
-  ch.outerHTML = chestHTML(c, true).replace('class="chest big"', 'class="chest big" id="opChest"');
-  const chest = $('opChest'); $('rays').style.opacity = 0; $('rays').style.setProperty('--rc', R0.c + '88');
-  $('opItem').className = ''; $('opItem').innerHTML = itemIcon(it, M.inv[it.id], true);
+function playChest(ci, loot) {
+  const c = CHESTS[ci], sc = $('opening');
+  $('opChest').outerHTML = chestHTML(c, true).replace('class="chest big"', 'class="chest big" id="opChest"');
+  const chest = $('opChest'); $('rays').style.opacity = 0; $('opItem').className = ''; $('opItem').innerHTML = '';
   $('opText').innerHTML = `<b>${c.ad}</b>Dokun ve aç!`; $('opBtns').style.display = 'none';
   sc.classList.add('on'); opBusy = false; snd(300, .2, 'triangle', .05, .5);
   setTimeout(() => chest.classList.add('idle'), 600);
-  const open = () => { if (opBusy) return; opBusy = true; chest.classList.remove('idle'); chest.classList.add('shake');
+  let idx = -1;
+  const show = () => { idx++;
+    if (idx >= loot.length) { // özet
+      $('opItem').className = ''; $('rays').style.opacity = 0;
+      $('opText').innerHTML = `<b>Sandıktan çıkanlar</b><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0">${loot.map(l => `<div style="text-align:center;width:92px">${itemIcon(l.it, M.inv[l.it.id], true)}<div style="font-size:12px;margin-top:10px">${l.yeni ? '✨ YENİ' : '+1 parça'}</div></div>`).join('')}</div>+${c.altin} 🪙`;
+      $('opBtns').style.display = ''; $('opAgain').style.display = 'none'; return; }
+    const { it, yeni } = loot[idx], R0 = RAR[it.r];
+    $('opItem').className = ''; $('opItem').innerHTML = itemIcon(it, M.inv[it.id], true); void $('opItem').offsetWidth;
+    $('rays').style.setProperty('--rc', R0.c + '88'); $('rays').style.opacity = 1; burst(R0.c, it.r);
+    if (it.r >= 2) { const fl = $('flashO'); fl.style.transition = 'none'; fl.style.opacity = it.r >= 3 ? .85 : .5; requestAnimationFrame(() => { fl.style.transition = 'opacity .6s'; fl.style.opacity = 0; }); }
+    chime(it.r >= 3 ? [523, 659, 784, 1046, 1318, 1568] : it.r >= 2 ? [523, 659, 784, 1046] : it.r ? [659, 784, 988] : [784, 988], 80);
+    setTimeout(() => $('opItem').classList.add('up'), 30);
+    const st = Object.keys(it.st).map(k => `${STN[k][0]} ${STN[k][1](it.st[k])}`).join(' · ');
+    $('opText').innerHTML = `<span style="background:${R0.c};border-radius:99px;padding:2px 12px;font-weight:700">${R0.ad}</span><b>${it.ad}</b>${SLOTS[it.s]} · ${st}<br>${yeni ? '✨ YENİ EŞYA!' : `+1 parça`}<div style="opacity:.8;font-size:14px;margin-top:6px">${idx + 1} / ${loot.length} · devam için dokun</div>`;
+  };
+  const open = () => { if (opBusy) { if (idx < loot.length) show(); return; } opBusy = true; chest.classList.remove('idle'); chest.classList.add('shake');
     [400, 500, 600, 750].forEach((f, k) => setTimeout(() => snd(f, .08, 'square', .03), k * 130));
-    setTimeout(() => { chest.classList.remove('shake'); chest.classList.add('open'); if (c.imgOpen) chest.querySelector('img').src = c.imgOpen;
-      $('rays').style.opacity = 1; burst(R0.c, it.r); const fl = $('flashO'); fl.style.transition = 'none'; fl.style.opacity = it.r >= 2 ? .85 : .5; requestAnimationFrame(() => { fl.style.transition = 'opacity .6s'; fl.style.opacity = 0; });
-      chime(it.r >= 3 ? [523, 659, 784, 1046, 1318, 1568] : it.r >= 2 ? [523, 659, 784, 1046] : [659, 784, 988], 90);
-      setTimeout(() => { $('opItem').classList.add('up');
-        const st = Object.keys(it.st).map(k => `${STN[k][0]} ${STN[k][1](it.st[k])}`).join(' · ');
-        $('opText').innerHTML = `<span style="background:${R0.c};border-radius:99px;padding:2px 12px;font-weight:700">${R0.ad}</span><b>${it.ad}</b>${SLOTS[it.s]} · ${st}<br>${yeni ? '✨ YENİ EŞYA!' : `+1 parça (${M.inv[it.id].parca} parça)`}`;
-        $('opBtns').style.display = ''; $('opAgain').textContent = M.kutu[i] ? `Bir daha aç (${M.kutu[i]})` : `Bir daha aç (🪙 ${c.fiyat})`; $('opAgain').onclick = () => buyChest(i); }, 250);
-    }, 600); };
-  chest.onclick = open; $('opStage').onclick = open;
+    setTimeout(() => { chest.classList.remove('shake'); chest.classList.add('open'); show(); }, 600); };
+  $('opStage').onclick = open; $('opText').onclick = () => opBusy && open();
 }
 $('opOk').onclick = () => { $('opening').classList.remove('on'); renderChests(); };
 function burst(col, r) { const n = 14 + r * 8, cx = innerWidth / 2, cy = innerHeight / 2 - 40, em = ['💖', '✨', '⭐', '🐾', '💗'];
   for (let k = 0; k < n; k++) { const e = document.createElement('div'), a = Math.random() * Math.PI * 2, d = 120 + Math.random() * 220; e.className = 'spark'; e.textContent = em[k % em.length];
     e.style.left = cx + 'px'; e.style.top = cy + 'px'; e.style.setProperty('--dx', Math.cos(a) * d + 'px'); e.style.setProperty('--dy', Math.sin(a) * d + 'px'); document.body.appendChild(e); setTimeout(() => e.remove(), 1000); } }
-
 /* ---------- EŞYA EKRANI ---------- */
 function itemIcon(it, o, noBadge) { const R0 = RAR[it.r], c = o && o.lv < ITEM_MAX ? itemCost(it, o.lv) : null, canUp = c && o.parca >= c.parca && M.altin >= c.altin;
   return `<div class="it" style="--c:${R0.c};--bg:${R0.bg}">${it.img ? `<img src="${it.img}" alt="">` : it.ic}${o ? `<span class="lv">Sv ${o.lv}</span>` : ''}${!noBadge && M.eq[it.s] === it.id ? '<span class="eqm">✓</span>' : ''}${!noBadge && canUp ? '<span class="up">▲</span>' : ''}</div>`; }
@@ -892,7 +941,7 @@ function renderSet() {
 }
 [...new Set([...BOSSES.map(b => b.img), skinSrc(M.skin), 'ordek_ikon.png'])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
-window.__sv = { get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
+window.__sv = { get picks() { return picks; }, get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
 </script>
 </body>
 </html>
