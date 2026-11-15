@@ -80,6 +80,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tg{width:56px;height:30px;border-radius:99px;background:#e5c9d8;position:relative;transition:background .15s}
 .tg::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 2px 3px rgba(0,0,0,.2)}
 .tg.on{background:#ff6fae}.tg.on::after{left:29px}
+@keyframes askIn{from{transform:scale(.6);opacity:0}}
 .x{position:absolute;top:10px;right:14px;font-size:22px;color:#e04f95;font-weight:700}
 /* sandıklar */
 .chests{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
@@ -173,6 +174,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 </div>
 <div id="joy"><i></i></div>
 <div id="toast"></div>
+<div class="scr" id="askM" style="z-index:80"><div class="card" style="max-width:400px;animation:askIn .35s cubic-bezier(.3,1.6,.5,1)">
+  <div id="askImg" style="display:flex;justify-content:center"></div>
+  <h2 id="askT" style="margin-top:6px"></h2><div class="sub" id="askB" style="font-size:16px"></div>
+  <button class="btn" id="askY">Tamam</button><button class="btn alt" id="askN">Vazgeç</button>
+</div></div>
 
 <div class="scr" id="skins"><div class="card">
   <button class="x" data-close>✕</button>
@@ -836,6 +842,10 @@ $('hInv').onclick = () => { renderInv(); $('invScr').classList.add('on'); };
 function chestHTML(c, big) { const R0 = RAR[c.r];
   if (c.img) return `<div class="chest ${big ? 'big' : ''}" style="--g:${R0.c}"><img src="${c.img}" alt=""></div>`;
   return `<div class="chest ${big ? 'big' : ''}" style="--c:${R0.ch[0]};--d:${R0.ch[1]}"><div class="lid"></div><div class="bd"></div><div class="lock"></div></div>`; }
+function ask(imgHTML, title, body, yes) { return new Promise(res => { $('askImg').innerHTML = imgHTML || ''; $('askT').textContent = title; $('askB').innerHTML = body; $('askY').textContent = yes || 'Tamam';
+  const m = $('askM'); m.classList.add('on'); snd(880, .08, 'sine', .04);
+  const done = v => { m.classList.remove('on'); $('askY').onclick = $('askN').onclick = m.onclick = null; res(v); };
+  $('askY').onclick = e => { e.stopPropagation(); done(true); }; $('askN').onclick = e => { e.stopPropagation(); done(false); }; m.onclick = e => { if (e.target === m) done(false); }; }); }
 const fmtD = sec => { sec = Math.max(0, Math.ceil(sec)); const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), ss = sec % 60; return h ? `${h} sa ${m} dk` : m ? `${m} dk ${String(ss).padStart(2, '0')} sn` : `${ss} sn`; };
 const left = k => k.bas ? CHESTS[k.r].sure - (Date.now() - k.bas) / 1000 : CHESTS[k.r].sure;
 const skipCost = k => Math.max(10, Math.ceil(left(k) / 60) * 6);
@@ -852,16 +862,16 @@ function renderChests() {
     return `<button class="cc" data-i="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b><div class="od">${CHEST_ITEMS} eşya · ${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div>${st}</button>`; }).join('');
   $('chestList').querySelectorAll('.cc[data-i]').forEach(b => b.onclick = () => tapChest(+b.dataset.i));
   $('chestShop').innerHTML = CHESTS.map((c, i) => `<button class="cc" data-b="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b><div class="od">${CHEST_ITEMS} eşya · ${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div><span class="bt">🪙 ${c.fiyat}</span></button>`).join('');
-  $('chestShop').querySelectorAll('.cc').forEach(b => b.onclick = () => { const i = +b.dataset.b, c = CHESTS[i];
+  $('chestShop').querySelectorAll('.cc').forEach(b => b.onclick = async () => { const i = +b.dataset.b, c = CHESTS[i];
     if (M.altin < c.fiyat) { toast(`${c.fiyat - M.altin} altın daha lazım 🥺`); snd(200, .15, 'triangle', .04); return; }
-    if (!confirm(`${c.ad} ${c.fiyat} altına alınıp açılsın mı?`)) return;
+    if (!await ask(chestHTML(c), c.ad, `${c.fiyat} 🪙 karşılığında alınıp hemen açılsın mı?`, 'Satın al ve aç')) return;
     M.altin -= c.fiyat; openLoot(i); });
   clearInterval(chestTimer); chestTimer = setInterval(() => { if (!$('chestScr').classList.contains('on')) return clearInterval(chestTimer); if (!$('opening').classList.contains('on')) renderChests(); }, 1000);
 }
-function tapChest(i) {
+async function tapChest(i) {
   const k = M.kutular[i]; if (!k) return; const L = left(k);
   if (!k.bas) { if (!TEST && M.kutular.some(x => x && x.bas && left(x) > 0)) { toast('Aynı anda tek sandık açılabilir ⏳'); return; } k.bas = Date.now(); saveM(); chime([523, 659], 80); return renderChests(); }
-  if (L > 0) { const c = skipCost(k); if (M.altin < c) { toast(`${c - M.altin} altın daha lazım 🥺`); return; } if (!confirm(`${c} altın harcayıp hemen açılsın mı?`)) return; M.altin -= c; }
+  if (L > 0) { const c = skipCost(k); if (M.altin < c) { toast(`${c - M.altin} altın daha lazım 🥺`); return; } if (!await ask(chestHTML(CHESTS[k.r]), CHESTS[k.r].ad, `Beklemeden ${c} 🪙 ile hemen açılsın mı?`, 'Hemen aç')) return; M.altin -= c; }
   M.kutular[i] = null; openLoot(k.r);
 }
 function openLoot(ci) {
@@ -943,8 +953,8 @@ function renderSkins() {
   $('gS').textContent = `🪙 ${M.altin}`;
   $('skinGrid').innerHTML = SKINS.map((s, i) => { const open = M.acik[i];
     return `<button class="sk ${open ? '' : 'lock'} ${M.skin === i ? 'sel' : ''}" data-i="${i}">${M.skin === i ? '<span class="tag">Giyili</span>' : ''}<img src="${skinSrc(i)}" alt="" loading="lazy"><b>${s.ad}</b><span class="pr">${open ? (M.skin === i ? '💖' : 'Giy') : '🔒 ' + s.fiyat + ' 🪙'}</span></button>`; }).join('');
-  $('skinGrid').querySelectorAll('.sk').forEach(b => b.onclick = () => { const i = +b.dataset.i, s = SKINS[i];
-    if (!M.acik[i]) { if (M.altin < s.fiyat) { toast(`${s.fiyat - M.altin} altın daha lazım 🥺`); snd(200, .15, 'triangle', .04); return; } if (!confirm(`"${s.ad}" ${s.fiyat} altına alınsın mı?`)) return; M.altin -= s.fiyat; M.acik[i] = 1; chime([659, 784, 1046, 1318], 80); }
+  $('skinGrid').querySelectorAll('.sk').forEach(b => b.onclick = async () => { const i = +b.dataset.i, s = SKINS[i];
+    if (!M.acik[i]) { if (M.altin < s.fiyat) { toast(`${s.fiyat - M.altin} altın daha lazım 🥺`); snd(200, .15, 'triangle', .04); return; } if (!await ask(`<img src="${skinSrc(i)}" style="height:170px">`, s.ad, `${s.fiyat} 🪙 karşılığında bu kostüm alınsın mı?`, 'Satın al')) return; M.altin -= s.fiyat; M.acik[i] = 1; chime([659, 784, 1046, 1318], 80); }
     M.skin = i; saveM(); renderSkins(); });
 }
 function renderShop() {
