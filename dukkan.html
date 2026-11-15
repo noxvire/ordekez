@@ -493,9 +493,9 @@ function renderMirror(dt) {
   camera.getWorldDirection(_md); _md.x = -_md.x;
   mirCam.lookAt(_mp.copy(mirCam.position).add(_md)); mirCam.updateMatrixWorld();
   mirMat.uniforms.M.value.multiplyMatrices(mirCam.projectionMatrix, mirCam.matrixWorldInverse);
-  rightWall.visible = false; rightWall2.visible = false; mirror.visible = false; const hv = heldMesh ? heldMesh.visible : false; if (heldMesh) heldMesh.visible = false;
+  rightWall.visible = false; rightWall2.visible = false; mirror.visible = false; for (const m of heldMeshes) m.visible = false;
   renderer.setRenderTarget(mirRT); renderer.render(scene, mirCam);
-  rightWall.visible = true; rightWall2.visible = true; mirror.visible = true; if (heldMesh) heldMesh.visible = hv;
+  rightWall.visible = true; rightWall2.visible = true; mirror.visible = true; for (const m of heldMeshes) m.visible = true;
   // 3. geceden sonra: yansıma bazen "yanlış"
   if (N && S.night >= 3) {
     camera.getWorldDirection(_md);
@@ -1216,7 +1216,8 @@ const gameName = id => GAMES[id] ? GAMES[id].ad : FAKE_GAMES[id] || id;
 
 /* ---------- gece durumu ---------- */
 let N = null;   // gece içi durum
-let state = 'menu', held = null, heldMesh = null, counterItems = [];
+let state = 'menu', held = null, heldMesh = null, counterItems = [], heldList = [], heldMeshes = [];
+const MAX_HELD = 3;
 const P = { pos: new THREE.Vector3(1.5, 0, -1), yaw: Math.PI, pitch: 0, eye: 1.62, bob: 0 };
 const keys = {};
 
@@ -1427,7 +1428,7 @@ function tutUpdate(t) {
 }
 function accept(c) {
   c.st = 'wait'; $('order').classList.remove('hidden'); $('order').querySelector('span').textContent = `${CH[c.v.who].ad}: ${wantText(c.v)}`;
-  if (S.night === 1 && !S.flags.tutDone && !tut && Array.isArray(c.v.want)) { tut = { game: c.v.want[0] }; tutSet(held === tut.game ? 'counter' : 'shelf'); }
+  if (S.night === 1 && !S.flags.tutDone && !tut && Array.isArray(c.v.want)) { tut = { game: c.v.want[0] }; tutSet(heldList.includes(tut.game) ? 'counter' : 'shelf'); }
   lockPointer();
 }
 function refuse(c) {
@@ -1529,33 +1530,39 @@ function boxMesh(id) {
   const tex = coverTex(id), fm = lam({ map: tex }), sm = lam(GAMES[id].c);
   return new THREE.Mesh(new THREE.BoxGeometry(.2, .27, .04), [sm, sm, sm, sm, fm, sm]);
 }
-function setHeld(id) {
-  if (heldMesh) { camera.remove(heldMesh); heldMesh = null; }
-  held = id;
-  if (id) { heldMesh = boxMesh(id); heldMesh.position.set(.22, -.2, -.42); heldMesh.rotation.set(-.2, -.4, .05); camera.add(heldMesh); heldMesh.material.forEach(m => { m.depthTest = false; }); heldMesh.renderOrder = 10; }
-  $('held').textContent = id ? `Elinde: ${GAMES[id].ad}  ·  Q bırak` : '';
+// elde en fazla 3 ürün: setHeld(null) hepsini bırakır, setHeld(id) bir tane ekler
+function syncHeld() {
+  held = heldList.length ? heldList[heldList.length - 1] : null;
+  for (const m of heldMeshes) camera.remove(m); heldMeshes = [];
+  heldList.forEach((id, i) => { const m = boxMesh(id); m.position.set(.22 - i * .03, -.2 + i * .045, -.42 - i * .01); m.rotation.set(-.2, -.4 + i * .12, .05); camera.add(m); m.material.forEach(q => { q.depthTest = false; }); m.renderOrder = 10 + i; heldMeshes.push(m); });
+  heldMesh = heldMeshes[heldMeshes.length - 1] || null;
+  $('held').innerHTML = heldList.length ? `Elinde (${heldList.length}/${MAX_HELD}): ${heldList.map(i => GAMES[i].ad).join(', ')}  ·  Q bırak` : '';
 }
+function setHeld(id) { if (id === null || id === undefined) heldList = []; else heldList.push(id); syncHeld(); }
+function handsFull() { return heldList.length >= MAX_HELD; }
 function takeFromShelf(id) {
-  if (held) { if (held === id) { returnHeld(); return; } toast('Elin dolu. (Q: rafa geri koy)'); return; }
+  if (handsFull()) { toast(`Elinde ${MAX_HELD} ürün var, daha fazla taşıyamazsın. (Q: son aldığını geri koy)`); return; }
   if (N.stock[id] <= 0) { toast('Bu üründen kalmamış.'); return; }
   N.stock[id]--; refreshShelves(); setHeld(id); SND.pick();
   if (tut && tut.step === 'shelf') { if (id === tut.game) tutSet('counter'); else toast(`Bu ${GAMES[id].ad}. Müşteri ${GAMES[tut.game].ad} istedi (Q ile geri koy).`, 3); }
 }
-function returnHeld() { if (!held) return; const was = held; N.stock[held]++; refreshShelves(); setHeld(null); SND.put(); if (tut && tut.step === 'counter' && was === tut.game) tutSet('shelf'); }
+function returnHeld() { if (!held) return; const was = heldList.pop(); N.stock[was]++; refreshShelves(); syncHeld(); SND.put(); if (tut && tut.step === 'counter' && was === tut.game && !heldList.includes(was)) tutSet('shelf'); }
+// tezgâhta ürünler üst üste dizilir (ortada)
+const COUNTER_MAX = 9;
+function stackCounter() { counterItems.forEach((c, k) => { const [x, z] = counterSlots[0]; c.mesh.position.set(x + (c.jx || 0), 1.075 + k * .043, counterZ + z - .5 + (c.jz || 0)); c.mesh.rotation.set(-Math.PI / 2, 0, c.jr || 0); }); }
 function placeOnCounter() {
   if (!held) return;
-  if (counterItems.length >= counterSlots.length) { toast('Tezgâh dolu.'); return; }
-  const [x, z] = counterSlots[counterItems.length], m = boxMesh(held);
-  m.position.set(x, 1.06, counterZ + z - .5); m.rotation.set(-Math.PI / 2, 0, 0); m.position.y = 1.075; scene.add(m);
+  if (counterItems.length >= COUNTER_MAX) { toast('Tezgâh dolu.'); return; }
+  const id = heldList.pop(), m = boxMesh(id); scene.add(m);
   m.userData = { kind: 'cItem' }; inter.push(m);
-  counterItems.push({ id: held, mesh: m }); const was = held; setHeld(null); SND.put();
-  if (tut && tut.step === 'counter' && was === tut.game) tutSet('till');
+  counterItems.push({ id, mesh: m, jx: (Math.random() - .5) * .04, jz: (Math.random() - .5) * .03, jr: (Math.random() - .5) * .25 }); stackCounter(); syncHeld(); SND.put();
+  if (tut && tut.step === 'counter' && id === tut.game) tutSet('till');
 }
 function takeFromCounter(mesh) {
-  if (held) { toast('Elin dolu.'); return; }
+  if (handsFull()) { toast('Elin dolu.'); return; }
   const i = counterItems.findIndex(c => c.mesh === mesh); if (i < 0) return;
   const it = counterItems.splice(i, 1)[0]; scene.remove(it.mesh); inter.splice(inter.indexOf(it.mesh), 1);
-  counterItems.forEach((c, k) => { const [x, z] = counterSlots[k]; c.mesh.position.set(x, 1.075, counterZ + z - .5); });
+  stackCounter();
   setHeld(it.id); SND.pick();
 }
 
@@ -1658,9 +1665,9 @@ function getFocus() {
 function promptFor(f) {
   if (!f) return '';
   switch (f.kind) {
-    case 'shelf': return held === f.id ? `Rafa geri koy` : held ? `${GAMES[f.id].ad}  (elin dolu)` : `${GAMES[f.id].ad} al · ${GAMES[f.id].p} ₺  (rafta ${N.stock[f.id]})`;
+    case 'shelf': return handsFull() ? `${GAMES[f.id].ad}  (elin dolu)` : `${GAMES[f.id].ad} al · ${GAMES[f.id].p} ₺  (rafta ${N.stock[f.id]})`;
     case 'counter': return held ? `Tezgâha koy` : '';
-    case 'cItem': return held ? '' : 'Geri al';
+    case 'cItem': return handsFull() ? '' : 'Geri al';
     case 'register': return 'Kasayı aç';
     case 'note': return 'Dayının notunu oku';
     case 'tv': return '';
@@ -1673,7 +1680,7 @@ function promptFor(f) {
     case 'cat': return "Odin'i sev";
     case 'pc': return 'Bilgisayarı kullan';
     case 'sign': return !N ? '' : !N.opened ? 'Dükkânı aç (tabelayı çevir: AÇIK)' : N.allDone && !N.shopClosed ? 'Dükkânı kapat (tabelayı çevir: KAPALI)' : N.shopClosed ? '' : 'Tabela: AÇIK';
-    case 'fall': return held ? '' : 'Yerden al';
+    case 'fall': return handsFull() ? '' : 'Yerden al';
   }
   return '';
 }
@@ -1701,7 +1708,7 @@ function interact() {
       break;
     case 'cat': playMeow(); toast('🐈 Miyav! Odin seviliyor.', 2); break;
     case 'pc': openPC(); break;
-    case 'fall': if (!held) { scene.remove(N.fall.m); N.fall.taken = true; setHeld(N.fall.id); SND.pick(); } break;
+    case 'fall': if (!handsFull()) { scene.remove(N.fall.m); N.fall.taken = true; setHeld(N.fall.id); SND.pick(); } break;
   }
 }
 function answerPhone() {
@@ -1906,7 +1913,7 @@ let order = {};
 function endNight() {
   state = 'sum'; unlockPointer(); ambStop();
   S.stock = { ...N.stock };
-  if (held) { S.stock[held]++; setHeld(null); }
+  for (const h of heldList) S.stock[h]++; setHeld(null);
   for (const c of counterItems) { S.stock[c.id]++; dropCounterItem(c); } counterItems = [];
   S.money -= RENT;
   if (NIGHTS[S.night].finale) return showEnding();
