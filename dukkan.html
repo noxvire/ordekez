@@ -388,6 +388,8 @@ doorPivot.children.forEach(m => { if (!m.userData.kind) { m.userData = { kind: '
 // tabela artık sağdaki vitrin camında (kapıdaki sadece görüntü)
 doorSign.userData = { kind: 'shopDoor' };
 winSign.userData = { kind: 'sign' }; inter.push(winSign);
+doorSign.visible = false;                       // kapıdaki tabela kaldırıldı
+winSign.position.set(.95, 1.18, 4.0); winSign.scale.set(.75, .9, 1);   // vitrinin sol altı, kapıya yakın
 solid(3.6, 5, 3.95, 4.15); solid(1.5, 2.4, 3.95, 4.15);
 // dışarısı: kaldırım, yol, karşı kaldırım (oyuncu çıkabilir)
 { const asp = ctex(64, 32, (g, w, h) => { noiseFill(g, w, h, '#1c1b20', .18, 200); g.fillStyle = '#b8a860'; for (let x = 2; x < w; x += 16) g.fillRect(x, h / 2 - 1, 8, 2); }, [6, 1]);
