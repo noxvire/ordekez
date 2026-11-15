@@ -264,7 +264,7 @@ const CARDS = [
   { id: 'k11', ad: 'Kart 11', r: 'efsanevi' },
   { id: 'k12', ad: 'Kart 12', r: 'mitik' },
 ];
-// PAKETLER: fiyat + rarity olasılıkları (%), her paket 3 kart
+// PAKETLER: fiyat + rarity olasılıkları (%), her paket 1 kart
 const PACKS = [
   { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 10000,     a: '#3a3226', b: '#7a6a50', o: [72, 22, 5, 0.9, 0.1] },
   { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 150000,    a: '#30384a', b: '#9fb2d0', o: [45, 35, 15, 4.5, 0.5] },
@@ -379,30 +379,30 @@ function buildPacks() {
     <div class="hd"><span class="nm">${p.ic} ${p.ad}</span><span class="pr">${fmt(p.fiyat)}</span></div>
     <div class="odds">${p.o.map((x, i) => x ? `<i style="width:${x}%;background:${RAR[RORDER[i]].c}"></i>` : '').join('')}</div>
     <div class="ol">${p.o.map((x, i) => x ? `<span style="--c:${RAR[RORDER[i]].c}">${RAR[RORDER[i]].ad} %${x}</span>` : '').join('')}</div>
-    <div style="font-size:11px;opacity:.6;margin-top:4px">3 kart</div></button>`).join('');
+    <div style="font-size:11px;opacity:.6;margin-top:4px">1 kart</div></button>`).join('');
   $('packs').querySelectorAll('.pk').forEach(b => b.onclick = () => buyPack(PACKS.find(p => p.id === b.dataset.p)));
 }
 function rollRarity(o) { let r = Math.random() * 100; for (let i = 0; i < o.length; i++) { r -= o[i]; if (r < 0) return RORDER[i]; } return RORDER[o.findIndex(x => x > 0)]; }
 function rollCard(o) { let r = rollRarity(o); if (Math.random() < .05 * tl('sans')) r = RORDER[Math.min(4, RORDER.indexOf(r) + 1)]; let pool = CARDS.filter(c => c.r === r);
   for (let i = RORDER.indexOf(r); !pool.length && i >= 0; i--) pool = CARDS.filter(c => c.r === RORDER[i]);
   return pool[Math.floor(Math.random() * pool.length)]; }
+let packPending = false;   // paket açılana kadar başarımlar rarity'yi ele vermesin
 function buyPack(p) {
   if (S.para < p.fiyat) { beep(140, .12, 'sawtooth', .04); toast(`Bu paket için ${fmt(p.fiyat - S.para)} daha lazım.`); return; }
   S.para -= p.fiyat; S.paket++;
-  const got = [0, 1, 2].map(() => rollCard(p.o)), isNew = got.map(c => !owned(c.id));
-  got.forEach(c => S.kart[c.id] = (S.kart[c.id] || 0) + 1); save(); refresh(); checkAch();
-  const best = Math.max(...got.map(c => RORDER.indexOf(c.r))), bc = RAR[RORDER[best]].c;
+  const got = [rollCard(p.o)], isNew = got.map(c => !owned(c.id));
+  got.forEach(c => S.kart[c.id] = (S.kart[c.id] || 0) + 1); save(); refresh();   // başarım kontrolü kart çevrilince (sürpriz bozulmasın)
+  packPending = true;
   $('openTitle').textContent = `${p.ic} ${p.ad}`; $('openOk').style.display = 'none'; $('flipAll').style.display = 'none';
   $('openHint').textContent = 'Pakete tıkla ve yırt!';
-  $('stage').innerHTML = `<div class="pack wobble" id="pack" style="--a:${p.a};--b:${p.b};--gl:${best >= 3 ? bc : 'transparent'}"><div class="top"></div><div class="ic">${p.ic}</div><div class="t">${p.ad}</div></div>
-    <div class="flips" id="flips">${got.map((c, i) => `<div class="fw hide" style="transition-delay:${i * .12}s"><div class="flip" data-i="${i}"><div class="bk ${RORDER.indexOf(c.r) >= 2 ? 'glow' : ''}" style="--gc:${RAR[c.r].c}">🦆</div>${cardHTML(c)}</div></div>`).join('')}</div>`;
+  $('stage').innerHTML = `<div class="pack wobble" id="pack" style="--a:${p.a};--b:${p.b};--gl:transparent"><div class="top"></div><div class="ic">${p.ic}</div><div class="t">${p.ad}</div></div>
+    <div class="flips" id="flips">${got.map((c, i) => `<div class="fw hide" style="transition-delay:${i * .12}s"><div class="flip" data-i="${i}"><div class="bk">🦆</div>${cardHTML(c)}</div></div>`).join('')}</div>`;
   $('open').classList.add('on');
   let torn = false, flipped = 0;
   const tear = () => {
     if (torn) return; torn = true; const pk = $('pack'); pk.classList.remove('wobble'); pk.classList.add('torn'); noise(.3, .12); beep(300, .2, 'sawtooth', .05, 2.5);
-    if (best >= 3) flash(bc);
     setTimeout(() => { pk.classList.add('gone'); document.querySelectorAll('#flips .fw').forEach(f => f.classList.remove('hide')); [520, 660, 780].forEach((f, k) => setTimeout(() => beep(f, .08, 'triangle', .05), k * 120)); }, 450);
-    setTimeout(() => { $('openHint').textContent = 'Kartlara tıkla ve çevir'; $('flipAll').style.display = ''; }, 900);
+    setTimeout(() => { $('openHint').textContent = 'Karta tıkla ve çevir'; }, 900);
   };
   $('pack').onclick = tear;
   const flipOne = f => {
@@ -414,7 +414,7 @@ function buyPack(p) {
     const t = document.createElement('div'); t.className = 'tag';
     if (isNew[i]) t.textContent = 'YENİ!'; else { t.style.background = '#a998d6'; t.textContent = 'KOPYA'; }
     f.parentNode.appendChild(t);
-    if (flipped === 3) { $('openOk').style.display = ''; $('flipAll').style.display = 'none'; $('openHint').textContent = 'Kartlar koleksiyonuna eklendi.'; }
+    if (flipped === got.length) { $('openOk').style.display = ''; $('openHint').textContent = isNew[0] ? 'Yeni kart koleksiyonuna eklendi!' : 'Bu karttan zaten vardı, kopya olarak eklendi.'; packPending = false; setTimeout(checkAch, 700); }
   };
   document.querySelectorAll('#flips .flip').forEach(f => f.onclick = () => flipOne(f));
   $('flipAll').onclick = () => document.querySelectorAll('#flips .flip').forEach((f, k) => setTimeout(() => flipOne(f), k * 250));
@@ -507,6 +507,7 @@ const ACH = [
 ];
 const achQ = []; let achBusy = false;
 function checkAch() {
+  if (packPending) return;
   for (const a of ACH) if (!S.rozet[a.id] && a.ok()) { S.rozet[a.id] = Date.now(); S.para += a.odul; S.toplam += a.odul; achQ.push(a); }
   if (achQ.length) { save(); refresh(); showAchPop(); }
 }
