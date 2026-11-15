@@ -21,6 +21,13 @@
   #money{position:absolute;left:18px;top:14px;font-size:20px;font-weight:700;color:#9ee870;text-shadow:2px 2px 0 #000}
   #order{position:absolute;left:18px;top:48px;max-width:300px;background:#efe6c8;color:#2a2010;padding:10px 12px;font-size:14px;line-height:1.35;transform:rotate(-1.5deg);box-shadow:3px 3px 0 rgba(0,0,0,.6)}
   #order b{display:block;font-size:11px;letter-spacing:2px;opacity:.6;margin-bottom:3px}
+  #tbc{position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20vh;animation:fadein 2s}
+  #tbc .tbcT{white-space:nowrap;font:900 clamp(40px,9vw,150px)/1 Impact,'Arial Black',sans-serif;letter-spacing:.04em;color:#8a0000;background:linear-gradient(#ff2020 0%,#9a0000 55%,#3a0000 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 18px rgba(255,0,0,.45)) drop-shadow(0 6px 0 #200);position:relative;animation:tbcShake 3s infinite;text-align:center}
+  #tbc .drip{position:absolute;top:80%;width:1vw;border-radius:0 0 .6vw .6vw;background:linear-gradient(#9a0000,#5a0000);transform-origin:top;animation:drip ease-in forwards}
+  #tbc .tbcT::after{display:none;content:'';position:absolute;left:4%;right:4%;top:88%;height:16vh;background:repeating-linear-gradient(90deg,transparent 0 3vw,#7a0000 3vw 3.6vw,transparent 3.6vw 7vw,#5a0000 7vw 7.4vw,transparent 7.4vw 10vw);-webkit-mask:linear-gradient(#000,transparent);mask:linear-gradient(#000,transparent);animation:drip 4s ease-in forwards;transform-origin:top;opacity:.9}
+  @keyframes drip{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes tbcShake{0%,92%,100%{transform:none}94%{transform:translate(3px,-2px) skewX(3deg)}96%{transform:translate(-3px,2px)}}
+  #tbc .mbtn{opacity:0;animation:fadein 1s 2.5s forwards}
   #held{position:absolute;right:18px;bottom:78px;font-size:14px;text-shadow:2px 2px 0 #000;opacity:.9}
   #hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:14px;background:rgba(0,0,0,.55);padding:6px 12px;border:1px solid rgba(255,255,255,.2);white-space:nowrap}
   #toast{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:18px;font-weight:700;text-shadow:2px 2px 0 #000;opacity:0;transition:opacity .4s;text-align:center;white-space:nowrap}
@@ -2019,8 +2026,17 @@ function endNight() {
   for (const c of counterItems) { S.stock[c.id]++; dropCounterItem(c); } counterItems = [];
   S.money -= RENT;
   if (NIGHTS[S.night].finale) return showEnding();
+  if (S.night === 2) return showTBC();
   order = {};
   renderSum();
+}
+// Gün 2 sonu: siyah ekranda kanlı "DEVAM EDECEK..." → ana menü
+function showTBC() {
+  $('hud').classList.add('hidden'); try { music.pause(); } catch (e) {}
+  const el = document.createElement('div'); el.id = 'tbc';
+  el.innerHTML = `<div class="tbcT">DEVAM EDECEK...${Array.from({ length: 14 }, (_, i) => `<i class="drip" style="left:${4 + i * 6.8 + Math.random() * 3}%;height:${4 + Math.random() * 14}vh;width:${.5 + Math.random() * .9}vw;animation-duration:${2 + Math.random() * 4}s"></i>`).join('')}</div><button class="mbtn" id="tbcGo">İlerle ▶</button>`;
+  document.body.appendChild(el); SND.sting && SND.sting(); glitch = .8;
+  $('tbcGo').onclick = () => { S.night++; writeSave(); el.remove(); showMenu(); };
 }
 function renderSum() {
   const n = N, cost = Object.entries(order).reduce((s, [id, q]) => s + q * Math.round(GAMES[id].p * .5), 0);
