@@ -435,7 +435,7 @@ const catCorner = new THREE.Group(); catCorner.visible = false; scene.add(catCor
   const rim = new THREE.Mesh(new THREE.TorusGeometry(.33, .06, 6, 14), lam(0x8a4a6a)); rim.rotation.x = Math.PI / 2; rim.position.set(3.5, .11, .15); catCorner.add(rim);
   const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.09, .07, .06, 10), lam(0xc0c4c8)); bowl.position.set(3.55, .03, .7); catCorner.add(bowl);
   box(.12, .01, .12, lam(0x8a5a2a), 3.55, .065, .7, catCorner);
-  catCorner.add(plane(.3, .12, basic({ map: signTex('PAMUK', '#3a2030', '#ffd8e8', 32, 12) }), 3.5, .5, .99, 0, Math.PI)); }
+  catCorner.add(plane(.3, .12, basic({ map: signTex('ODİN', '#3a2030', '#ffd8e8', 32, 12) }), 3.5, .5, .99, 0, Math.PI)); }
 const cat = new THREE.Group(); cat.position.set(3.5, .1, .15); cat.rotation.y = -.6; cat.visible = false; scene.add(cat);
 { const cm = lam(0xe8e4dc); box(.34, .16, .16, cm, 0, .1, 0, cat); box(.14, .14, .13, cm, .2, .2, 0, cat); box(.04, .06, .03, cm, .2, .3, .04, cat); box(.04, .06, .03, cm, .2, .3, -.04, cat); box(.18, .03, .03, cm, -.24, .16, 0, cat);
   box(.02, .02, .005, basic({ color: 0x55ff55 }), .27, .22, .04, cat); box(.02, .02, .005, basic({ color: 0x55ff55 }), .27, .22, -.04, cat); }
@@ -479,10 +479,10 @@ function renderMirror(dt) {
     const p = selfP[k]; p.g.visible = (k === 'fake') === showFake;
     p.g.position.set(P.pos.x, 0, P.pos.z);
     camera.getWorldDirection(_md);
-    setView(p, _md.x <= 0, dt);     // aynaya dönüksen önün, değilse arkan görünür
+
     const lv = N && N.power && !tubes.every(t => t.off) ? .9 : flashOn ? .5 : .1; if (Math.abs(p.lit - lv) > .01) setLit(p, lv);
     const mv = (keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD) && state === 'play' && !dlg; if (mv) p.ph += dt * 7; animRig(p, mv, dt);
-    camera.getWorldDirection(_md); p.g.rotation.y = Math.atan2(_md.x, _md.z); p.sprite.position.y = 0; p.sprite.rotation.set(0, 0, 0);
+    camera.getWorldDirection(_md); p.g.rotation.y = Math.atan2(_md.x, _md.z); p.sprite.position.y = 0; spriteView(p, mirCam.position, mv);
   }
   if (toMir > 9) return;
   // yansıyan kamera
@@ -658,7 +658,7 @@ function drawFace(cv, def, fake) {
 }
 const CH = {
   erdi:  { ad: 'Erdi', photo: 'dk_erdi.png', skin: '#d8a888', hair: '#121012', shirt: '#1c1a1c', pants: '#211d22', shoes: '#cfcac4', print: 'erdi', eyes: [[25, 30], [49, 30]], mouth: [37, 50], h: 1.04,
-           sprite: { on: 'dk_erdi_on.png', arka: 'dk_erdi_arka.png', h: 1.8, eyes: [[77, 40], [97, 40]], mouth: [87, 54],
+           sprite: { on: 'dk_erdi_on.png', arka: 'dk_erdi_arka.png', yuru: 'dk_erdi_yuru.png', yuruN: 8, h: 1.8, eyes: [[77, 40], [97, 40]], mouth: [87, 54],
              rigF: { armL: [0, 33, 92, 262], armR: [133, 166, 92, 262], hip: 238, split: 83 }, rigB: { armL: [0, 31, 92, 264], armR: [122, 153, 92, 264], hip: 240, split: 76 } } },
   cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#e0a020', pants: '#3050a0', h: .78 },
   teyze: { ad: 'Teyze', skin: '#d8a888', hair: '#8a8580', shirt: '#6a3a6a', pants: '#3a2a3a', old: true, glasses: true, longHair: true },
@@ -667,11 +667,11 @@ const CH = {
   kurye: { ad: 'Kurye', skin: '#b88868', hair: '#1a1a1a', shirt: '#c03020', pants: '#222', beanie: '#c03020' },
   self:  { ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f' },
   zeynep:{ ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f', shoes: '#e8e4dc', print: 'cat', longHair: true, eyes: [[21, 32], [46, 32]], mouth: [35, 52],
-           sprite: { on: 'dk_zeynep_on.png', arka: 'dk_zeynep_arka.png', h: 1.7, eyes: [[76, 46], [96, 46]], mouth: [85, 63],
+           sprite: { on: 'dk_zeynep_on.png', arka: 'dk_zeynep_arka.png', yuru: 'dk_zeynep_yuru.png', yuruN: 8, h: 1.7, eyes: [[76, 46], [96, 46]], mouth: [85, 63],
              rigF: { armR: [117, 153, 95, 268], hip: 246, split: 78 }, rigB: { armL: [0, 33, 104, 276], armR: [140, 177, 104, 276], hip: 248, split: 88 } } },
 };
 // çizimlerden gelen karakterler: düz resim (her zaman sana dönük), arkası ayrı resim
-for (const k in CH) if (CH[k].sprite) { loadImg(CH[k].sprite.on, () => {}); loadImg(CH[k].sprite.arka, () => {}); }
+for (const k in CH) if (CH[k].sprite) { loadImg(CH[k].sprite.on, () => {}); loadImg(CH[k].sprite.arka, () => {}); if (CH[k].sprite.yuru) loadImg(CH[k].sprite.yuru, () => {}); }
 function spriteTex(src, edit) {
   const cv = document.createElement('canvas'); cv.width = 4; cv.height = 4;
   const t = new THREE.CanvasTexture(cv); t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.colorSpace = THREE.SRGBColorSpace;
@@ -693,17 +693,17 @@ function makeSpritePerson(id, def, fake, cv) {
   const bill = new THREE.Group(); g.add(bill);         // sana dönen taşıyıcı
   const flip = new THREE.Group(); bill.add(flip);      // kâğıt dönüşü (scale.x)
   // kalınlık: aynı resimden üst üste katmanlar (dış katman tam renk, içtekiler gölgeli) → yandan bakınca dolu görünür
-  const THICK = .055, NS = 9;
+  const THICK = 0, NS = 1;
   const slices = (parent, geo, tex, th) => {
     for (let i = 0; i < NS; i++) {
-      const f = i / (NS - 1), outer = i === NS - 1;
-      const m = new THREE.MeshBasicMaterial({ map: tex, alphaTest: .5, side: outer ? THREE.FrontSide : THREE.DoubleSide, fog: true });
+      const f = NS > 1 ? i / (NS - 1) : 1, outer = i === NS - 1;
+      const m = new THREE.MeshBasicMaterial({ map: tex, alphaTest: .5, side: THREE.DoubleSide, fog: true });
       m.userData.shade = outer ? 1 : .14 + f * .1; mats.push(m);
       const mesh = new THREE.Mesh(geo, m); mesh.position.z = .004 + f * th; mesh.userData = { kind: 'cust' }; parent.add(mesh);
     }
   };
   const mkRig = (src, rig, back) => {
-    const R = { g: new THREE.Group(), parts: {} }; flip.add(R.g); if (back) R.g.rotation.y = Math.PI;   // arka resim karakterin arkasında, ters yöne bakar
+    const R = { g: new THREE.Group(), parts: {} }; flip.add(R.g); R.g.visible = !back;
     loadImg(src, im => {
       const W = im.width, Hh = im.height, k = sp.h / Hh;
       const base = document.createElement('canvas'); base.width = W; base.height = Hh; const bq = base.getContext('2d'); bq.drawImage(im, 0, 0);
@@ -732,11 +732,37 @@ function makeSpritePerson(id, def, fake, cv) {
     });
     return R;
   };
-  const P_ = { g, sprite: bill, flip, mats, cv, ph: 0, isSprite: true, lit: .9, back: false, flipT: 0 };
+  const P_ = { g, sprite: bill, flip, mats, cv, ph: 0, isSprite: true, lit: .9, back: false, flipT: 0, mode: 'F' };
+  // yan yürüyüş kareleri (çizimden): tek düzlem, kare kare değişir
+  if (sp.yuru) {
+    const n = sp.yuruN, wt = spriteTex(sp.yuru, fake ? (q, w, h) => { const d = q.getImageData(0, 0, w, h); for (let i = 0; i < d.data.length; i += 4) { const v = (d.data[i] + d.data[i + 1] + d.data[i + 2]) / 3; d.data[i] = v * .75 + 12; d.data[i + 1] = v * .66; d.data[i + 2] = v * .72 + 8; } q.putImageData(d, 0, 0); } : null);
+    wt.magFilter = THREE.LinearFilter; wt.minFilter = THREE.LinearFilter; wt.repeat.set(1 / n, 1); wt.wrapS = THREE.ClampToEdgeWrapping;
+    const wm = new THREE.MeshBasicMaterial({ map: wt, alphaTest: .5, side: THREE.DoubleSide, fog: true }); mats.push(wm);
+    const sideG = new THREE.Group(); sideG.visible = false; flip.add(sideG);
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).translate(0, .5, 0), wm); mesh.userData = { kind: 'cust' }; sideG.add(mesh);
+    const fitSide = () => { if (!wt.userData.ready) return setTimeout(fitSide, 100); const fw = wt.image.width / n, fh = wt.image.height; mesh.scale.set(sp.h * 1.02 * fw / fh, sp.h * 1.02, 1); }; fitSide();
+    P_.S = { g: sideG, tex: wt, n };
+  }
   P_.F = mkRig(sp.on, sp.rigF, false); P_.B = mkRig(sp.arka, sp.rigB, true);
   const dummy = () => { const d = new THREE.Group(); g.add(d); return d; };
   Object.assign(P_, { head: dummy(), armL: dummy(), armR: dummy(), legL: dummy(), legR: dummy() });
   return P_;
+}
+// bakış açısına göre: önden / arkadan / yandan yürüyüş kareleri
+function spriteView(p, viewer, moving) {
+  const g = p.g; g.getWorldPosition(_wp);
+  let rel = g.rotation.y - Math.atan2(viewer.x - _wp.x, viewer.z - _wp.z); rel = Math.atan2(Math.sin(rel), Math.cos(rel));
+  const a = Math.abs(rel);
+  let mode = a < .45 ? 'F' : a > 2.55 ? 'B' : 'S';
+  if (mode === 'S' && !p.S) mode = a < Math.PI / 2 ? 'F' : 'B';
+  p.mode = mode; p.back = mode === 'B';
+  p.F.g.visible = mode === 'F'; p.B.g.visible = mode === 'B'; if (p.S) p.S.g.visible = mode === 'S';
+  p.flip.scale.x = 1;
+  if (mode === 'S') {
+    const n = p.S.n, f = moving ? Math.floor(((p.ph / (Math.PI * 2)) * n) % n + n) % n : 3;
+    p.S.tex.offset.x = f / n; p.S.g.scale.x = rel > 0 ? -1 : 1;
+  }
+  p.sprite.rotation.set(0, 0, 0); faceTo(p, viewer);
 }
 function setLit(p, v) { p.lit = v; for (const m of p.mats) m.color.setScalar(v * (m.userData.shade ?? 1)); }
 // önden arkaya geçerken kâğıt gibi döner
@@ -750,19 +776,18 @@ function setView(p, back, dt) {
   } else p.flip.scale.x = 1;
 }
 function animRig(p, moving, dt) {
-  const s = Math.sin(p.ph), c = Math.cos(p.ph);
-  for (const R of [p.F, p.B]) {
-    if (!R.ready) continue; const P2 = R.parts;
-    // ileri-geri adım (x ekseni) — iki resimde de legL=-a, legR=+a aynı dünya hareketini verir
-    const a = moving ? s * .5 : 0, b = moving ? s * .45 : 0;
-    const L = (o, tx, tz, k) => { if (!o) return; o.rotation.x += (tx - o.rotation.x) * k; o.rotation.z += (tz - o.rotation.z) * k; };
-    const k = moving ? 1 : Math.min(1, dt * 8 || .2);
-    L(P2.legL, -a, 0, k); L(P2.legR, a, 0, k);
-    L(P2.armL, b, -.03, k); L(P2.armR, -b, .03, k);
-    for (const n of ['legL', 'legR']) if (P2[n]) { const y0 = P2[n].userData.y0 ??= P2[n].position.y; P2[n].position.y = y0; }
-    P2.body.position.y = moving ? Math.abs(c) * .03 : Math.sin(performance.now() / 700) * .006;
-    P2.body.rotation.x = moving ? .04 : P2.body.rotation.x * .9;
-    P2.body.rotation.z = moving ? s * .025 : P2.body.rotation.z * .9;
+  const R = p.back ? p.B : p.F; if (!R.ready) return; const P2 = R.parts, s = Math.sin(p.ph), c = Math.cos(p.ph);
+  if (moving) {
+    if (P2.legL) { P2.legL.rotation.z = s * .07; P2.legL.position.y = (P2.legL.userData.y0 ??= P2.legL.position.y) + Math.max(0, s) * .045; }
+    if (P2.legR) { P2.legR.rotation.z = s * .07; P2.legR.position.y = (P2.legR.userData.y0 ??= P2.legR.position.y) + Math.max(0, -s) * .045; }
+    if (P2.armL) P2.armL.rotation.z = -.04 + s * .16;
+    if (P2.armR) P2.armR.rotation.z = .04 + s * .16;
+    P2.body.rotation.z = s * .02; P2.body.position.y = Math.abs(c) * .02;
+  } else {
+    const br = Math.sin(performance.now() / 700) * .006;
+    for (const n of ['legL', 'legR']) if (P2[n]) { P2[n].rotation.z *= .8; if (P2[n].userData.y0 !== undefined) P2[n].position.y += (P2[n].userData.y0 - P2[n].position.y) * .2; }
+    if (P2.armL) P2.armL.rotation.z = P2.armL.rotation.z * .85 - .01; if (P2.armR) P2.armR.rotation.z = P2.armR.rotation.z * .85 + .01;
+    P2.body.rotation.z *= .8; P2.body.position.y = br;
   }
 }
 function makePerson(id, fake) {
@@ -1077,6 +1102,10 @@ function closePaper() { $('paper').classList.add('hidden'); }
    ===================================================================== */
 const OUT = new THREE.Vector3(3, 0, 7), DOOR_IN = new THREE.Vector3(3, 0, 3.3), DESK = new THREE.Vector3(1.15, 0, 1.45);
 // müşterinin başının üstünde isim
+// miyav: önceden çözülmüş ses, anında çalar
+let meowBuf = null;
+fetch('dk_miyav.mp3').then(r => r.arrayBuffer()).then(b => { const go = () => ac().decodeAudioData(b).then(x => meowBuf = x); try { go(); } catch (e) {} });
+function playMeow() { const c = ac(); if (!meowBuf) return; const s = c.createBufferSource(); s.buffer = meowBuf; s.connect(master); s.start(); }
 function nameTag(name, fake) {
   const cv = document.createElement('canvas'), g = cv.getContext('2d'); g.font = 'bold 30px monospace';
   const w = Math.ceil(g.measureText(name).width) + 28; cv.width = w; cv.height = 46;
@@ -1110,7 +1139,7 @@ function spriteFacing(p, dt, moving) {
   const g = p.g, toC = Math.atan2(camera.position.x - g.position.x, camera.position.z - g.position.z);
   const away = Math.cos(g.rotation.y - toC) < -.1;
   animRig(p, moving, dt || .016);
-  p.sprite.rotation.y = 0; p.sprite.rotation.z = 0;
+  spriteView(p, camera.position, moving);
   // ışığa göre parlaklık (sprite ışık almaz)
   const lit = N && N.power && !tubes.every(t => t.off) ? .92 : flashOn ? .55 : .12;
   if (Math.abs(p.lit - lit) > .01) setLit(p, lit);
@@ -1127,7 +1156,7 @@ function wantText(v) { return Array.isArray(v.want) ? v.want.map(gameName).join(
 function askLines(v) { const a = v.ask || (Array.isArray(v.want) ? `${v.want.map(gameName).join(' ve ')} alabilir miyim?` : `Bana ${v.want.cat.toLowerCase()} oyunu önerir misin?`); return [v.hi, a]; }
 function custArrived(c) {
   c.st = 'arrived';
-  if (S.upg.kedi && c.v.fake) setTimeout(() => { SND.hiss(); toast('🐈 Pamuk tıslıyor...'); }, 600);
+  if (S.upg.kedi && c.v.fake) setTimeout(() => { SND.hiss(); toast('🐈 Odin tıslıyor...'); }, 600);
   toast('Kasada bir müşteri bekliyor...', 2.4);
   if (S.night === 1 && N.served === 0) hint('Müşteriye bak ve E bas: konuşmaya başla.', 6);
 }
@@ -1406,7 +1435,7 @@ function promptFor(f) {
     case 'depoDoor': return depoTarget ? 'Kapıyı kapat' : 'Depoyu aç';
     case 'bedDoor': return bedDoorTarget ? 'Kapıyı kapat' : 'Odaya gir';
     case 'bed': return N && N.canSleep ? 'Uyu (günü bitir)' : 'Yatak';
-    case 'cat': return "Pamuk'u sev";
+    case 'cat': return "Odin'i sev";
     case 'pc': return 'Bilgisayarı kullan';
     case 'sign': return !N ? '' : !N.opened ? 'Dükkânı aç (tabelayı çevir: AÇIK)' : N.allDone && !N.shopClosed ? 'Dükkânı kapat (tabelayı çevir: KAPALI)' : N.shopClosed ? '' : 'Tabela: AÇIK';
     case 'fall': return held ? '' : 'Yerden al';
@@ -1435,7 +1464,7 @@ function interact() {
       else if (N.allDone && !N.shopClosed) { N.shopClosed = true; N.closedAt = performance.now(); setShopOpen(false); SND.click(); SND.drawer(); toast('Dükkân kapandı.', 2.5); $('hint').classList.add('hidden'); hintT = 0; }
       else if (!N.allDone) toast('Daha müşteri gelecek, dükkân açık kalmalı.');
       break;
-    case 'cat': { const a = new Audio('dk_miyav.mp3'); a.volume = Math.min(1, SET.vol); a.play().catch(() => {}); toast('🐈 Miyav! Pamuk seviliyor.', 2); } break;
+    case 'cat': playMeow(); toast('🐈 Miyav! Odin seviliyor.', 2); break;
     case 'pc': openPC(); break;
     case 'fall': if (!held) { scene.remove(N.fall.m); N.fall.taken = true; setHeld(N.fall.id); SND.pick(); } break;
   }
@@ -1492,7 +1521,7 @@ function applySkin() {
   for (const t of skinClones) t.needsUpdate = true;
 }
 const UPG2 = [
-  { id: 'kedi', ad: '🐈 Pamuk (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 300 },
+  { id: 'kedi', ad: '🐈 Odin (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 300 },
   { id: 'kamera', ad: '📹 Güvenlik kamerası sistemi', d: 'Bilgisayardan 5 kamera izlenir + tezgâhta monitör', p: 350 },
   { id: 'neon', ad: '💡 Neon tabela', d: 'Bahşişler %30 artar', p: 250 },
   { id: 'lamba', ad: '🔆 Yeni floresanlar', d: 'Daha az titreme, daha parlak', p: 200 },
@@ -1633,7 +1662,7 @@ function updateNight(dt, now) {
    ===================================================================== */
 const RENT = 10;   // elektrik
 const UPG = [
-  { id: 'kedi', ad: '🐈 Pamuk (dükkân kedisi)', d: 'Kediler bazı şeyleri hisseder...', p: 400 },
+  { id: 'kedi', ad: '🐈 Odin (dükkân kedisi)', d: 'Kediler bazı şeyleri hisseder...', p: 400 },
   { id: 'kamera', ad: '📹 Güvenlik monitörü', d: 'Tezgâhta kamera görüntüsü', p: 450 },
   { id: 'neon', ad: '💡 Neon tabela', d: 'Bahşişler %30 artar', p: 300 },
   { id: 'lamba', ad: '🔆 Yeni floresanlar', d: 'Daha az titreme, daha parlak', p: 250 },
@@ -1843,7 +1872,7 @@ function frame(now) {
   renderMirror(dt);
   if ((N && N.tvMode === 'cam') || mon.visible) { renderer.setRenderTarget(camRT); renderer.render(scene, secCam); }
   if (state === 'cam' && camIdx >= 0) {
-    const vc = CAMS[camIdx].c; if (selfP) for (const k of ['real', 'fake']) selfP[k].sprite.rotation.set(0, 0, 0);
+    const vc = CAMS[camIdx].c; if (selfP) for (const k of ['real', 'fake']) spriteView(selfP[k], vc.position, false);
     vc.aspect = camera.aspect; vc.updateProjectionMatrix(); postMat.uniforms.glitch.value = Math.max(glitch, .06);
     $('camClock').textContent = new Date().toLocaleTimeString('tr-TR');
     renderer.setRenderTarget(rt); renderer.render(scene, vc);
