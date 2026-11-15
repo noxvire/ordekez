@@ -548,7 +548,7 @@
   <section class="screen menu hidden" id="leader" aria-hidden="true">
     <h2>Skor Tablosu</h2>
     <div class="lb">
-      <div class="lb-tabs"><button data-g="flappy">Flappy Erdy</button><button data-g="atessu">Ateş &amp; Su</button><button data-g="backrooms">Backrooms</button><button data-g="erdivur">Erdiyi Vur</button><button data-g="dukkan">Dükkân</button></div>
+      <div class="lb-tabs"><button data-g="flappy">Flappy Erdy</button><button data-g="atessu">Ateş &amp; Su</button><button data-g="backrooms">Backrooms</button><button data-g="erdivur">Erdiyi Vur</button><button data-g="dukkan">Dükkân</button><button data-g="survivor">Survivors</button></div>
       <p class="hint">Skorunun burada görünmesi için sağ üstten <b>giriş yap</b>.</p>
       <div class="list"></div>
     </div>
@@ -563,6 +563,7 @@
       <button class="card" id="playBR"><img class="ic-img mon" src="zeynep_canavar.png" alt=""><span>Backrooms: <b class="red">Zeynep</b></span></button>
       <button class="card" id="playDK" onclick="location.href='dukkan.html'"><img class="ic-img" src="dk_zeynep.png" alt="" style="image-rendering:pixelated;border-radius:8px"><span>Zeynep'in <b class="red">Dükkânı</b></span></button>
       <button class="card" id="playNI" data-soon style="opacity:.55;cursor:not-allowed;position:relative"><span class="ic-img" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#16120e;border-radius:8px">🚪</span><span>No, I'm Not a <b class="red">Ördekez</b><br><small style="font-size:11px;letter-spacing:1px;opacity:.9">ÇOK YAKINDA</small></span></button>
+      <button class="card" id="playSV" onclick="location.href='survivor.html'"><img class="ic-img" src="ordek_ikon.png" alt="" style="width:2.7rem;height:2.7rem;object-fit:contain;image-rendering:auto;background:radial-gradient(circle at 35% 30%,#7ad06a,#2b5a1c);border-radius:50%;padding:4px"><span>Ördek <b class="red">Survivors</b></span></button>
       <button class="card" id="playTK" onclick="location.href='tikla.html'"><img class="ic-img" src="ordek_ikon.png" alt="" style="width:2.7rem;height:2.7rem;object-fit:contain;image-rendering:auto;background:radial-gradient(circle at 35% 30%,#ffe98a,#d98400);border-radius:50%;padding:4px"><span>Ördekez <b class="red">Tıkla</b></span></button>
       <button class="card" id="playAY" onclick="location.href='uzay.html'"><img class="ic-img" src="erdivur_ikon.webp" alt="" style="image-rendering:auto;border-radius:50%"><span>Erdiyi <b class="vur">Vur</b></span></button>
     </div>
@@ -3277,7 +3278,7 @@ const SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
 const TOK = 'ordekez_token', USR = 'ordekez_user';
 const ls = window.localStorage;
 const rawSet = Storage.prototype.setItem, rawRemove = Storage.prototype.removeItem;
-const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_') || k.startsWith('ni_') || k.startsWith('tk_'));
+const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_') || k.startsWith('ni_') || k.startsWith('tk_') || k.startsWith('sv_'));
 
 async function rpc(fn, args){
   const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) });
@@ -3302,6 +3303,7 @@ function better(k, a, b){              // a: sunucu, b: yerel
     base.cls = Object.assign({}, B.cls || {}, A.cls || {}); base.clsStart = Object.assign({}, B.clsStart || {}, A.clsStart || {});
     base.clsXp = {}; for (const k2 of new Set([...Object.keys(A.clsXp || {}), ...Object.keys(B.clsXp || {})])) base.clsXp[k2] = Math.max((A.clsXp || {})[k2] || 0, (B.clsXp || {})[k2] || 0);
     base.clsFix = A.clsFix || B.clsFix; return JSON.stringify(base); } catch(e){ return a; } }
+  if (k === 'sv_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); return (B.oyun || 0) > (A.oyun || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'tk_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); if ((A.v === 2) !== (B.v === 2)) return A.v === 2 ? a : b; return (B.toplam || 0) > (A.toplam || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'dk_save'){ try { return (JSON.parse(b).night || 0) > (JSON.parse(a).night || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'ev_best' || k === 'ev_kayit'){ try { return (JSON.parse(b).wave || 0) > (JSON.parse(a).wave || 0) ? b : a; } catch(e){ return a; } }
@@ -3412,8 +3414,8 @@ async function loadBoard(oyun){
     if (!rows || !rows.length){ list.innerHTML = '<p class="muted">Henüz skor yok. İlk sen ol! 🦆</p>'; return; }
     const me = (user() || '').toLowerCase();
     list.innerHTML = rows.map((r, i) => {
-      const v = oyun === 'backrooms' ? fmtTime(r.deger) : oyun === 'atessu' ? `Bölüm ${r.deger}` : oyun === 'erdivur' ? `Dalga ${r.deger}` : oyun === 'dukkan' ? `${r.deger} ₺` : `${r.deger} puan`;
-      const tag = oyun === 'dukkan' ? `<i>${r.detay && r.detay.son === 'iyi' ? '🌅 İyi son' : '👁️ Kötü son'}</i>` : oyun === 'erdivur' ? `<i>${(r.detay && r.detay.oldurme) || 0} öldürme</i>` : oyun === 'backrooms' ? `<i>${DIFFN[r.detay && r.detay.zorluk] || ''}${r.detay && r.detay.gizli ? ' · 👻' : ''}</i>` : '';
+      const v = oyun === 'backrooms' ? fmtTime(r.deger) : oyun === 'atessu' ? `Bölüm ${r.deger}` : oyun === 'erdivur' ? `Dalga ${r.deger}` : oyun === 'dukkan' ? `${r.deger} ₺` : oyun === 'survivor' ? `${r.deger} öldürme` : `${r.deger} puan`;
+      const tag = oyun === 'survivor' ? `<i>${r.detay && r.detay.kazandi ? '🏆 ' : ''}${Math.floor(((r.detay && r.detay.sure) || 0) / 60)}:${String(((r.detay && r.detay.sure) || 0) % 60).padStart(2, '0')}</i>` : oyun === 'dukkan' ? `<i>${r.detay && r.detay.son === 'iyi' ? '🌅 İyi son' : '👁️ Kötü son'}</i>` : oyun === 'erdivur' ? `<i>${(r.detay && r.detay.oldurme) || 0} öldürme</i>` : oyun === 'backrooms' ? `<i>${DIFFN[r.detay && r.detay.zorluk] || ''}${r.detay && r.detay.gizli ? ' · 👻' : ''}</i>` : '';
       return `<div class="row${r.kullanici_adi.toLowerCase() === me ? ' me' : ''}"><span class="rk">${['🥇','🥈','🥉'][i] || (i+1)}</span><b>${r.kullanici_adi}</b>${tag}<span class="v">${v}</span></div>`;
     }).join('');
   } catch(e){ list.innerHTML = '<p class="muted">Skorlar yüklenemedi. İnternet bağlantını kontrol et.</p>'; }
