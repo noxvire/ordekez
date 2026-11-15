@@ -1872,10 +1872,10 @@ function applySkin() {
   for (const t of skinClones) t.needsUpdate = true;
 }
 const UPG2 = [
-  { id: 'kedi', ad: '🐈 Odin (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 60 },
-  { id: 'kamera', ad: '📹 Güvenlik kamerası sistemi', d: 'Bilgisayardan 5 kamera izlenir + tezgâhta monitör', p: 75 },
-  { id: 'neon', ad: '💡 Neon tabela', d: 'Bahşişler %30 artar', p: 50 },
-  { id: 'lamba', ad: '🔆 Yeni floresanlar', d: 'Daha az titreme, daha parlak', p: 40 },
+  { id: 'kedi', ad: '🐈 Odin (dükkân kedisi)', d: 'Tezgâhın yanındaki minderde yaşar. Bazı müşterilere tıslar...', p: 150 },
+  { id: 'kamera', ad: '📹 Güvenlik kamerası sistemi', d: 'Bilgisayardan 5 kamera izlenir + tezgâhta monitör', p: 200 },
+  { id: 'neon', ad: '💡 Neon tabela', d: 'Bahşişler %30 artar', p: 120 },
+  { id: 'lamba', ad: '🔆 Yeni floresanlar', d: 'Daha az titreme, daha parlak', p: 100 },
 ];
 let pcTab = 'shop', cart = {};
 function openPC() { state = 'pc'; unlockPointer(); $('pc').classList.remove('hidden'); SND.beep(); cart = {}; renderPC(); }
