@@ -834,7 +834,7 @@ function ambStop() { if (!ambNodes) return; try { ambNodes.hum.stop(); ambNodes.
    ===================================================================== */
 const SAVE_KEY = 'dk_save';
 let S = null;   // kalıcı (gece arası)
-function freshSave() { return { night: 1, money: 0, incoming: {}, skin: { floor: 'dama', wall: 'yesil' }, owned: { dama: 1, yesil: 1 }, stock: { ...START_STOCK }, upg: {}, lanet: 0, fakeRefused: 0, rel: {}, flags: {}, best: 0, ended: false }; }
+function freshSave() { return { night: 1, money: 5000, flags: { testCash: 1 }, incoming: {}, skin: { floor: 'dama', wall: 'yesil' }, owned: { dama: 1, yesil: 1 }, stock: { ...START_STOCK }, upg: {}, lanet: 0, fakeRefused: 0, rel: {}, best: 0, ended: false }; }
 function loadSave() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return null; } }
 function writeSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 
@@ -968,6 +968,7 @@ function refreshShelves() {
 }
 function startNight() {
   setShopOpen(false);
+  S.flags = S.flags || {}; if (!S.flags.testCash) { S.flags.testCash = 1; S.money += 5000; }   // TEST: deneme parası (sonra kaldırılacak)
   S.incoming = S.incoming || {}; S.skin = S.skin || { floor: 'dama', wall: 'yesil' }; S.owned = S.owned || { dama: 1, yesil: 1 };
   let got = 0; for (const [id, q] of Object.entries(S.incoming)) { S.stock[id] = (S.stock[id] || 0) + q; got += q; } S.incoming = {};
   applySkin();
