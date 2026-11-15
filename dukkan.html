@@ -2087,6 +2087,8 @@ function menuPanel(html) { const p = $('mPanel'); p.innerHTML = html; p.classLis
 function closeMenuPanel() { $('mPanel').classList.add('hidden'); $('mItems').classList.remove('hidden'); SND.click(); }
 function menuGo(k) {
   ac(); SND.click(); if (k === 'cont' || k === 'new') keyGuard();
+  // TEST: dukkan.html?gece=2 → seçilen geceden başla
+  { const gq = +new URLSearchParams(location.search).get('gece'); if (gq > 1 && (k === 'cont' || k === 'new')) { S = freshSave(); S.night = gq; S.flags = S.flags || {}; S.flags.tutDone = true; S.flags.testCash = 1; history.replaceState(null, '', location.pathname); fadeTo(startNight); return; } }
   if (k === 'cont') { S = loadSave(); if (S) fadeTo(startNight); }
   else if (k === 'new') {
     const sv = loadSave();
