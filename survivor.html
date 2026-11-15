@@ -138,7 +138,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .slots{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:6px 0 10px}
 .slots>div{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:13px;color:#a0507e;font-weight:700}
 .inv{display:grid;grid-template-columns:repeat(auto-fill,88px);gap:18px 14px;justify-content:center;margin-top:12px}
-.inv button{padding:0}
+.inv button,.slots button{padding:0;touch-action:none}
 .sum{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:14px;color:#8a4a70;background:#fff;border-radius:14px;padding:8px;border:2px solid #ffd0e6}
 .sum b{color:#e04f95}
 #itemDet .card{max-width:420px}
@@ -219,7 +219,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 
 <div class="scr" id="invScr"><div class="card">
   <button class="x" data-close>✕</button>
-  <h2>⚔️ Eşyalar</h2><div class="sub">Eşyaya tıkla: giy, çıkar, güçlendir. Aynı eşyadan tekrar çıkınca parça olur, parça + altın ile seviye atlar. <span class="gold" id="gI"></span></div>
+  <h2>⚔️ Eşyalar</h2><div class="sub">Eşyayı sürükleyip yuvasına bırak ya da tıkla: giy, çıkar, güçlendir. Aynı eşyadan tekrar çıkınca parça olur, parça + altın ile seviye atlar. <span class="gold" id="gI"></span></div>
   <div class="slots" id="eqSlots"></div>
   <div class="sum" id="eqSum"></div>
   <div class="inv" id="invGrid"></div>
@@ -920,13 +920,38 @@ function itemIcon(it, o, noBadge) { const R0 = RAR[it.r], c = o && o.lv < ITEM_M
 function renderInv() {
   $('gI').textContent = `🪙 ${M.altin}`;
   $('eqSlots').innerHTML = Object.keys(SLOTS).map(sl => { const id = M.eq[sl], it = ITEMS.find(x => x.id === id);
-    return `<div>${it ? `<button data-it="${it.id}">${itemIcon(it, M.inv[it.id], true)}</button>` : `<div class="it empty">boş</div>`}${SLOTS[sl]}</div>`; }).join('');
+    return `<div data-slot="${sl}">${it ? `<button data-it="${it.id}" data-from="slot">${itemIcon(it, M.inv[it.id], true)}</button>` : `<div class="it empty">boş</div>`}${SLOTS[sl]}</div>`; }).join('');
   const E = eqStats(), parts = Object.keys(E).filter(k => E[k] > 0).map(k => `${STN[k][0]} <b>${STN[k][1](E[k])}</b>`);
   $('eqSum').innerHTML = parts.length ? parts.join('') : 'Henüz eşya giymedin — sandık aç!';
   const own = ITEMS.filter(it => M.inv[it.id]).sort((a, b) => b.r - a.r || a.s.localeCompare(b.s));
   $('invGrid').innerHTML = own.length ? own.map(it => `<button data-it="${it.id}">${itemIcon(it, M.inv[it.id])}</button>`).join('') : '<div class="sub" style="grid-column:1/-1">Envanterin boş. 🎁 Sandıklar\'dan eşya kazan!</div>';
-  document.querySelectorAll('#invScr [data-it]').forEach(b => b.onclick = () => openItem(b.dataset.it));
+  document.querySelectorAll('#invScr [data-it]').forEach(b => { b.onclick = e => { if (dragJust) { e.preventDefault(); return; } openItem(b.dataset.it); }; b.onpointerdown = e => dragStart(e, b); });
 }
+// ---- sürükle bırak: envanterden yuvaya giy, yuvadan envantere çıkar
+let drag = null, dragJust = false;
+function dragStart(e, b) {
+  if (e.button > 0) return; const it = ITEMS.find(x => x.id === b.dataset.it);
+  drag = { it, from: b.dataset.from || 'inv', x0: e.clientX, y0: e.clientY, on: false, el: b, id: e.pointerId };
+}
+addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  if (!drag.on) { if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 8) return; drag.on = true;
+    const g = drag.el.firstElementChild.cloneNode(true); g.style.cssText = 'position:fixed;z-index:200;pointer-events:none;transform:translate(-50%,-50%) scale(1.1) rotate(-6deg);opacity:.92;filter:drop-shadow(0 10px 12px rgba(80,20,60,.4))'; document.body.appendChild(g); drag.g = g;
+    drag.el.style.opacity = .35;
+    document.querySelectorAll(`#eqSlots [data-slot="${drag.it.s}"] .it`).forEach(x => x.style.boxShadow = '0 0 0 4px #ff6fae,0 0 20px #ff6fae');
+    snd(700, .05, 'sine', .03); }
+  drag.g.style.left = e.clientX + 'px'; drag.g.style.top = e.clientY + 'px';
+});
+addEventListener('pointerup', e => {
+  if (!drag || e.pointerId !== drag.id) return; const d = drag; drag = null;
+  if (!d.on) return;
+  dragJust = true; setTimeout(() => dragJust = false, 50);
+  d.g.remove(); const tgt = document.elementFromPoint(e.clientX, e.clientY), slot = tgt && tgt.closest('[data-slot]');
+  if (slot && slot.dataset.slot === d.it.s) { if (M.eq[d.it.s] !== d.it.id) { M.eq[d.it.s] = d.it.id; chime([523, 784], 70); } }
+  else if (slot) { toast(`Bu eşya ${SLOTS[d.it.s]} yuvasına giyilir`); snd(200, .15, 'triangle', .04); }
+  else if (d.from === 'slot' && tgt && tgt.closest('#invScr')) { delete M.eq[d.it.s]; chime([659, 523], 70); }
+  saveM(); renderInv();
+});
 function openItem(id) {
   const it = ITEMS.find(x => x.id === id), o = M.inv[id], R0 = RAR[it.r], worn = M.eq[it.s] === id, c = o.lv < ITEM_MAX ? itemCost(it, o.lv) : null;
   const line = lv => Object.keys(it.st).map(k => `${STN[k][0]} <b>${STN[k][1](it.st[k] * itemMul(lv))}</b>`).join(' · ');
