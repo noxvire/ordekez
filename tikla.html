@@ -29,7 +29,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   box-shadow:0 14px 0 #6b3d00,0 22px 40px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5);
   transition:transform .06s,box-shadow .06s;display:flex;align-items:center;justify-content:center;font-size:min(130px,30vw)}
 #bigBtn:active,#bigBtn.p{transform:translateY(10px) scale(.97);box-shadow:0 4px 0 #6b3d00,0 8px 20px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5)}
-#bigBtn .lbl{position:absolute;bottom:18%;font-size:clamp(13px,2.4vw,18px);font-weight:900;letter-spacing:3px;color:#5a3300;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+#bigBtn img{width:54%;height:auto;margin-top:-20%;pointer-events:none;filter:drop-shadow(0 6px 6px rgba(90,50,0,.45));transition:transform .06s}
+#bigBtn.p img{transform:scale(.9) rotate(-4deg)}
+#bigBtn .lbl{position:absolute;bottom:10%;font-size:clamp(13px,2.4vw,18px);font-weight:900;letter-spacing:3px;color:#5a3300;text-shadow:0 1px 0 rgba(255,255,255,.5)}
 #ring{position:absolute;inset:-18px;border-radius:50%;border:3px dashed rgba(255,216,74,.25);animation:spin 18s linear infinite;pointer-events:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 .fl{position:fixed;pointer-events:none;font-weight:900;font-size:22px;color:#fff6c2;text-shadow:0 2px 0 #7a5200;animation:fl .9s ease-out forwards;z-index:50}
@@ -105,7 +107,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
     <div id="money">0</div>
     <div id="rates"></div>
     <div id="bonus"></div>
-    <div id="btnWrap"><div id="ring"></div><button id="bigBtn" aria-label="Tıkla">🦆<span class="lbl">TIKLA</span></button></div>
+    <div id="btnWrap"><div id="ring"></div><button id="bigBtn" aria-label="Tıkla"><img src="ordek_ikon.png" alt="" draggable="false"><span class="lbl">TIKLA</span></button></div>
     <div id="frenzy"></div>
     <div id="golden">🌟</div>
   </main>
