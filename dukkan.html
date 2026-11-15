@@ -300,13 +300,13 @@ function posterTex(title, emoji, bg, sub) {
    ===================================================================== */
 const GAMES = {
   ordekavi: { ad: 'Ördek Avcısı 2', cat: 'Aksiyon', p: 100, e: '🦆', c: '#2f6a2a' },
-  aysavas:  { ad: 'Ay Savaşları', cat: 'Aksiyon', p: 110, e: '🌙', c: '#20304a' },
+  aysavas:  { ad: 'Götten Yemek', cat: 'Aksiyon', p: 110, e: '🍑', c: '#20304a' },
   sberdi:   { ad: 'Süper Erdi Bros.', cat: 'Aksiyon', p: 90, e: '🍄', c: '#a02020' },
   bkr64:    { ad: 'Backrooms 64', cat: 'Korku', p: 95, e: '🚪', c: '#8a7a20' },
   sessiz:   { ad: 'Sessiz Koridor', cat: 'Korku', p: 100, e: '👁️', c: '#2a2a2a' },
-  zkombat:  { ad: 'Zeynep Kombat', cat: 'Dövüş', p: 105, e: '🥋', c: '#6a1a5a' },
-  erdikart: { ad: 'Erdi Kart 64', cat: 'Yarış', p: 120, e: '🏎️', c: '#c06010' },
-  futbol:   { ad: 'Pro Ördek Futbol 99', cat: 'Spor', p: 95, e: '⚽', c: '#1a6a30' },
+  zkombat:  { ad: 'Ördekez Kombat', cat: 'Dövüş', p: 105, e: '🥋', c: '#6a1a5a' },
+  erdikart: { ad: 'Erdi Truck Sim', cat: 'Yarış', p: 120, e: '🚚', c: '#c06010' },
+  futbol:   { ad: 'Pro Ördek Futbol', cat: 'Spor', p: 95, e: '⚽', c: '#1a6a30' },
   ciftlik:  { ad: 'Ördek Çiftliği', cat: 'Aile', p: 80, e: '🌾', c: '#7a9a30' },
   konsol:   { ad: 'PlayKutu Konsol', cat: 'Donanım', p: 900, e: '🎮', c: '#3a3a44' },
   kol:      { ad: 'Oyun Kolu', cat: 'Donanım', p: 150, e: '🕹️', c: '#22222a' },
@@ -704,7 +704,7 @@ const CH = {
   cocuk: { ad: 'Mahalleli Çocuk', skin: '#e8b898', hair: '#2a1a10', shirt: '#1c2140', pants: '#1a1818', h: .78, glasses: true, frames: { src: 'dk_cocuk_yuru.png', n: 8, h: 1.42, dir: -1, headX: .58, face: [.525, .108, .215, .09] }, kid3d: 'kid' },
   teyze: { ad: 'Teyze', skin: '#d8a888', hair: '#8a8580', shirt: '#6a3a6a', pants: '#3a2a3a', old: true, glasses: true, longHair: true, frames: { src: 'dk_teyze_yuru.png', n: 8, h: 1.55, headX: .63, face: [.68, .07, .18, .13] }, kid3d: 'teyze' },
   adam:  { ad: 'Takım Elbiseli Adam', skin: '#cfc2b0', hair: '#111', shirt: '#151518', pants: '#151518', h: 1.06, eyeC: '#111' },
-  ogr:   { ad: 'Üniversiteli', skin: '#c99878', hair: '#1a1416', shirt: '#1c1a1e', pants: '#3a3a40', frames: { src: 'dk_ogr_yuru.png', n: 8, h: 1.76, headX: .64, face: [.545, .075, .2, .11] }, kid3d: 'ogr' },
+  ogr:   { ad: 'Anatolian', skin: '#c99878', hair: '#1a1416', shirt: '#1c1a1e', pants: '#3a3a40', frames: { src: 'dk_ogr_yuru.png', n: 8, h: 1.76, headX: .64, face: [.545, .075, .2, .11] }, kid3d: 'ogr' },
   kurye: { ad: 'Kurye', skin: '#b88868', hair: '#1a1a1a', shirt: '#c03020', pants: '#222', beanie: '#c03020' },
   self:  { ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f' },
   zeynep:{ ad: 'Zeynep', photo: 'dk_zeynep.png', skin: '#e2b49a', hair: '#3a2418', shirt: '#1a181c', pants: '#1d1a1f', shoes: '#e8e4dc', print: 'cat', longHair: true, eyes: [[21, 32], [46, 32]], mouth: [35, 52],
@@ -1103,6 +1103,7 @@ const SND = {
   step() { noise(.07, .07, 380, 'lowpass'); },
   talk(pitch) { tone(pitch * rand(.9, 1.15), pitch * .9, .05, .035, 'square'); },
   thud() { tone(130, 45, .25, .45); noise(.2, .35, 500); },
+  slam() { tone(95, 38, .45, .9); tone(180, 60, .2, .5); noise(.35, .9, 900); noise(.12, .6, 2600); tone(60, 30, .7, .4, 'sine', .05); },
   sting() { noise(.9, .7, 1800, 'bandpass', .7); tone(900, 120, .9, .2, 'sawtooth'); tone(1300, 200, .8, .12, 'square'); },
   scream() { noise(1.2, 1, 1500, 'bandpass', .5); noise(1.2, .7, 400); tone(800, 140, 1.1, .3, 'sawtooth'); tone(1200, 220, 1.0, .18, 'square'); },
   glitch() { for (let i = 0; i < 6; i++) { tone(rand(200, 2000), rand(100, 3000), .05, .06, 'square', i * .05); } noise(.35, .25, 3000, 'highpass'); },
@@ -1150,10 +1151,10 @@ const NIGHTS = {
       { m: 8, who: 'cocuk', want: ['sberdi'], pay: 200,
         hi: 'Abla iyi akşamlar! Süper Erdi Bros. var mı? Harçlığımı biriktirdim!',
         thanks: 'Yaşasın! Annem uyumadan eve koşmam lazım!',
-        chat: { q: 'Abla bu oyunda prenses kurtarılıyor mu?', o: [['Hayır, prensesi Erdi kurtarıyor.', 1, 5, 'Erdi mi? O kim ya? Neyse, sağ ol abla!'], ['Prenses kendi kendini kurtarıyor.', 2, 15, 'Vay be! Prenses güçlüymüş! Al abla, bahşiş!'], ['Oyna da gör.', 0, 0, 'Peki...']] } },
+        chat: { q: 'Abla bu oyunda prenses kurtarılıyor mu?', o: [['Hayır, prensesi Erdi kurtarıyor.', 1, 5, 'Erdi mi? Vay be, neyse, sağ ol abla!'], ['Prenses kendi kendini kurtarıyor.', 2, 15, 'Vay be! Prenses güçlüymüş! Al abla, bahşiş!'], ['Oyna da gör.', 0, 0, 'Peki...']] } },
       { m: 40, who: 'ogr', want: ['erdikart'], pay: 250,
         hi: 'Selam! Burası yeniden mi açıldı? Hayırlı olsun!',
-        ask: 'Erdi Kart 64 lazım. Yurtta turnuva var, rezil olmayayım.',
+        ask: 'Erdi Truck Sim lazım. Yurtta turnuva var, rezil olmayayım.',
         thanks: 'Eyvallah! Kazanırsam gelip anlatırım.',
         chat: { q: 'Bu arada... bu dükkân gece hep böyle sessiz mi? Dışarıda tek kişi yok.', o: [['Alışırsın, mahalle sakin.', 1, 0, 'Haklısın, ben kuruntu yapıyorum.'], ['Benden önceki çalışan bir gece ortadan kaybolmuş...', 0, 0, '...Ne? Ciddi misin? Ben kaçtım.'], ['Korktun mu yoksa?', 2, 10, 'Ben mi? Asla! ...Neyse, ben kaçtım.']] } },
       { m: 85, who: 'teyze', want: ['konsol'], pay: 1600,
@@ -1164,7 +1165,7 @@ const NIGHTS = {
         hi: 'ZEYNEP! Duydun mu, Ördek Avcısı 2 çıkmış!!',
         thanks: 'Bu gece uyumuyorum! Ördekler beni bekler!',
         chat: { q: 'Ya bu oyunda ördekleri vuruyor muyuz? Ben ördekleri severim ama...', o: [['Merak etme, sonunda ördekler kazanıyor.', 2, 10, 'Biliyordum! Ördekler her zaman kazanır!'], ['Evet, hepsini vuruyorsun.', -1, 0, '...Hepsini mi? Ben yine de alayım ama içim burkuldu.'], ['Al şunu, git.', 0, 0, 'Bugün pek neşeli değilsin Zeynep.']] } },
-    ], events: [{ m: 285, f: 'ghostBell' }] },
+    ], events: [{ m: 0, f: 'doorSlam', afterClose: true, delay: 1.2 }] },
   2: { title: 'GECE 2', sub: 'Bir şeyler yerinden oynuyor', visits: [
       { m: 6, who: 'kurye', want: ['hafiza', 'kol'], pay: 400,
         hi: 'İyi akşamlar. Bir hafıza kartı ve bir oyun kolu lazım, müşteri acil istiyor.',
@@ -1175,7 +1176,7 @@ const NIGHTS = {
         thanks: 'Sağ ol kızım.',
         chat: { q: 'Dün gece saat 4\'te pencereden baktım. Sen vitrinde durmuş bana el sallıyordun. ...Dükkân kapalıydı ama kızım.', o: [['Ben değildim. Saat 3\'te kapattım.', 0, 0, '...Allah korusun. Ben gidiyorum.'], ['Evet bendim, şaka yaptım.', 1, 0, 'Böyle şaka mı olur kızım, ödüm koptu.']] } },
       { m: 100, who: 'ogr', want: ['aysavas'], pay: 250,
-        hi: 'Selam. Ay Savaşları var mı? Ödevden kaçmam lazım.',
+        hi: 'Selam. Götten Yemek var mı? Ödevden kaçmam lazım.',
         thanks: 'Kurtardın beni. Ya da batırdın, sabah anlarız.',
         chat: { q: 'Bu dükkânı hep merak ederdim. Burada önceden çalışan Necmi abi hiç kimseye depoyu göstermezdi. Sonra bir gün ortadan kayboldu.', o: [['Ben de girmedim daha.', 0, 0, 'Bence girme. Şaka şaka. ...Belki de değil.'], ['Depoda sadece koli var.', 1, 5, 'Hm. Öyle olsun.']] } },
       { m: 160, who: 'erdi', want: ['futbol'], pay: 170,
@@ -1190,7 +1191,7 @@ const NIGHTS = {
     ], events: [{ m: 70, f: 'boxFall' }, { m: 190, f: 'tvName' }] },
   3: { title: 'GECE 3', sub: 'Tanıdık yüzler', visits: [
       { m: 6, who: 'cocuk', want: ['zkombat'], pay: 200,
-        hi: 'Abla yine ben! Zeynep Kombat var mı? Kapağında sana benzeyen biri var!',
+        hi: 'Abla yine ben! Ördekez Kombat var mı? Kapağında sana benzeyen biri var!',
         thanks: 'Teşekkürler abla! Sen de dövüşüyor musun?',
         chat: { q: 'Abla dün gece dükkânın önünden geçtim, içeride biri vardı ama sen değildin.', o: [['Kimdi?', 0, 0, 'Bilmem. Kasada duruyordu. Sana benziyordu ama gülümsüyordu.'], ['Ben buradaydım, yanlış görmüşsün.', 1, 5, 'Tamam abla. İyi geceler!']] } },
       { m: 55, who: 'erdi', fake: true, noBell: true, want: ['bkr0'], pay: 300,
@@ -1216,7 +1217,7 @@ const NIGHTS = {
         chat: { q: 'Necmi kaybolmadan bir gün önce bana dedi ki: "Kasadaki kız gelirse ona söyle, kendine benzeyene kapıyı açmasın."', o: [['Bu ne demek?', 0, 0, 'Bilmiyorum kızım. Ben de anlamadım. Allah korusun.'], ['Onu hiç tanımadım.', 0, 10, 'Tuhaftı ama iyi çocuktu. Al kızım, harçlık.']] } },
       { m: 75, who: 'ogr', fake: true, want: ['erdikart'], pay: 300,
         hi: 'Selam Zeynep. Ben. Ben öğrenciyim. Ödevim var. Ödev.',
-        ask: 'Erdi Kart 64. Yurtta. Turnuva. Kazanacağım. Kazanacağım.',
+        ask: 'Erdi Truck Sim. Yurtta. Turnuva. Kazanacağım. Kazanacağım.',
         thanks: 'Teşekkürler. Görüşürüz. Hep. Görüşürüz.',
         refuse: 'Kapattınız. Anladım. Anladım. Anladım.' },
       { m: 150, who: 'kurye', want: ['ordekavi'], pay: 200,
@@ -1232,7 +1233,7 @@ const NIGHTS = {
   5: { title: 'GECE 5', sub: 'Son vardiya', visits: [
       { m: 10, who: 'ogr', want: ['aysavas'], pay: 200,
         hi: 'Zeynep. Gerçek benim, merak etme. Zil çaldı, değil mi?',
-        ask: 'Ay Savaşları ver. Bu gece seninle burada kalayım mı?',
+        ask: 'Götten Yemek ver. Bu gece seninle burada kalayım mı?',
         thanks: 'Ben dışarıda arabadayım. Bir şey olursa bağır.',
         chat: { q: 'Dün gece buraya benim kılığımda biri gelmiş, Erdi söyledi. Ona ne sattın?', o: [['Hiçbir şey satmadım.', 1, 0, 'İyi. Çok iyi.'], ['Hatırlamıyorum...', 0, 0, 'Zeynep. Bu iyiye işaret değil.']] } },
       { m: 70, who: 'teyze', fake: true, noBell: true, want: ['gunluk'], pay: 500,
@@ -1242,7 +1243,7 @@ const NIGHTS = {
         refuse: 'Kapattın mı? Necmi de kapatmıştı. Bak, şimdi nerede?' },
       { m: 120, who: 'erdi', want: ['zkombat', 'erdikart'], pay: 420,
         hi: 'ZEYNEP! Gerçek Erdi burada! Kanıt: ördekleri seviyorum!',
-        ask: 'Zeynep Kombat ve Erdi Kart 64 lazım. Son gecene özel, hepimiz oynayacağız!',
+        ask: 'Ördekez Kombat ve Erdi Truck Sim lazım. Son gecene özel, hepimiz oynayacağız!',
         thanks: 'Yarın sabah hepimiz burada oyun oynuyoruz, söz!',
         chat: { q: 'Zeynep, sabah olunca bu dükkânı kapatacak mısın? Bence burası... yaşıyor.', o: [['Hayır, artık burası benim. Kalacak.', 2, 20, 'İşte benim Zeynep\'im! Al, ördek pulu, şans getirir.'], ['Bilmiyorum Erdi.', 1, 0, 'Ne karar verirsen yanındayım.']] } },
     ], events: [{ m: 190, f: 'powerCut' }], finale: true },
@@ -1608,6 +1609,8 @@ function takeFromCounter(mesh) {
    ===================================================================== */
 let glitch = 0, darkness = 0, ghost = null;
 const EV = {
+  // dükkân kapanır kapanmaz kapı kendiliğinden açılıp sertçe çarpar
+  doorSlam() { doorCust = 1; SND.creak && SND.creak(); setTimeout(() => { doorCust = 0; setTimeout(() => { doorOpen = 0; SND.slam(); glitch = .35; setTimeout(() => toast('...Kapı kendi kendine çarptı. Dışarıda kimse yok.', 3.5), 500); }, 260); }, 1300); },
   ghostBell() { doorCust = 1; SND.bell(); setTimeout(() => { doorCust = 0; }, 1400); setTimeout(() => toast('...Kimse yok. Rüzgâr olmalı.'), 1500); },
   boxFall() {
     const ids = Object.keys(shelfBoxes).filter(id => N.stock[id] > 0), id = pick(ids), b = shelfBoxes[id][N.stock[id] - 1];
@@ -1899,7 +1902,7 @@ function updateNight(dt, now) {
   // saat yok: dükkân açıkken iç zaman akar (olaylar için), müşteri biri gidince birkaç saniye sonra gelir
   if (n.opened && !n.shopClosed) n.t = Math.min(n.t + dt * (n.cust ? .35 : .8), 300);
   // olaylar
-  for (const e of n.events) if (!e.done && n.opened && (n.t >= e.m || (n.shopClosed && performance.now() > n.closedAt + 6000)) && !dlg) { e.done = true; EV[e.f](); }
+  for (const e of n.events) if (!e.done && n.opened && (e.afterClose ? n.shopClosed && performance.now() > n.closedAt + e.delay * 1000 : (n.t >= e.m || (n.shopClosed && performance.now() > n.closedAt + 6000))) && !dlg) { e.done = true; EV[e.f](); }
   n.events = n.events.filter(e => !e.done);
   // müşteri
   if (n.opened && !n.cust && n.queue.length && n.power) { n.gap -= dt; if (n.gap <= 0) { const v = n.queue.shift(); n.t = Math.max(n.t, v.m); spawnCustomer(v); n.gap = rand(6, 12); } }
