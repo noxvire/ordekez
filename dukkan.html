@@ -429,11 +429,12 @@ box(.2, .08, .26, lam(0x7a1a1a), 0, .04, 0, phone); box(.24, .06, .07, lam(0x6a1
 phone.children.forEach(m => { m.userData = { kind: 'phone' }; inter.push(m); });
 // kedi (geliştirme)
 // kedi köşesi: tezgâhın sağında yerde minder ve mama kabı
-{ const cush = new THREE.Mesh(new THREE.CylinderGeometry(.34, .38, .1, 12), lam(0x7a3a5a)); cush.position.set(3.5, .05, .15); scene.add(cush);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(.33, .06, 6, 14), lam(0x8a4a6a)); rim.rotation.x = Math.PI / 2; rim.position.set(3.5, .11, .15); scene.add(rim);
-  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.09, .07, .06, 10), lam(0xc0c4c8)); bowl.position.set(3.55, .03, .7); scene.add(bowl);
-  box(.12, .01, .12, lam(0x8a5a2a), 3.55, .065, .7);
-  plane(.3, .12, basic({ map: signTex('PAMUK', '#3a2030', '#ffd8e8', 32, 12) }), 3.5, .5, .99, 0, Math.PI).visible = true; }
+const catCorner = new THREE.Group(); catCorner.visible = false; scene.add(catCorner);
+{ const cush = new THREE.Mesh(new THREE.CylinderGeometry(.34, .38, .1, 12), lam(0x7a3a5a)); cush.position.set(3.5, .05, .15); catCorner.add(cush);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(.33, .06, 6, 14), lam(0x8a4a6a)); rim.rotation.x = Math.PI / 2; rim.position.set(3.5, .11, .15); catCorner.add(rim);
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.09, .07, .06, 10), lam(0xc0c4c8)); bowl.position.set(3.55, .03, .7); catCorner.add(bowl);
+  box(.12, .01, .12, lam(0x8a5a2a), 3.55, .065, .7, catCorner);
+  catCorner.add(plane(.3, .12, basic({ map: signTex('PAMUK', '#3a2030', '#ffd8e8', 32, 12) }), 3.5, .5, .99, 0, Math.PI)); }
 const cat = new THREE.Group(); cat.position.set(3.5, .1, .15); cat.rotation.y = -.6; cat.visible = false; scene.add(cat);
 { const cm = lam(0xe8e4dc); box(.34, .16, .16, cm, 0, .1, 0, cat); box(.14, .14, .13, cm, .2, .2, 0, cat); box(.04, .06, .03, cm, .2, .3, .04, cat); box(.04, .06, .03, cm, .2, .3, -.04, cat); box(.18, .03, .03, cm, -.24, .16, 0, cat);
   box(.02, .02, .005, basic({ color: 0x55ff55 }), .27, .22, .04, cat); box(.02, .02, .005, basic({ color: 0x55ff55 }), .27, .22, -.04, cat); }
@@ -959,7 +960,7 @@ const P = { pos: new THREE.Vector3(1.5, 0, -1), yaw: Math.PI, pitch: 0, eye: 1.6
 const keys = {};
 
 function applyUpgrades() {
-  cat.visible = !!S.upg.kedi; neon.visible = !!S.upg.neon; neonL.intensity = S.upg.neon ? 2.5 : 0; mon.visible = !!S.upg.kamera;
+  cat.visible = catCorner.visible = !!S.upg.kedi; neon.visible = !!S.upg.neon; neonL.intensity = S.upg.neon ? 2.5 : 0; mon.visible = !!S.upg.kamera;
   const ci = inter.indexOf(cat.children[0]); if (!cat.visible) cat.children.forEach(m => { const i = inter.indexOf(m); if (i >= 0) inter.splice(i, 1); }); else cat.children.forEach(m => { if (!inter.includes(m)) inter.push(m); });
   for (const t of tubes) t.base = S.upg.lamba ? 7 : 5.5;
 }
