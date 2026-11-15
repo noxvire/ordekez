@@ -8,29 +8,32 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{height:100%;background:#0e0c14;color:#f1ecff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
 body{background:radial-gradient(ellipse at 50% 40%,#2a1f45 0%,#120f1c 60%,#0a0910 100%)}
+body.shake{animation:bshake .5s}
+@keyframes bshake{0%,100%{transform:none}20%{transform:translate(-8px,4px)}40%{transform:translate(7px,-5px)}60%{transform:translate(-5px,-3px)}80%{transform:translate(4px,5px)}}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
-#app{display:grid;grid-template-columns:300px 1fr 330px;height:100%;gap:0}
+#app{display:grid;grid-template-columns:300px 1fr 330px;height:100%}
 @media (max-width:980px){#mid{order:-1}#app{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;overflow-y:auto;height:auto;min-height:100%}html,body{overflow:auto}}
 .panel{background:rgba(10,8,18,.72);border-right:1px solid #2c2442;padding:14px;overflow-y:auto}
 .panel.r{border-right:0;border-left:1px solid #2c2442}
 .panel h2{font-size:13px;letter-spacing:3px;color:#a998d6;margin:4px 0 10px;font-weight:800}
 /* orta */
-#mid{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-height:520px}
-#top{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px}
+#mid{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;min-height:560px}
+#top{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px;gap:8px}
+#top .g{display:flex;gap:8px}
 .back{background:#241d38;border:1px solid #3d3360;padding:8px 14px;border-radius:10px;font-weight:700;font-size:14px}
 .back:hover{background:#30264a}
 #money{font-size:clamp(34px,6vw,58px);font-weight:900;color:#ffd84a;text-shadow:0 3px 0 #6b4a00,0 0 30px rgba(255,200,40,.35);font-variant-numeric:tabular-nums}
 #rates{opacity:.8;font-size:15px;margin-top:4px;text-align:center}
 #rates b{color:#ffd84a}
 #bonus{font-size:13px;color:#8fe39a;margin-top:2px;min-height:18px}
-#btnWrap{position:relative;margin:34px 0 20px}
+#btnWrap{position:relative;margin:30px 0 16px}
 #bigBtn{width:min(280px,64vw);height:min(280px,64vw);border-radius:50%;position:relative;
   background:radial-gradient(circle at 35% 30%,#ffe98a 0%,#ffbf1f 45%,#d98400 80%,#9b5a00 100%);
   box-shadow:0 14px 0 #6b3d00,0 22px 40px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5);
-  transition:transform .06s,box-shadow .06s;display:flex;align-items:center;justify-content:center;font-size:min(130px,30vw)}
-#bigBtn:active,#bigBtn.p{transform:translateY(10px) scale(.97);box-shadow:0 4px 0 #6b3d00,0 8px 20px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5)}
+  transition:transform .06s,box-shadow .06s;display:flex;align-items:center;justify-content:center}
 #bigBtn img{width:54%;height:auto;margin-top:-20%;pointer-events:none;filter:drop-shadow(0 6px 6px rgba(90,50,0,.45));transition:transform .06s}
 #bigBtn.p img{transform:scale(.9) rotate(-4deg)}
+#bigBtn:active,#bigBtn.p{transform:translateY(10px) scale(.97);box-shadow:0 4px 0 #6b3d00,0 8px 20px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5)}
 #bigBtn .lbl{position:absolute;bottom:10%;font-size:clamp(13px,2.4vw,18px);font-weight:900;letter-spacing:3px;color:#5a3300;text-shadow:0 1px 0 rgba(255,255,255,.5)}
 #ring{position:absolute;inset:-18px;border-radius:50%;border:3px dashed rgba(255,216,74,.25);animation:spin 18s linear infinite;pointer-events:none}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -39,7 +42,9 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 @keyframes fl{to{transform:translateY(-90px);opacity:0}}
 #golden{position:absolute;font-size:46px;cursor:pointer;display:none;filter:drop-shadow(0 0 14px gold);animation:bob 1s ease-in-out infinite alternate;z-index:5}
 @keyframes bob{to{transform:translateY(-10px) rotate(8deg)}}
-#frenzy{position:absolute;bottom:22px;font-weight:800;color:#ffd84a;display:none}
+#frenzy{font-weight:800;color:#ffd84a;min-height:22px}
+#myBadges{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:420px;margin-top:6px;font-size:20px;min-height:26px}
+#myBadges span{filter:drop-shadow(0 0 4px rgba(255,216,74,.5))}
 /* yükseltmeler */
 .up{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:#1b1530;border:1px solid #33295a;border-radius:12px;padding:10px;margin-bottom:8px;transition:background .1s,transform .05s}
 .up:hover{background:#251d42}.up:active{transform:scale(.98)}
@@ -57,39 +62,85 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .pk .odds i{display:block;height:100%}
 .pk .ol{display:flex;flex-wrap:wrap;gap:4px 9px;margin-top:6px;font-size:11px;opacity:.85}
 .pk .ol span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px;background:var(--c)}
-#colBtn{width:100%;padding:11px;border-radius:12px;background:#2d2350;border:1px solid #4a3d80;font-weight:800;margin-bottom:12px}
+.sideBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.sb{padding:10px 6px;border-radius:12px;background:#2d2350;border:1px solid #4a3d80;font-weight:800;font-size:14px}
+.sb:hover{background:#382b63}
+.sb.full{grid-column:1/-1}
 /* kartlar */
 .card{--c:#9aa0a6;width:150px;aspect-ratio:3/4.2;border-radius:12px;position:relative;background:#16121f;border:3px solid var(--c);box-shadow:0 0 18px color-mix(in srgb,var(--c) 50%,transparent);overflow:hidden;flex-shrink:0}
 .card .ph{position:absolute;inset:0 0 26% 0;background:#241d38 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:900;color:rgba(255,255,255,.18)}
 .card .nm{position:absolute;left:0;right:0;bottom:0;height:26%;background:linear-gradient(transparent,rgba(0,0,0,.85) 30%);display:flex;flex-direction:column;justify-content:flex-end;padding:6px 8px}
 .card .nm b{font-size:14px;line-height:1.1}.card .nm small{font-size:10px;letter-spacing:2px;font-weight:800;color:var(--c)}
-.card .cnt{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border-radius:8px;padding:1px 7px;font-size:12px;font-weight:800}
+.card .cnt{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border-radius:8px;padding:1px 7px;font-size:12px;font-weight:800;z-index:2}
+.card .gcnt{position:absolute;top:6px;left:6px;background:#ffd84a;color:#3a2600;border-radius:8px;padding:1px 7px;font-size:12px;font-weight:900;z-index:2}
 .card.lock{filter:grayscale(1) brightness(.35);box-shadow:none}
 .card.lock .ph{font-size:60px;color:#555}
 .card.mitik{animation:mit 2s linear infinite}
 @keyframes mit{0%,100%{box-shadow:0 0 24px #ff3d5a}50%{box-shadow:0 0 40px #ff9a3d}}
+.card.gold{border-color:#ffd84a;box-shadow:0 0 26px #ffd84a}
+.card.gold::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,240,170,.55) 45%,transparent 60%);background-size:250% 100%;animation:shine 2.4s linear infinite;pointer-events:none;mix-blend-mode:screen}
+@keyframes shine{from{background-position:150% 0}to{background-position:-100% 0}}
+.card.gold .nm small{color:#ffd84a}
+.card.sm{width:96px;border-width:2px}.card.sm .ph{font-size:34px}.card.sm .nm b{font-size:11px}.card.sm .nm small{font-size:8px;letter-spacing:1px}
+.card.click{cursor:pointer;transition:transform .1s}.card.click:hover{transform:translateY(-4px)}
+.vslot{width:96px;aspect-ratio:3/4.2;border-radius:12px;border:2px dashed #4a3d80;display:flex;align-items:center;justify-content:center;color:#6a5aa0;font-size:12px;text-align:center;padding:6px}
 /* modallar */
 .modal{position:fixed;inset:0;background:rgba(5,3,10,.88);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:100;padding:20px}
 .modal.on{display:flex}
-#open .row{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;perspective:900px}
-.flip{width:170px;aspect-ratio:3/4.2;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.8,.3,1.2);cursor:pointer}
+.box{width:min(1000px,100%);max-height:86vh;overflow-y:auto;background:#130f20;border:1px solid #33295a;border-radius:16px;padding:18px}
+.box h3{font-size:22px;margin-bottom:4px}
+.box .sub{opacity:.75;font-size:14px;margin-bottom:14px}
+.grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.mbtn{margin-top:14px;background:#ffd84a;color:#3a2600;font-weight:900;padding:11px 24px;border-radius:12px;font-size:15px}
+.mbtn.alt{background:#2d2350;color:#f1ecff;border:1px solid #4a3d80}
+.mbtn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center}
+/* paket açma */
+#open .stage{position:relative;width:min(640px,100%);height:330px;display:flex;align-items:center;justify-content:center;perspective:900px}
+.pack{position:absolute;width:170px;height:240px;border-radius:14px;cursor:pointer;background:linear-gradient(160deg,var(--b),var(--a) 70%);border:3px solid var(--b);box-shadow:0 0 30px var(--gl,transparent),0 14px 30px rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;text-align:center;overflow:visible;transition:transform .2s}
+.pack .ic{font-size:64px}.pack .t{font-size:15px;margin-top:6px;text-shadow:0 2px 0 rgba(0,0,0,.5)}
+.pack .top{position:absolute;left:-3px;right:-3px;top:-3px;height:44px;border-radius:14px 14px 0 0;background:inherit;border:3px solid var(--b);border-bottom:2px dashed rgba(255,255,255,.6);transition:transform .5s cubic-bezier(.3,1.4,.5,1),opacity .5s}
+.pack.wobble{animation:wob .35s infinite}
+@keyframes wob{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-4deg) scale(1.03)}75%{transform:rotate(4deg) scale(1.03)}}
+.pack.torn .top{transform:translate(70px,-160px) rotate(35deg);opacity:0}
+.pack.gone{transform:scale(.6) translateY(80px);opacity:0;transition:transform .4s,opacity .4s}
+.flips{display:flex;gap:18px;justify-content:center}
+.fw{position:relative;transition:transform .55s cubic-bezier(.2,.9,.3,1.15),opacity .3s}
+.fw.hide{transform:translateY(60px) scale(.25);opacity:0}
+.flip{width:160px;aspect-ratio:3/4.2;position:relative;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.2,.8,.3,1.2);cursor:pointer}
 .flip.on{transform:rotateY(180deg)}
 .flip>*{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .flip .bk{border-radius:12px;background:repeating-linear-gradient(45deg,#3b2d6b 0 10px,#2c2152 10px 20px);border:3px solid #6a58b0;display:flex;align-items:center;justify-content:center;font-size:54px;box-shadow:0 8px 20px rgba(0,0,0,.5)}
-.flip .bk.glow{animation:shake .4s infinite}
+.flip .bk.glow{box-shadow:0 0 30px var(--gc);animation:shake .4s infinite}
 @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
 .flip .card{width:100%;transform:rotateY(180deg)}
 .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#ffd84a;color:#3a2600;font-weight:900;font-size:12px;padding:2px 10px;border-radius:10px;z-index:3;white-space:nowrap}
-#openTitle{font-size:26px;font-weight:900;margin-bottom:22px;text-align:center}
-#openHint{margin-top:22px;opacity:.75;font-size:14px;min-height:20px}
-.mbtn{margin-top:18px;background:#ffd84a;color:#3a2600;font-weight:900;padding:12px 28px;border-radius:12px;font-size:16px}
-#col .wrap{width:min(1000px,100%);max-height:80vh;overflow-y:auto;background:#130f20;border:1px solid #33295a;border-radius:16px;padding:18px}
-#col .grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
-#col h3{font-size:22px;margin-bottom:4px}
-#col .sub{opacity:.7;font-size:14px;margin-bottom:14px}
-#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#241d38;border:1px solid #4a3d80;padding:12px 18px;border-radius:12px;font-weight:700;transition:transform .3s;z-index:200;max-width:90vw;text-align:center}
+#openTitle{font-size:26px;font-weight:900;margin-bottom:10px;text-align:center}
+#openHint{margin-top:10px;opacity:.75;font-size:14px;min-height:20px;text-align:center}
+@media (max-width:600px){.flip{width:100px}.flips{gap:8px}#open .stage{height:260px}}
+/* detay */
+#det .box{width:min(560px,100%);text-align:center}
+#det .big .card{width:200px;margin:0 auto}
+#det .info{margin:12px 0;font-size:14px;opacity:.85;line-height:1.6}
+/* başarımlar */
+.ach{display:flex;gap:12px;align-items:center;background:#1b1530;border:1px solid #33295a;border-radius:12px;padding:10px 12px;width:min(300px,100%)}
+.ach .i{font-size:30px}.ach b{display:block}.ach small{opacity:.7;font-size:12px}
+.ach .rw{margin-left:auto;font-weight:800;color:#ffd84a;font-size:13px;white-space:nowrap}
+.ach.off{opacity:.4;filter:grayscale(1)}
+#achPop{position:fixed;top:16px;left:50%;transform:translate(-50%,-140px);background:linear-gradient(135deg,#4a3a10,#241d38);border:2px solid #ffd84a;padding:12px 18px;border-radius:14px;z-index:300;display:flex;gap:12px;align-items:center;transition:transform .4s cubic-bezier(.3,1.4,.5,1);box-shadow:0 0 30px rgba(255,216,74,.4)}
+#achPop.on{transform:translate(-50%,0)}
+#achPop .i{font-size:34px}#achPop small{color:#ffd84a;font-weight:800;letter-spacing:2px;font-size:11px}
+/* liderlik */
+table.lb{width:100%;border-collapse:collapse;font-size:15px}
+table.lb th{text-align:left;font-size:12px;letter-spacing:2px;color:#a998d6;padding:8px;border-bottom:1px solid #33295a}
+table.lb td{padding:10px 8px;border-bottom:1px solid #221b38}
+table.lb tr.me td{background:#2a2046}
+table.lb tr.r{cursor:pointer}table.lb tr.r:hover td{background:#211a38}
+table.lb .rk{font-weight:900;width:40px}
+.vrow td{background:#0f0c1a!important}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#241d38;border:1px solid #4a3d80;padding:12px 18px;border-radius:12px;font-weight:700;transition:transform .3s;z-index:400;max-width:90vw;text-align:center}
 #toast.on{transform:translateX(-50%) translateY(0)}
-.burst{position:fixed;inset:0;pointer-events:none;z-index:99;opacity:0;transition:opacity .4s}
+.burst{position:fixed;inset:0;pointer-events:none;z-index:150;opacity:0;transition:opacity .4s}
 </style>
 </head>
 <body>
@@ -102,50 +153,77 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   <main id="mid">
     <div id="top">
       <button class="back" onclick="location.href='index.html'">← Oyunlar</button>
-      <button class="back" id="muteBtn">🔊</button>
+      <div class="g"><button class="back" id="muteBtn">🔊</button></div>
     </div>
     <div id="money">0</div>
     <div id="rates"></div>
     <div id="bonus"></div>
     <div id="btnWrap"><div id="ring"></div><button id="bigBtn" aria-label="Tıkla"><img src="ordek_ikon.png" alt="" draggable="false"><span class="lbl">TIKLA</span></button></div>
     <div id="frenzy"></div>
+    <div id="myBadges" title="Rozetlerin"></div>
     <div id="golden">🌟</div>
   </main>
 
   <aside class="panel r" id="right">
+    <div class="sideBtns">
+      <button class="sb" id="colBtn">📚 Koleksiyon</button>
+      <button class="sb" id="achBtn">🏆 Başarımlar</button>
+      <button class="sb full" id="lbBtn">🥇 Liderlik Tablosu</button>
+    </div>
     <h2>🎴 PAKETLER</h2>
-    <button id="colBtn">📚 Koleksiyon</button>
     <div id="packs"></div>
   </aside>
 </div>
 
 <div class="modal" id="open">
   <div id="openTitle"></div>
-  <div class="row" id="openRow"></div>
-  <div id="openHint">Kartlara tıkla ve çevir</div>
-  <button class="mbtn" id="openOk" style="display:none">Tamam</button>
+  <div class="stage" id="stage"></div>
+  <div id="openHint"></div>
+  <div class="row"><button class="mbtn alt" id="flipAll" style="display:none">Hepsini çevir</button><button class="mbtn" id="openOk" style="display:none">Tamam</button></div>
 </div>
 
-<div class="modal" id="col">
-  <div class="wrap">
-    <h3>📚 Koleksiyon</h3>
-    <div class="sub" id="colSub"></div>
-    <div class="grid" id="colGrid"></div>
-    <div style="text-align:center"><button class="mbtn" onclick="document.getElementById('col').classList.remove('on')">Kapat</button></div>
-  </div>
-</div>
+<div class="modal" id="col"><div class="box">
+  <h3>📚 Koleksiyon</h3>
+  <div class="sub" id="colSub"></div>
+  <div style="margin-bottom:14px"><div style="font-weight:800;font-size:13px;letter-spacing:2px;color:#a998d6;margin-bottom:8px;text-align:center">🖼️ VİTRİNİM (liderlik tablosunda herkes görür)</div><div class="row" id="myVitrin"></div></div>
+  <div class="row" style="margin-bottom:14px"><button class="mbtn alt" id="sellAll" style="margin-top:0">💰 Tüm kopyaları sat</button></div>
+  <div class="grid" id="colGrid"></div>
+  <div style="text-align:center"><button class="mbtn" data-close="col">Kapat</button></div>
+</div></div>
+
+<div class="modal" id="det"><div class="box">
+  <div class="big" id="detCard"></div>
+  <div class="info" id="detInfo"></div>
+  <div class="row" id="detBtns"></div>
+  <div style="text-align:center"><button class="mbtn alt" data-close="det">Geri</button></div>
+</div></div>
+
+<div class="modal" id="achM"><div class="box">
+  <h3>🏆 Başarımlar</h3>
+  <div class="sub" id="achSub"></div>
+  <div class="grid" id="achGrid"></div>
+  <div style="text-align:center"><button class="mbtn" data-close="achM">Kapat</button></div>
+</div></div>
+
+<div class="modal" id="lbM"><div class="box">
+  <h3>🥇 Liderlik Tablosu</h3>
+  <div class="sub" id="lbSub">Sıralama toplam kazanılan paraya göre. Bir oyuncuya tıkla, vitrinini gör.</div>
+  <div id="lbBody">Yükleniyor…</div>
+  <div style="text-align:center"><button class="mbtn" data-close="lbM">Kapat</button></div>
+</div></div>
+
+<div id="achPop"><span class="i"></span><div><small>BAŞARIM AÇILDI</small><div><b></b></div><div class="rw" style="font-size:13px;color:#ffd84a"></div></div></div>
 <div id="toast"></div>
 <div class="burst" id="burst"></div>
 
 <script>
 /* ============ AYARLAR ============ */
-// Rarity'ler
 const RAR = {
-  siradan:  { ad: 'SIRADAN',  c: '#9aa0a6', bonus: .01 },
-  nadir:    { ad: 'NADİR',    c: '#3d9bff', bonus: .025 },
-  epik:     { ad: 'EPİK',     c: '#b04dff', bonus: .06 },
-  efsanevi: { ad: 'EFSANEVİ', c: '#ffb020', bonus: .15 },
-  mitik:    { ad: 'MİTİK',    c: '#ff3d5a', bonus: .35 },
+  siradan:  { ad: 'SIRADAN',  c: '#9aa0a6', sat: 150,    birlestir: 50 },
+  nadir:    { ad: 'NADİR',    c: '#3d9bff', sat: 800,    birlestir: 30 },
+  epik:     { ad: 'EPİK',     c: '#b04dff', sat: 4000,   birlestir: 20 },
+  efsanevi: { ad: 'EFSANEVİ', c: '#ffb020', sat: 25000,  birlestir: 10 },
+  mitik:    { ad: 'MİTİK',    c: '#ff3d5a', sat: 150000, birlestir: 3 },
 };
 const RORDER = ['siradan', 'nadir', 'epik', 'efsanevi', 'mitik'];
 // KARTLAR: fotoğraflar gelince img: 'tk_xxx.jpg' eklenecek
@@ -165,17 +243,16 @@ const CARDS = [
 ];
 // PAKETLER: fiyat + rarity olasılıkları (%), her paket 3 kart
 const PACKS = [
-  { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 10000,       a: '#3a3226', b: '#7a6a50', o: [72, 22, 5, 0.9, 0.1] },
-  { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 150000,      a: '#30384a', b: '#9fb2d0', o: [45, 35, 15, 4.5, 0.5] },
-  { id: 'altin',   ad: 'Altın Paket',   ic: '🥇', fiyat: 2500000,     a: '#4a3a10', b: '#ffcf40', o: [18, 36, 30, 13, 3] },
-  { id: 'elmas',   ad: 'Elmas Paket',   ic: '💎', fiyat: 40000000,    a: '#123848', b: '#58e0ff', o: [0, 22, 42, 28, 8] },
+  { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 10000,     a: '#3a3226', b: '#7a6a50', o: [72, 22, 5, 0.9, 0.1] },
+  { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 150000,    a: '#30384a', b: '#9fb2d0', o: [45, 35, 15, 4.5, 0.5] },
+  { id: 'altin',   ad: 'Altın Paket',   ic: '🥇', fiyat: 2500000,   a: '#4a3a10', b: '#ffcf40', o: [18, 36, 30, 13, 3] },
+  { id: 'elmas',   ad: 'Elmas Paket',   ic: '💎', fiyat: 40000000,  a: '#123848', b: '#58e0ff', o: [0, 22, 42, 28, 8] },
   { id: 'ordekez', ad: 'Ördekez Paketi', ic: '🦆', fiyat: 750000000, a: '#4a1020', b: '#ff4d6d', o: [0, 0, 35, 45, 20] },
 ];
-// GELİŞTİRMELER
 const UPS = [
   { id: 'parmak', ad: 'Güçlü Parmak',  ic: '👆', d: 'Her tıklama +1 para',                base: 60,     k: 1.65 },
   { id: 'oto',    ad: 'Oto Tıklayıcı', ic: '🤖', d: 'Robot her 5 saniyede seviyesi kadar para verir (Sv 2 = 5 sn\'de 2)', base: 600, k: 1.85 },
-  { id: 'hiz',    ad: 'Hızlı Robot',   ic: '⚡', d: 'Robot %15 daha sık çalışır',     base: 12000,  k: 3, max: 10 },
+  { id: 'hiz',    ad: 'Hızlı Robot',   ic: '⚡', d: 'Robot %15 daha sık çalışır',           base: 12000,  k: 3, max: 10 },
   { id: 'krit',   ad: 'Kritik Tık',    ic: '💥', d: '%2 şansla tıklama ×5 verir',           base: 4000,   k: 2.4, max: 10 },
   { id: 'altin',  ad: 'Altın Ördek',   ic: '🌟', d: 'Altın ördek daha sık çıkar (yakala: 15 sn ×5)', base: 30000, k: 3.2, max: 8 },
   { id: 'carpan', ad: 'Ördek Çarpanı', ic: '✖️', d: 'Tüm kazanç ×2',                       base: 500000, k: 18 },
@@ -183,9 +260,9 @@ const UPS = [
 
 /* ============ KAYIT ============ */
 const KEY = 'tk_save';
-let S = { para: 0, toplam: 0, tik: 0, lv: {}, kart: {}, son: Date.now(), ses: 1 };
+let S = { para: 0, toplam: 0, tik: 0, lv: {}, kart: {}, altin: {}, rozet: {}, vitrin: [], paket: 0, sat: 0, birles: 0, gold: 0, krit: 0, son: Date.now(), ses: 1 };
 try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && o.v === 2) S = Object.assign(S, o); } catch (e) {}
-S.v = 2;   // ekonomi değişti: eski (kolay) kayıtlar sıfırlanır
+S.v = 2;
 const save = () => { S.son = Date.now(); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
 /* ============ HESAPLAR ============ */
@@ -194,11 +271,15 @@ const upCost = u => Math.ceil(u.base * Math.pow(u.k, lv(u.id)));
 let frenzyT = 0;
 const mult = () => Math.pow(2, lv('carpan')) * (frenzyT > 0 ? 5 : 1);
 const perClick = () => (1 + lv('parmak')) * mult();
-const autoInt = () => 5 / (1 + .15 * lv('hiz'));                       // robot kaç saniyede bir çalışır
-const autoRate = () => lv('oto') ? 1 / autoInt() : 0;                   // robot tıkı / sn            // tıklama/sn
-const perAuto = () => lv('oto') * mult();                                         // robot tıkı: tıklama gücünden bağımsız 1 para (× çarpanlar)
+const autoInt = () => 5 / (1 + .15 * lv('hiz'));
+const autoRate = () => lv('oto') ? 1 / autoInt() : 0;
+const perAuto = () => lv('oto') * mult();
 const perSec = () => autoRate() * perAuto();
 const critCh = () => .02 * lv('krit');
+const card = id => CARDS.find(c => c.id === id);
+const owned = id => (S.kart[id] || 0) + (S.altin[id] || 0) > 0;
+const ownedCount = () => CARDS.filter(c => owned(c.id)).length;
+const goldCount = () => CARDS.filter(c => S.altin[c.id]).length;
 
 function fmt(n) {
   n = Math.floor(n); if (n < 1000) return String(n);
@@ -206,6 +287,7 @@ function fmt(n) {
   while (x >= 1000 && i < u.length - 1) { x /= 1000; i++; }
   return (x < 10 ? x.toFixed(2) : x < 100 ? x.toFixed(1) : Math.floor(x)) + ' ' + u[i];
 }
+const $ = id => document.getElementById(id);
 
 /* ============ SES ============ */
 let AC = null;
@@ -214,15 +296,16 @@ function beep(f, d = .06, type = 'square', v = .05, slide = 0) {
   try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; if (slide) o.frequency.exponentialRampToValueAtTime(f * slide, AC.currentTime + d);
     g.gain.setValueAtTime(v, AC.currentTime); g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime + d); } catch (e) {}
 }
-const $ = id => document.getElementById(id);
+function noise(d = .25, v = .08) { if (!S.ses) return; try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const b = AC.createBuffer(1, AC.sampleRate * d, AC.sampleRate), ch = b.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length); const s = AC.createBufferSource(), g = AC.createGain(), f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1500; g.gain.value = v; s.buffer = b; s.connect(f).connect(g).connect(AC.destination); s.start(); } catch (e) {} }
 $('muteBtn').onclick = () => { S.ses = S.ses ? 0 : 1; $('muteBtn').textContent = S.ses ? '🔊' : '🔇'; save(); };
 $('muteBtn').textContent = S.ses ? '🔊' : '🔇';
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => $(b.dataset.close).classList.remove('on'));
 
 /* ============ TIKLAMA ============ */
 function gain(x) { S.para += x; S.toplam += x; }
 function floatText(x, y, txt, crit) { const e = document.createElement('div'); e.className = 'fl' + (crit ? ' crit' : ''); e.textContent = txt; e.style.left = (x - 20 + Math.random() * 40) + 'px'; e.style.top = (y - 30) + 'px'; document.body.appendChild(e); setTimeout(() => e.remove(), 900); }
 function doClick(x, y) {
-  let v = perClick(), crit = Math.random() < critCh(); if (crit) v *= 5;
+  let v = perClick(), crit = Math.random() < critCh(); if (crit) { v *= 5; S.krit++; }
   gain(v); S.tik++; floatText(x, y, '+' + fmt(v), crit);
   beep(crit ? 880 : 520 + Math.random() * 80, crit ? .12 : .05, 'square', crit ? .07 : .04, crit ? 1.5 : 1.2);
   const b = $('bigBtn'); b.classList.add('p'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('p'), 70);
@@ -243,6 +326,15 @@ function buyUp(u) {
   if (u.id === 'altin') scheduleGolden(); save(); refresh();
 }
 
+/* ============ KART GÖRÜNÜMÜ ============ */
+function cardHTML(c, o = {}) {
+  const R = RAR[c.r], lock = o.lock, gold = o.gold;
+  return `<div class="card ${o.sm ? 'sm' : ''} ${lock ? 'lock' : ''} ${gold ? 'gold' : c.r === 'mitik' && !lock ? 'mitik' : ''} ${o.click ? 'click' : ''}" style="--c:${R.c}" ${o.click ? `data-card="${c.id}"` : ''}>
+    <div class="ph" style="${c.img && !lock ? `background-image:url('${c.img}')` : ''}">${lock ? '?' : c.img ? '' : c.ad.replace(/\D/g, '') || '★'}</div>
+    ${o.n > 1 ? `<span class="cnt">×${o.n}</span>` : ''}${o.g ? `<span class="gcnt">★${o.g > 1 ? '×' + o.g : ''}</span>` : ''}
+    <div class="nm"><small>${gold ? 'ALTIN ' : ''}${R.ad}</small><b>${lock ? '???' : c.ad}</b></div></div>`;
+}
+
 /* ============ PAKETLER ============ */
 function buildPacks() {
   $('packs').innerHTML = PACKS.map(p => `<button class="pk" data-p="${p.id}" style="--a:${p.a};--b:${p.b}">
@@ -256,42 +348,176 @@ function rollRarity(o) { let r = Math.random() * 100; for (let i = 0; i < o.leng
 function rollCard(o) { let r = rollRarity(o), pool = CARDS.filter(c => c.r === r);
   for (let i = RORDER.indexOf(r); !pool.length && i >= 0; i--) pool = CARDS.filter(c => c.r === RORDER[i]);
   return pool[Math.floor(Math.random() * pool.length)]; }
-function cardHTML(c, n, lock) {
-  const R = RAR[c.r];
-  return `<div class="card ${lock ? 'lock' : ''} ${c.r === 'mitik' && !lock ? 'mitik' : ''}" style="--c:${R.c}">
-    <div class="ph" style="${c.img && !lock ? `background-image:url('${c.img}')` : ''}">${lock ? '?' : c.img ? '' : c.ad.replace(/\D/g, '') || '★'}</div>
-    ${n > 1 ? `<span class="cnt">×${n}</span>` : ''}
-    <div class="nm"><small>${R.ad}</small><b>${lock ? '???' : c.ad}</b></div></div>`;
-}
 function buyPack(p) {
   if (S.para < p.fiyat) { beep(140, .12, 'sawtooth', .04); toast(`Bu paket için ${fmt(p.fiyat - S.para)} daha lazım.`); return; }
-  S.para -= p.fiyat; const got = [0, 1, 2].map(() => rollCard(p.o));
-  const isNew = got.map(c => !S.kart[c.id]); got.forEach(c => S.kart[c.id] = (S.kart[c.id] || 0) + 1); save(); refresh();
-  $('openTitle').textContent = `${p.ic} ${p.ad}`;
-  $('openRow').innerHTML = got.map((c, i) => `<div style="position:relative"><div class="flip" data-i="${i}"><div class="bk ${RORDER.indexOf(c.r) >= 3 ? 'glow' : ''}">🦆</div>${cardHTML(c, 0, false)}</div></div>`).join('');
-  $('openOk').style.display = 'none'; $('openHint').textContent = 'Kartlara tıkla ve çevir'; $('open').classList.add('on');
-  let flipped = 0;
-  $('openRow').querySelectorAll('.flip').forEach(f => f.onclick = () => {
-    if (f.classList.contains('on')) return; f.classList.add('on'); flipped++;
+  S.para -= p.fiyat; S.paket++;
+  const got = [0, 1, 2].map(() => rollCard(p.o)), isNew = got.map(c => !owned(c.id));
+  got.forEach(c => S.kart[c.id] = (S.kart[c.id] || 0) + 1); save(); refresh(); checkAch();
+  const best = Math.max(...got.map(c => RORDER.indexOf(c.r))), bc = RAR[RORDER[best]].c;
+  $('openTitle').textContent = `${p.ic} ${p.ad}`; $('openOk').style.display = 'none'; $('flipAll').style.display = 'none';
+  $('openHint').textContent = 'Pakete tıkla ve yırt!';
+  $('stage').innerHTML = `<div class="pack wobble" id="pack" style="--a:${p.a};--b:${p.b};--gl:${best >= 3 ? bc : 'transparent'}"><div class="top"></div><div class="ic">${p.ic}</div><div class="t">${p.ad}</div></div>
+    <div class="flips" id="flips">${got.map((c, i) => `<div class="fw hide" style="transition-delay:${i * .12}s"><div class="flip" data-i="${i}"><div class="bk ${RORDER.indexOf(c.r) >= 2 ? 'glow' : ''}" style="--gc:${RAR[c.r].c}">🦆</div>${cardHTML(c)}</div></div>`).join('')}</div>`;
+  $('open').classList.add('on');
+  let torn = false, flipped = 0;
+  const tear = () => {
+    if (torn) return; torn = true; const pk = $('pack'); pk.classList.remove('wobble'); pk.classList.add('torn'); noise(.3, .12); beep(300, .2, 'sawtooth', .05, 2.5);
+    if (best >= 3) flash(bc);
+    setTimeout(() => { pk.classList.add('gone'); document.querySelectorAll('#flips .fw').forEach(f => f.classList.remove('hide')); [520, 660, 780].forEach((f, k) => setTimeout(() => beep(f, .08, 'triangle', .05), k * 120)); }, 450);
+    setTimeout(() => { $('openHint').textContent = 'Kartlara tıkla ve çevir'; $('flipAll').style.display = ''; }, 900);
+  };
+  $('pack').onclick = tear;
+  const flipOne = f => {
+    if (!torn || f.classList.contains('on')) return; f.classList.add('on'); flipped++;
     const i = +f.dataset.i, c = got[i], ri = RORDER.indexOf(c.r);
     [440, 554, 659, 880, 1175].slice(0, ri + 1).forEach((fr, k) => setTimeout(() => beep(fr, .14, 'triangle', .07), k * 80));
     if (ri >= 3) flash(RAR[c.r].c);
-    if (isNew[i]) { const t = document.createElement('div'); t.className = 'tag'; t.textContent = 'YENİ!'; f.parentNode.appendChild(t); }
-    else { const t = document.createElement('div'); t.className = 'tag'; t.style.background = '#a998d6'; t.textContent = 'KOPYA'; f.parentNode.appendChild(t); }
-    if (flipped === 3) { $('openOk').style.display = ''; $('openHint').textContent = 'Kartlar koleksiyonuna eklendi.'; }
-  });
+    if (ri === 4) { document.body.classList.remove('shake'); void document.body.offsetWidth; document.body.classList.add('shake'); noise(.6, .15); }
+    const t = document.createElement('div'); t.className = 'tag';
+    if (isNew[i]) t.textContent = 'YENİ!'; else { t.style.background = '#a998d6'; t.textContent = 'KOPYA'; }
+    f.parentNode.appendChild(t);
+    if (flipped === 3) { $('openOk').style.display = ''; $('flipAll').style.display = 'none'; $('openHint').textContent = 'Kartlar koleksiyonuna eklendi.'; }
+  };
+  document.querySelectorAll('#flips .flip').forEach(f => f.onclick = () => flipOne(f));
+  $('flipAll').onclick = () => document.querySelectorAll('#flips .flip').forEach((f, k) => setTimeout(() => flipOne(f), k * 250));
 }
 $('openOk').onclick = () => $('open').classList.remove('on');
 function flash(c) { const b = $('burst'); b.style.background = `radial-gradient(circle,${c}aa,transparent 70%)`; b.style.opacity = 1; setTimeout(() => b.style.opacity = 0, 350); }
 
-/* ============ KOLEKSİYON ============ */
-$('colBtn').onclick = () => {
-  const have = CARDS.filter(c => S.kart[c.id]).length;
-  $('colSub').innerHTML = `${have} / ${CARDS.length} kart toplandı`;
+/* ============ KOLEKSİYON / SATIŞ / BİRLEŞTİRME / VİTRİN ============ */
+function openCol() {
+  $('colSub').innerHTML = `${ownedCount()} / ${CARDS.length} kart · ⭐ ${goldCount()} altın kart · Karta tıkla: sat, birleştir, vitrine koy`;
   const sorted = [...CARDS].sort((a, b) => RORDER.indexOf(a.r) - RORDER.indexOf(b.r));
-  $('colGrid').innerHTML = sorted.map(c => cardHTML(c, S.kart[c.id] || 0, !S.kart[c.id])).join('');
+  $('colGrid').innerHTML = sorted.map(c => owned(c.id) ? cardHTML(c, { n: S.kart[c.id] || 0, g: S.altin[c.id] || 0, gold: !S.kart[c.id] && S.altin[c.id], click: 1 }) : cardHTML(c, { lock: 1 })).join('');
+  $('colGrid').querySelectorAll('[data-card]').forEach(e => e.onclick = () => openDet(e.dataset.card));
+  renderVitrin(); const tot = sellAllValue(); $('sellAll').textContent = `💰 Tüm kopyaları sat (${fmt(tot)})`; $('sellAll').disabled = !tot;
   $('col').classList.add('on');
+}
+function renderVitrin() {
+  S.vitrin = S.vitrin.filter(v => { const [g, id] = v.split(':'); return card(id) && (g === 'g' ? S.altin[id] : S.kart[id]); });
+  $('myVitrin').innerHTML = [0, 1, 2].map(i => { const v = S.vitrin[i]; if (!v) return `<div class="vslot">Boş<br>Karta tıkla → Vitrine koy</div>`; const [g, id] = v.split(':'); return cardHTML(card(id), { sm: 1, gold: g === 'g' }); }).join('');
+}
+const copies = id => Math.max(0, (S.kart[id] || 0) - 1);
+const sellAllValue = () => CARDS.reduce((a, c) => a + copies(c.id) * RAR[c.r].sat, 0);
+$('colBtn').onclick = openCol;
+$('sellAll').onclick = () => {
+  const tot = sellAllValue(); if (!tot) return;
+  if (!confirm(`Bütün kopya kartlar satılsın mı? (Her karttan 1 tane kalır)\nKazanç: ${fmt(tot)} 🪙`)) return;
+  let n = 0; CARDS.forEach(c => { n += copies(c.id); if (S.kart[c.id] > 1) S.kart[c.id] = 1; });
+  S.para += tot; S.sat += n; coin(); save(); refresh(); checkAch(); openCol(); toast(`${n} kopya satıldı: +${fmt(tot)} 🪙`);
 };
+function coin() { [880, 1320].forEach((f, k) => setTimeout(() => beep(f, .08, 'square', .05), k * 60)); }
+function openDet(id) {
+  const c = card(id), R = RAR[c.r], n = S.kart[id] || 0, g = S.altin[id] || 0, cp = copies(id), need = R.birlestir;
+  $('detCard').innerHTML = `<div class="row">${n ? cardHTML(c, { n }) : ''}${g ? cardHTML(c, { gold: 1, n: g }) : ''}</div>`;
+  $('detInfo').innerHTML = `<b style="color:${R.c}">${R.ad}</b> · Elinde <b>${n}</b> normal${g ? `, <b style="color:#ffd84a">${g}</b> altın` : ''}<br>
+    Kopya satış fiyatı: <b style="color:#ffd84a">${fmt(R.sat)}</b> / adet<br>
+    Birleştirme: <b>${need}</b> aynı kart → <b style="color:#ffd84a">1 Altın ${c.ad}</b> (${Math.min(n, need)}/${need})`;
+  const inV = t => S.vitrin.includes(t + ':' + id), full = S.vitrin.length >= 3;
+  const btns = [
+    `<button class="mbtn" data-a="s1" ${cp ? '' : 'disabled'}>💰 1 kopya sat (+${fmt(R.sat)})</button>`,
+    `<button class="mbtn" data-a="sa" ${cp > 1 ? '' : 'disabled'}>💰 ${cp} kopyayı sat (+${fmt(cp * R.sat)})</button>`,
+    `<button class="mbtn" data-a="m" ${n >= need ? '' : 'disabled'}>✨ Birleştir (${need} → 1 altın)</button>`,
+  ];
+  if (n) btns.push(`<button class="mbtn alt" data-a="vn" ${!inV('n') && full ? 'disabled' : ''}>${inV('n') ? '🖼️ Vitrinden çıkar' : '🖼️ Vitrine koy'}</button>`);
+  if (g) btns.push(`<button class="mbtn alt" data-a="vg" ${!inV('g') && full ? 'disabled' : ''}>${inV('g') ? '🖼️ Altını vitrinden çıkar' : '🖼️ Altını vitrine koy'}</button>`);
+  $('detBtns').innerHTML = btns.join('');
+  $('detBtns').querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if (a === 's1' && cp) { S.kart[id]--; S.para += R.sat; S.sat++; coin(); }
+    if (a === 'sa' && cp) { S.kart[id] = 1; S.para += cp * R.sat; S.sat += cp; coin(); }
+    if (a === 'm' && n >= need) {
+      S.kart[id] -= need; S.altin[id] = g + 1; S.birles++; flash('#ffd84a');
+      [523, 659, 784, 1046, 1318].forEach((f, k) => setTimeout(() => beep(f, .15, 'triangle', .07), k * 90)); toast(`✨ Altın ${c.ad} oluştu!`);
+    }
+    if (a === 'vn' || a === 'vg') { const t = (a === 'vg' ? 'g' : 'n') + ':' + id; if (S.vitrin.includes(t)) S.vitrin = S.vitrin.filter(x => x !== t); else if (S.vitrin.length < 3) S.vitrin.push(t); }
+    save(); refresh(); checkAch(); pushProfile(true); openCol();
+    if (owned(id)) openDet(id); else $('det').classList.remove('on');
+  });
+  $('det').classList.add('on');
+}
+
+/* ============ BAŞARIMLAR ============ */
+const RI = r => RORDER.indexOf(r);
+const hasR = r => CARDS.some(c => c.r === r && owned(c.id));
+const ACH = [
+  { id: 't100',   i: '👆', ad: 'Isınma Turu',      d: '100 kez tıkla',                  odul: 200,      ok: () => S.tik >= 100 },
+  { id: 't1k',    i: '✋', ad: 'Parmak Kası',      d: '1.000 kez tıkla',                odul: 3000,     ok: () => S.tik >= 1000 },
+  { id: 't10k',   i: '🦾', ad: 'Demir Parmak',     d: '10.000 kez tıkla',               odul: 60000,    ok: () => S.tik >= 10000 },
+  { id: 'p1k',    i: '🪙', ad: 'İlk Birikim',      d: 'Toplam 1.000 para kazan',        odul: 300,      ok: () => S.toplam >= 1e3 },
+  { id: 'p100k',  i: '💰', ad: 'Cebi Dolu',        d: 'Toplam 100 bin para kazan',      odul: 15000,    ok: () => S.toplam >= 1e5 },
+  { id: 'p10m',   i: '🏦', ad: 'Ördek Bankası',    d: 'Toplam 10 milyon para kazan',    odul: 800000,   ok: () => S.toplam >= 1e7 },
+  { id: 'p1b',    i: '👑', ad: 'Ördek Kral',       d: 'Toplam 1 milyar para kazan',     odul: 50000000, ok: () => S.toplam >= 1e9 },
+  { id: 'robot',  i: '🤖', ad: 'Robot Ordusu',     d: 'Oto Tıklayıcı 10. seviye',       odul: 20000,    ok: () => lv('oto') >= 10 },
+  { id: 'krit',   i: '💥', ad: 'Kritik Usta',      d: '100 kritik tık',                 odul: 10000,    ok: () => S.krit >= 100 },
+  { id: 'gold',   i: '🌟', ad: 'Altın Avcısı',     d: 'Altın ördeği 5 kez yakala',      odul: 25000,    ok: () => S.gold >= 5 },
+  { id: 'pk1',    i: '📦', ad: 'İlk Paket',        d: 'İlk paketini aç',                odul: 2000,     ok: () => S.paket >= 1 },
+  { id: 'pk25',   i: '🎁', ad: 'Paket Bağımlısı',  d: '25 paket aç',                    odul: 100000,   ok: () => S.paket >= 25 },
+  { id: 'r2',     i: '🔷', ad: 'Nadir Bulucu',     d: 'Bir NADİR kart bul',             odul: 1000,     ok: () => hasR('nadir') },
+  { id: 'r3',     i: '🟣', ad: 'Epik An',          d: 'Bir EPİK kart bul',              odul: 5000,     ok: () => hasR('epik') },
+  { id: 'r4',     i: '🔶', ad: 'Efsane Doğdu',     d: 'Bir EFSANEVİ kart bul',          odul: 50000,    ok: () => hasR('efsanevi') },
+  { id: 'r5',     i: '🔴', ad: 'MİTİK!',           d: 'Bir MİTİK kart bul',             odul: 300000,   ok: () => hasR('mitik') },
+  { id: 'yari',   i: '📗', ad: 'Yarı Yol',         d: 'Koleksiyonun yarısını topla',    odul: 40000,    ok: () => ownedCount() >= Math.ceil(CARDS.length / 2) },
+  { id: 'tam',    i: '📚', ad: 'Tam Koleksiyon',   d: 'Bütün kartları topla',           odul: 5000000,  ok: () => ownedCount() === CARDS.length },
+  { id: 'sat',    i: '🏷️', ad: 'Tüccar',           d: 'İlk kopya kartını sat',          odul: 500,      ok: () => S.sat >= 1 },
+  { id: 'sat100', i: '🧾', ad: 'Pazarcı',          d: '100 kopya kart sat',             odul: 30000,    ok: () => S.sat >= 100 },
+  { id: 'birl',   i: '✨', ad: 'Simyacı',          d: 'İlk altın kartını birleştir',    odul: 20000,    ok: () => S.birles >= 1 },
+  { id: 'altin3', i: '🏅', ad: 'Altın Koleksiyon', d: '3 farklı altın kart',            odul: 500000,   ok: () => goldCount() >= 3 },
+  { id: 'vitrin', i: '🖼️', ad: 'Sergici',          d: 'Vitrinini 3 kartla doldur',      odul: 5000,     ok: () => S.vitrin.length >= 3 },
+];
+const achQ = []; let achBusy = false;
+function checkAch() {
+  for (const a of ACH) if (!S.rozet[a.id] && a.ok()) { S.rozet[a.id] = Date.now(); S.para += a.odul; S.toplam += a.odul; achQ.push(a); }
+  if (achQ.length) { save(); refresh(); showAchPop(); }
+}
+function showAchPop() {
+  if (achBusy || !achQ.length) return; achBusy = true; const a = achQ.shift(), p = $('achPop');
+  p.querySelector('.i').textContent = a.i; p.querySelector('b').textContent = a.ad; p.querySelector('.rw').textContent = `${a.d} · +${fmt(a.odul)} 🪙`;
+  p.classList.add('on'); [784, 988, 1175, 1568].forEach((f, k) => setTimeout(() => beep(f, .12, 'triangle', .06), k * 90));
+  setTimeout(() => { p.classList.remove('on'); setTimeout(() => { achBusy = false; showAchPop(); }, 450); }, 2600);
+}
+$('achBtn').onclick = () => {
+  const got = ACH.filter(a => S.rozet[a.id]).length;
+  $('achSub').textContent = `${got} / ${ACH.length} başarım · Açtığın her başarım bir rozet verir ve liderlik tablosunda görünür.`;
+  $('achGrid').innerHTML = ACH.map(a => `<div class="ach ${S.rozet[a.id] ? '' : 'off'}"><span class="i">${a.i}</span><div><b>${a.ad}</b><small>${a.d}</small></div><span class="rw">+${fmt(a.odul)}</span></div>`).join('');
+  $('achM').classList.add('on');
+};
+
+/* ============ LİDERLİK TABLOSU (Supabase) ============ */
+const SB_URL = 'https://servvglgsudtjouqknvx.supabase.co', SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
+const token = () => { try { return localStorage.getItem('ordekez_token'); } catch (e) { return null; } };
+const me = () => { try { return localStorage.getItem('ordekez_user'); } catch (e) { return null; } };
+async function rpc(fn, args, keep) {
+  const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', keepalive: !!keep, headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) });
+  const t = await r.text(); let d = null; try { d = t ? JSON.parse(t) : null; } catch (e) {}
+  if (!r.ok) throw new Error((d && d.message) || 'Sunucu hatası'); return d;
+}
+let lastPush = '', pushT = 0;
+function profilePayload() { return { p_token: token(), p_toplam: Math.floor(S.toplam), p_kart: ownedCount(), p_altin: goldCount(), p_rozet: Object.keys(S.rozet).length, p_vitrin: S.vitrin }; }
+function pushProfile(force, keep) {
+  if (!token()) return; const p = profilePayload(), key = JSON.stringify({ ...p, p_toplam: Math.floor(p.p_toplam / 100) });
+  if (!force && key === lastPush) return; lastPush = key; rpc('tk_profil_kaydet', p, keep).catch(() => { lastPush = ''; });
+}
+$('lbBtn').onclick = async () => {
+  $('lbM').classList.add('on'); $('lbBody').textContent = 'Yükleniyor…';
+  if (!token()) $('lbSub').innerHTML = '⚠️ Tabloya girmek için ana sayfadan <b>giriş yap</b>. Şimdilik sadece başkalarını görebilirsin.';
+  else { $('lbSub').textContent = 'Sıralama toplam kazanılan paraya göre. Bir oyuncuya tıkla, vitrinini gör.'; pushProfile(true); await new Promise(r => setTimeout(r, 400)); }
+  try {
+    const rows = await rpc('tk_tablo', { p_limit: 50 }) || [];
+    if (!rows.length) { $('lbBody').innerHTML = '<p style="text-align:center;opacity:.7;padding:20px">Henüz kimse yok. İlk sen ol!</p>'; return; }
+    const medal = i => ['🥇', '🥈', '🥉'][i] || (i + 1);
+    $('lbBody').innerHTML = `<table class="lb"><tr><th>#</th><th>OYUNCU</th><th>TOPLAM</th><th>KART</th><th>🏆</th></tr>${rows.map((r, i) => `<tr class="r ${r.kullanici_adi === me() ? 'me' : ''}" data-i="${i}"><td class="rk">${medal(i)}</td><td><b>${esc(r.kullanici_adi)}</b></td><td style="color:#ffd84a;font-weight:800">${fmt(+r.toplam)}</td><td>${r.kart}/${CARDS.length}${r.altin ? ` <span style="color:#ffd84a">★${r.altin}</span>` : ''}</td><td>${r.rozet}</td></tr>`).join('')}</table>`;
+    $('lbBody').querySelectorAll('tr.r').forEach(tr => tr.onclick = () => {
+      const nx = tr.nextElementSibling; if (nx && nx.classList.contains('vrow')) { nx.remove(); return; }
+      $('lbBody').querySelectorAll('.vrow').forEach(x => x.remove());
+      const v = (rows[+tr.dataset.i].vitrin || []).filter(x => typeof x === 'string' && card(x.split(':')[1]));
+      const vr = document.createElement('tr'); vr.className = 'vrow';
+      vr.innerHTML = `<td colspan="5"><div style="font-size:12px;letter-spacing:2px;color:#a998d6;font-weight:800;text-align:center;margin-bottom:8px">🖼️ ${esc(rows[+tr.dataset.i].kullanici_adi)} VİTRİNİ</div><div class="row">${v.length ? v.map(x => { const [g, id] = x.split(':'); return cardHTML(card(id), { sm: 1, gold: g === 'g' }); }).join('') : '<span style="opacity:.6">Vitrin boş</span>'}</div></td>`;
+      tr.after(vr);
+    });
+  } catch (e) { $('lbBody').innerHTML = `<p style="text-align:center;color:#ff8080">Tablo yüklenemedi: ${esc(e.message)}</p>`; }
+};
+function esc(s) { return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]); }
 
 /* ============ ALTIN ÖRDEK ============ */
 let goldT = null;
@@ -301,38 +527,40 @@ function showGolden() {
   g.style.left = (20 + Math.random() * (m.width - 90)) + 'px'; g.style.top = (80 + Math.random() * (m.height - 180)) + 'px'; g.style.display = 'block';
   beep(1200, .2, 'sine', .05, 1.5); clearTimeout(g._t); g._t = setTimeout(() => { g.style.display = 'none'; scheduleGolden(); }, 9000);
 }
-$('golden').onclick = () => { const g = $('golden'); g.style.display = 'none'; clearTimeout(g._t); frenzyT = 15; flash('#ffd84a'); [660, 880, 1100, 1320].forEach((f, k) => setTimeout(() => beep(f, .12, 'triangle', .07), k * 70)); toast('🌟 ALTIN ÖRDEK! 15 saniye boyunca tüm kazanç ×5'); scheduleGolden(); };
+$('golden').onclick = () => { const g = $('golden'); g.style.display = 'none'; clearTimeout(g._t); frenzyT = 15; S.gold++; flash('#ffd84a'); [660, 880, 1100, 1320].forEach((f, k) => setTimeout(() => beep(f, .12, 'triangle', .07), k * 70)); toast('🌟 ALTIN ÖRDEK! 15 saniye boyunca tüm kazanç ×5'); scheduleGolden(); checkAch(); };
 
 /* ============ EKRAN ============ */
 let tt;
 function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2600); }
+let lastBadges = '';
 function refresh() {
   $('money').textContent = fmt(S.para) + ' 🪙';
-  const ps = perSec();
   const ar = autoRate(); $('rates').innerHTML = `Tıklama başı <b>${fmt(perClick())}</b>${ar ? ` · 🤖 ${autoInt().toFixed(1).replace('.0', '')} sn'de <b>${fmt(perAuto())}</b> para` : ''}`;
   $('bonus').textContent = lv('carpan') ? `✖️ ×${Math.pow(2, lv('carpan'))}` : '';
   document.querySelectorAll('.up').forEach(b => { const u = UPS.find(x => x.id === b.dataset.u), L = lv(u.id), mx = u.max && L >= u.max;
     b.querySelector('.pr').textContent = mx ? 'MAKS' : fmt(upCost(u)); b.querySelector('.lv').textContent = 'Seviye ' + L + (u.max ? ' / ' + u.max : '');
     b.classList.toggle('no', !mx && S.para < upCost(u)); b.classList.toggle('max', !!mx); });
   document.querySelectorAll('.pk').forEach(b => b.classList.toggle('no', S.para < PACKS.find(p => p.id === b.dataset.p).fiyat));
+  const bk = Object.keys(S.rozet).join(); if (bk !== lastBadges) { lastBadges = bk; $('myBadges').innerHTML = ACH.filter(a => S.rozet[a.id]).map(a => `<span title="${a.ad}: ${a.d}">${a.i}</span>`).join(''); }
 }
 
 /* ============ DÖNGÜ ============ */
-let last = performance.now(), autoAcc = 0, saveAcc = 0;
+let last = performance.now(), autoAcc = 0, saveAcc = 0, achAcc = 0, pushAcc = 25;
 function loop(now) {
   const dt = Math.min(1, (now - last) / 1000); last = now;
-  if (frenzyT > 0) { frenzyT -= dt; $('frenzy').style.display = 'block'; $('frenzy').textContent = `🌟 ×5 — ${Math.ceil(frenzyT)} sn`; if (frenzyT <= 0) $('frenzy').style.display = 'none'; }
-  // oto tıklayıcı: gerçek tıklama gibi aralıklı çalışır (5 sn'de 1 tık / robot)
+  if (frenzyT > 0) { frenzyT -= dt; $('frenzy').textContent = frenzyT > 0 ? `🌟 ×5 — ${Math.ceil(frenzyT)} sn` : ''; }
   const ar = autoRate(); if (ar) { autoAcc += ar * dt; while (autoAcc >= 1) { autoAcc -= 1; const v = perAuto(); gain(v); const r = $('bigBtn').getBoundingClientRect(); floatText(r.left + r.width * (.2 + Math.random() * .6), r.top + r.height * .25, '🤖 +' + fmt(v)); refresh(); } }
   saveAcc += dt; if (saveAcc > 3) { saveAcc = 0; save(); }
+  achAcc += dt; if (achAcc > 1) { achAcc = 0; checkAch(); }
+  pushAcc += dt; if (pushAcc > 30) { pushAcc = 0; pushProfile(); }
   requestAnimationFrame(loop);
 }
-// çevrimdışı kazanç: en fazla 2 saat, yarı hızda
 (() => { const away = Math.min(3600, (Date.now() - (S.son || Date.now())) / 1000), ps = perSec();
   if (away > 30 && ps > 0) { const x = ps * away * .25; gain(x); setTimeout(() => toast(`🤖 Sen yokken robotlar ${fmt(x)} 🪙 kazandı!`), 500); } })();
-window.addEventListener('pagehide', save); document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
-buildUps(); buildPacks(); refresh(); scheduleGolden(); requestAnimationFrame(loop);
-window.__tk = { S, CARDS, PACKS, refresh, buyPack, rollCard };
+window.addEventListener('pagehide', () => { save(); pushProfile(true, true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); pushProfile(false, true); } });
+buildUps(); buildPacks(); refresh(); scheduleGolden(); checkAch(); requestAnimationFrame(loop);
+window.__tk = { S, CARDS, PACKS, refresh, buyPack, rollCard, checkAch, openCol, openDet };
 </script>
 </body>
 </html>
