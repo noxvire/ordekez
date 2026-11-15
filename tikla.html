@@ -271,11 +271,11 @@ const CARDS = [
 ];
 // PAKETLER: fiyat + rarity olasılıkları (%), her paket 1 kart
 const PACKS = [
-  { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 10000,     a: '#3a3226', b: '#7a6a50', o: [72, 22, 5, 0.9, 0.1] },
-  { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 150000,    a: '#30384a', b: '#9fb2d0', o: [45, 35, 15, 4.5, 0.5] },
-  { id: 'altin',   ad: 'Altın Paket',   ic: '🥇', fiyat: 2500000,   a: '#4a3a10', b: '#ffcf40', o: [18, 36, 30, 13, 3] },
-  { id: 'elmas',   ad: 'Elmas Paket',   ic: '💎', fiyat: 40000000,  a: '#123848', b: '#58e0ff', o: [0, 22, 42, 28, 8] },
-  { id: 'ordekez', ad: 'Ördekez Paketi', ic: '🦆', fiyat: 750000000, a: '#4a1020', b: '#ff4d6d', o: [0, 0, 35, 45, 20] },
+  { id: 'karton',  ad: 'Karton Paket',  ic: '📦', fiyat: 10000,     a: '#3a3226', b: '#7a6a50', o: [78, 18, 3.6, 0.35, 0.05] },
+  { id: 'gumus',   ad: 'Gümüş Paket',   ic: '🥈', fiyat: 150000,    a: '#30384a', b: '#9fb2d0', o: [55, 33, 10.5, 1.3, 0.2] },
+  { id: 'altin',   ad: 'Altın Paket',   ic: '🥇', fiyat: 2500000,   a: '#4a3a10', b: '#ffcf40', o: [30, 42, 24, 3.5, 0.5] },
+  { id: 'elmas',   ad: 'Elmas Paket',   ic: '💎', fiyat: 40000000,  a: '#123848', b: '#58e0ff', o: [10, 40, 42, 7, 1] },
+  { id: 'ordekez', ad: 'Ördekez Paketi', ic: '🦆', fiyat: 750000000, a: '#4a1020', b: '#ff4d6d', o: [0, 25, 60, 13, 2] },
 ];
 const UPS = [
   { id: 'parmak', ad: 'Güçlü Parmak',  ic: '👆', d: 'Her tıklama +1 para',                base: 60,     k: 1.65 },
@@ -293,7 +293,7 @@ const TUY = [
   { id: 'parmak', ic: '🪶', ad: 'Tüylü Parmak',    d: 'Tıklama başı kalıcı +%25',                 cost: L => L + 1,       max: 20 },
   { id: 'robot',  ic: '🏭', ad: 'Fabrika Robotu',  d: 'Robot her seviye için +1 para daha verir', cost: L => 2 * (L + 1), max: 10 },
   { id: 'basla',  ic: '🎒', ad: 'Erken Başlangıç', d: 'Yeniden doğunca 5 bin / 50 bin / 500 bin ile başla', cost: L => 3 * Math.pow(2, L), max: 3 },
-  { id: 'sans',   ic: '🍀', ad: 'Şanslı Paket',    d: 'Her kartın %5 şansla bir üst rarity\'ye çıkması', cost: L => 5 * (L + 1), max: 5 },
+  { id: 'sans',   ic: '🍀', ad: 'Şanslı Paket',    d: 'Her kartın %3 şansla bir üst rarity\'ye çıkması', cost: L => 5 * (L + 1), max: 5 },
   { id: 'altin',  ic: '🌟', ad: 'Altın Tüy',       d: 'Altın ördek etkisi +5 sn uzun sürer',     cost: L => 2 * (L + 1), max: 5 },
 ];
 const BASLA = [0, 5000, 50000, 500000];
@@ -388,7 +388,7 @@ function buildPacks() {
   $('packs').querySelectorAll('.pk').forEach(b => b.onclick = () => buyPack(PACKS.find(p => p.id === b.dataset.p)));
 }
 function rollRarity(o) { let r = Math.random() * 100; for (let i = 0; i < o.length; i++) { r -= o[i]; if (r < 0) return RORDER[i]; } return RORDER[o.findIndex(x => x > 0)]; }
-function rollCard(o) { let r = rollRarity(o); if (Math.random() < .05 * tl('sans')) r = RORDER[Math.min(4, RORDER.indexOf(r) + 1)]; let pool = CARDS.filter(c => c.r === r);
+function rollCard(o) { let r = rollRarity(o); if (Math.random() < .03 * tl('sans')) r = RORDER[Math.min(4, RORDER.indexOf(r) + 1)]; let pool = CARDS.filter(c => c.r === r);
   for (let i = RORDER.indexOf(r); !pool.length && i >= 0; i--) pool = CARDS.filter(c => c.r === RORDER[i]);
   return pool[Math.floor(Math.random() * pool.length)]; }
 let packPending = false;   // paket açılana kadar başarımlar rarity'yi ele vermesin
