@@ -258,7 +258,7 @@ const WEAPONS = {
 const PASSIVES = {
   guc:   { ad: 'Kurdele',       ic: '🎀', d: '+%12 hasar' },
   hiz:   { ad: 'Pembe Botlar',  ic: '👢', d: '+%8 hareket hızı' },
-  mik:   { ad: 'Kedi Maması',   ic: '🐟', d: '+%35 toplama mesafesi' },
+  mik:   { ad: 'Çekim Alanı',   ic: '🧲', d: 'Kalpleri ve eşyaları %40 daha uzaktan çeker' },
   kalp:  { ad: 'Çilekli Pasta', ic: '🍰', d: '+25 can, saniyede +0.3 can' },
   sogum: { ad: 'Altın Çan',     ic: '🔔', d: 'Saldırılar %8 daha sık' },
   zirh:  { ad: 'Oyuncak Ayı',   ic: '🧸', d: 'Alınan hasar -2' },
@@ -359,7 +359,7 @@ const pl = id => P.p[id] || 0, wl = id => P.w[id] || 0;
 const dmgM = () => P.dmgMul * (1 + .12 * pl('guc'));
 const cdM = () => Math.pow(.92, pl('sogum'));
 const spdNow = () => P.spd * (1 + .08 * pl('hiz'));
-const magNow = () => P.magnet * (1 + .35 * pl('mik'));
+const magNow = () => P.magnet * (1 + .4 * pl('mik'));
 
 /* =================== DÜŞMANLAR =================== */
 function spawnEnemy(type, boss) {
@@ -402,8 +402,8 @@ function kill(e) {
   if (e.final && !won) { won = true; setTimeout(() => { if (state === 'play' || state === 'lvup') gameOver(true); }, 1200); }
   if (e.boss) { picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
   else if (r < .025) picks.push({ x: e.x, y: e.y, k: 'coin' });
-  else if (r < .029) picks.push({ x: e.x, y: e.y, k: 'cilek' });
-  else if (r < .0305) picks.push({ x: e.x, y: e.y, k: 'balik' });
+  else if (r < .033) picks.push({ x: e.x, y: e.y, k: 'cilek' });      // nadiren can
+  else if (r < .036) picks.push({ x: e.x, y: e.y, k: 'balik' });      // nadiren mıknatıs
   else if (r < .0315 && T > 60) picks.push({ x: e.x, y: e.y, k: 'sevgi' });
   fx.push({ k: 'puf', x: e.x, y: e.y, r: e.r, t: .35 });
   if (Math.random() < .35) fx.push({ k: 'kalpcik', x: e.x, y: e.y, vy: -60, t: .7 });
@@ -494,8 +494,8 @@ function update(dt) {
   for (const k of picks) { const dx = P.x - k.x, dy = P.y - k.y, d = Math.hypot(dx, dy) || 1; if (d < mag * .6) { k.x += dx / d * 420 * dt; k.y += dy / d * 420 * dt; }
     if (d < P.r + 16) { k.got = true;
       if (k.k === 'coin') { coins++; snd(1320, .08, 'square', .015, 1.5); }
-      if (k.k === 'cilek') { P.hp = Math.min(P.maxHp, P.hp + 30); chime([784, 988], 70); fx.push({ k: 'kalpcik', x: P.x, y: P.y - 40, vy: -70, t: .8 }); }
-      if (k.k === 'balik') { gems.forEach(g => g.pull = true); chime([523, 784, 1046], 60, 'sine'); }
+      if (k.k === 'cilek') { P.hp = Math.min(P.maxHp, P.hp + 30); toast('❤️ +30 can'); chime([784, 988], 70); fx.push({ k: 'kalpcik', x: P.x, y: P.y - 40, vy: -70, t: .8 }); }
+      if (k.k === 'balik') { gems.forEach(g => g.pull = true); toast('🧲 Bütün kalpler sana geliyor!'); chime([523, 784, 1046], 60, 'sine'); }
       if (k.k === 'sevgi') { for (const e of onScreen()) if (!e.boss) hurt(e, 99999); fx.push({ k: 'flash', t: .4 }); chime([1046, 1318, 1568, 2093], 70); }
       if (k.k === 'sandik') openChest(); } }
   picks = picks.filter(k => !k.got);
@@ -554,11 +554,12 @@ function draw(dt) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   if (P.w.sevgi) { const l = P.w.sevgi, rad = [0, 72, 90, 90, 112, 142][l]; const g = ctx.createRadialGradient(P.x, P.y, rad * .2, P.x, P.y, rad); g.addColorStop(0, 'rgba(255,150,200,0)'); g.addColorStop(1, 'rgba(255,120,190,.25)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(P.x, P.y, rad, 0, 7); ctx.fill();
     const n = 8 + l * 2; for (let i = 0; i < n; i++) { const a = T * 1.2 + i / n * Math.PI * 2; ctx.fillStyle = l >= 5 ? (i % 2 ? '#b07cff' : '#ffc93c') : (i % 2 ? '#ff8ac2' : '#ffc2de'); heartPath(ctx, P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad - 6, 12 + l * 1.5); ctx.fill(); } }
+  if (pl('mik')) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]); ctx.lineDashOffset = T * 20; ctx.beginPath(); ctx.arc(P.x, P.y, magNow(), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const g of gems) { if (!vis(g.x, g.y, 20)) continue; const s = g.v >= 20 ? 26 : g.v >= 4 ? 21 : 17, b = Math.sin(T * 5 + g.ph) * 2.5, pul = 1 + Math.sin(T * 7 + g.ph) * .08;
     ctx.save(); ctx.translate(g.x, g.y + b); ctx.scale(pul, pul); ctx.shadowColor = g.v >= 20 ? '#ffb000' : g.v >= 4 ? '#9a5cff' : '#ff3d8f'; ctx.shadowBlur = 10;
     ctx.fillStyle = g.v >= 20 ? '#ffc93c' : g.v >= 4 ? '#a978ff' : '#ff5ea6'; heartPath(ctx, 0, -s / 2, s); ctx.fill(); ctx.shadowBlur = 0; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.ellipse(-s * .2, -s * .22, s * .1, s * .07, -.6, 0, 7); ctx.fill(); ctx.restore(); }
-  for (const k of picks) if (vis(k.x, k.y, 30)) { const e = { coin: '🪙', cilek: '🍓', balik: '🐟', sevgi: '💝', sandik: '🎁' }[k.k], s = k.k === 'sandik' ? 38 : 24, c = emo(e, s); ctx.drawImage(c, k.x - c.width / 2, k.y - c.height / 2 + Math.sin(T * 4 + k.x) * 3); }
+  for (const k of picks) if (vis(k.x, k.y, 30)) { const e = { coin: '🪙', cilek: '❤️', balik: '🧲', sevgi: '💝', sandik: '🎁' }[k.k], s = k.k === 'sandik' ? 38 : k.k === 'coin' ? 24 : 30, c = emo(e, s); ctx.drawImage(c, k.x - c.width / 2, k.y - c.height / 2 + Math.sin(T * 4 + k.x) * 3); }
   for (const f of fx) if (f.k === 'patiIn') { const k = 1 - f.t / .45; ctx.fillStyle = `rgba(255,120,180,${.15 + k * .25})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.stroke(); ctx.setLineDash([]); }
   const vEn = enemies.filter(e => vis(e.x, e.y, e.r * 1.4)).sort((a, b) => a.y - b.y);
   for (const e of vEn) {
