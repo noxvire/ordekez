@@ -17,11 +17,11 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .hot{position:absolute;left:55.8%;width:19.8%;border-radius:1.2vmin;transition:transform .12s,box-shadow .12s,background .12s}
 .hot:hover{background:rgba(255,255,255,.18);box-shadow:0 0 22px rgba(255,170,220,.9);transform:scale(1.03)}
 .hot:active{transform:scale(.97)}
-#hPlay{top:47.6%;height:8.6%}#hSkin{top:57.8%;height:7%}#hUp{top:66.1%;height:7%}#hSet{top:74.4%;height:7%}
+#hPlay{top:47.6%;height:8.6%}#hSkin{top:57.4%;height:7.3%}#hUp{top:65%;height:7.3%}#hChest{top:72.7%;height:7.3%}#hInv{top:80.3%;height:7.3%}#hSet{top:88%;height:7.3%}
 #tTop{position:absolute;top:2%;right:1.5%;display:flex;gap:.8vmin;flex-wrap:wrap;justify-content:flex-end}
 .pill{background:rgba(255,240,250,.92);color:#b0407a;font-weight:700;font-size:clamp(11px,1.7vmin,18px);padding:.8vmin 1.6vmin;border-radius:99px;border:2px solid #f6a8cf;box-shadow:0 3px 0 #d980ad}
 .pill:active{transform:translateY(2px);box-shadow:0 1px 0 #d980ad}
-#tBest{position:absolute;bottom:13.5%;left:1.8%;color:#fff;font-size:clamp(10px,1.6vmin,16px);text-shadow:0 2px 4px #000;line-height:1.4}
+#tBest{position:absolute;top:9%;left:1.8%;color:#fff;font-size:clamp(10px,1.6vmin,16px);text-shadow:0 2px 4px #000;line-height:1.4}
 #hud{position:fixed;inset:0;pointer-events:none;display:none;color:#fff}
 #xpbar{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(560px,70vw);height:18px;background:rgba(255,255,255,.75);border:3px solid #fff;border-radius:99px;overflow:hidden;box-shadow:0 3px 0 rgba(176,64,122,.5)}
 #xpfill{height:100%;width:0;background:linear-gradient(90deg,#ff8ac2,#c58bff);border-radius:99px;transition:width .15s}
@@ -81,6 +81,66 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .tg::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 2px 3px rgba(0,0,0,.2)}
 .tg.on{background:#ff6fae}.tg.on::after{left:29px}
 .x{position:absolute;top:10px;right:14px;font-size:22px;color:#e04f95;font-weight:700}
+/* sandıklar */
+.chests{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.cc{background:#fff;border:4px solid var(--c);border-radius:22px;padding:12px 10px;box-shadow:0 6px 0 var(--c);transition:transform .12s}
+.cc:hover{transform:translateY(-4px)}
+.cc b{display:block;font-size:19px;color:var(--d);margin-top:6px}
+.cc .od{font-size:11px;color:#8a4a70;margin:6px 0;line-height:1.5}
+.cc .od span{white-space:nowrap;margin:0 3px}
+.cc .bt{display:inline-block;background:var(--c);color:#fff;font-weight:700;border-radius:99px;padding:5px 14px;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.cc .own{display:block;font-size:13px;color:#2f9a5a;font-weight:700;margin-top:4px}
+.chest{--c:#c58a5a;--d:#8a5a35;position:relative;width:150px;height:120px;margin:4px auto 0}
+.chest .bd{position:absolute;left:0;right:0;bottom:0;height:68%;border-radius:10px 10px 14px 14px;background:linear-gradient(180deg,var(--c),var(--d));border:4px solid #4a2a3a;box-shadow:inset 0 -8px 0 rgba(0,0,0,.15)}
+.chest .bd::before,.chest .lid::before{content:"";position:absolute;top:0;bottom:0;left:18%;width:12%;background:rgba(255,230,150,.85);border-left:3px solid #4a2a3a;border-right:3px solid #4a2a3a}
+.chest .bd::after,.chest .lid::after{content:"";position:absolute;top:0;bottom:0;right:18%;width:12%;background:rgba(255,230,150,.85);border-left:3px solid #4a2a3a;border-right:3px solid #4a2a3a}
+.chest .lid{position:absolute;left:-4%;right:-4%;top:6%;height:36%;border-radius:40px 40px 8px 8px;background:linear-gradient(180deg,var(--c),var(--d));border:4px solid #4a2a3a;transform-origin:50% 100%;transition:transform .45s cubic-bezier(.3,1.6,.5,1);z-index:2}
+.chest .lock{position:absolute;left:50%;top:34%;width:26px;height:30px;margin-left:-13px;background:#ffd84a;border:3px solid #4a2a3a;border-radius:8px;z-index:3}
+.chest .lock::after{content:"";position:absolute;left:50%;top:9px;width:6px;height:10px;margin-left:-3px;background:#4a2a3a;border-radius:3px}
+.chest img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.chest{width:170px;height:118px}.chest.big{width:300px;height:210px}
+.chest img{filter:drop-shadow(0 6px 8px rgba(80,30,80,.35))}
+.chest.big img{filter:drop-shadow(0 0 18px var(--g)) drop-shadow(0 10px 10px rgba(0,0,0,.4))}
+#rays,#opItem{pointer-events:none}
+#opChest.open img{animation:pop .7s ease-out forwards}
+@keyframes pop{0%{transform:scale(1);filter:brightness(1) drop-shadow(0 0 18px var(--g))}25%{transform:scale(1.25,1.15);filter:brightness(2.4) drop-shadow(0 0 50px var(--g))}100%{transform:scale(.92);filter:brightness(1.1) drop-shadow(0 0 30px var(--g));opacity:.55}}
+#flashO{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:31;transition:opacity .5s}
+#opening{background:radial-gradient(circle at 50% 45%,rgba(120,50,120,.65),rgba(30,10,40,.92))}
+#opStage{position:relative;width:320px;height:320px;display:flex;align-items:flex-end;justify-content:center}
+#rays{position:absolute;left:50%;top:50%;width:620px;height:620px;margin:-310px;border-radius:50%;background:repeating-conic-gradient(var(--rc) 0 9deg,transparent 9deg 22deg);opacity:0;transition:opacity .4s;animation:spin 6s linear infinite;-webkit-mask:radial-gradient(circle,#000 20%,transparent 70%);mask:radial-gradient(circle,#000 20%,transparent 70%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+#opChest{animation:drop .6s cubic-bezier(.3,1.5,.5,1)}
+#opChest.idle{animation:wig 1.2s ease-in-out infinite}
+#opChest.shake{animation:shk .12s linear infinite}
+#opChest.open .lid{transform:rotate(-115deg) translateY(-10px)}
+#opChest.open .lock{opacity:0;transition:opacity .2s}
+@keyframes drop{from{transform:translateY(-400px) scale(.6)}to{transform:none}}
+@keyframes wig{0%,100%{transform:rotate(0)}10%{transform:rotate(-5deg)}20%{transform:rotate(5deg)}30%{transform:rotate(0)}}
+@keyframes shk{0%{transform:translate(-4px,0) rotate(-3deg)}50%{transform:translate(4px,-2px) rotate(3deg)}100%{transform:translate(-4px,0) rotate(-3deg)}}
+#opItem{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) scale(0);transition:transform .55s cubic-bezier(.3,1.7,.5,1),top .55s;z-index:5}
+#opItem.up{transform:translate(-50%,-50%) scale(1);top:12%}
+#opText{min-height:96px;color:#fff;margin-top:10px;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+#opText b{font-size:26px;display:block}
+.spark{position:fixed;pointer-events:none;z-index:60;font-size:22px;animation:sp 1s ease-out forwards}
+@keyframes sp{to{transform:translate(var(--dx),var(--dy)) rotate(200deg) scale(.4);opacity:0}}
+/* eşyalar */
+.it{position:relative;width:88px;height:88px;border-radius:18px;border:4px solid var(--c);background:radial-gradient(circle at 50% 35%,#fff,var(--bg));display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 4px 0 var(--c)}
+.it .lv{position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:var(--c);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:0 7px;border:2px solid #fff;white-space:nowrap}
+.it .eqm{position:absolute;top:-8px;right:-8px;background:#ff6fae;color:#fff;font-size:12px;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.it .up{position:absolute;top:-8px;left:-8px;background:#2fbf6a;color:#fff;font-size:12px;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;animation:bob 1s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(-3px)}}
+.it.empty{border-style:dashed;--c:#e0b8d0;--bg:#fff;opacity:.8;font-size:13px;color:#b07a9a;font-weight:700;box-shadow:none}
+.it img{width:80%;height:80%;object-fit:contain}
+.slots{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:6px 0 10px}
+.slots>div{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:13px;color:#a0507e;font-weight:700}
+.inv{display:grid;grid-template-columns:repeat(auto-fill,88px);gap:18px 14px;justify-content:center;margin-top:12px}
+.inv button{padding:0}
+.sum{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:14px;color:#8a4a70;background:#fff;border-radius:14px;padding:8px;border:2px solid #ffd0e6}
+.sum b{color:#e04f95}
+#itemDet .card{max-width:420px}
+#itemDet .it{width:120px;height:120px;font-size:60px;margin:6px auto 14px}
+.bar{height:12px;background:#f3d6e6;border-radius:99px;overflow:hidden;margin:6px auto;max-width:240px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#ff8ac2,#c58bff)}
 </style>
 </head>
 <body>
@@ -91,6 +151,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     <button class="hot" id="hPlay" aria-label="Oyuna Başla"></button>
     <button class="hot" id="hSkin" aria-label="Skin Seç"></button>
     <button class="hot" id="hUp" aria-label="Güçlendir"></button>
+    <button class="hot" id="hChest" aria-label="Sandıklar"></button>
+    <button class="hot" id="hInv" aria-label="Eşyalar"></button>
     <button class="hot" id="hSet" aria-label="Ayarlar"></button>
     <div id="tTop"><span class="pill" id="tGold">🪙 0</span><button class="pill" id="hExit">← Siteye dön</button></div>
     <div id="tBest"></div>
@@ -131,6 +193,32 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <div class="sub" style="margin-top:12px">Hareket: WASD / ok tuşları · Telefonda ekrana basıp sürükle<br>Duraklat: Esc · Seçim: 1 / 2 / 3</div>
 </div></div>
 
+<div class="scr" id="chestScr"><div class="card">
+  <button class="x" data-close>✕</button>
+  <h2>🎁 Sandıklar</h2><div class="sub">Sandıklardan giyilebilir eşyalar çıkar. Patronları yenince bedava sandık kazanırsın! <span class="gold" id="gC"></span></div>
+  <div class="chests" id="chestList"></div>
+</div></div>
+
+<div id="flashO"></div>
+<div class="scr" id="opening">
+  <div id="opStage"><div id="rays"></div><div id="opItem"></div><div class="chest big" id="opChest"></div></div>
+  <div id="opText"><b>Dokun ve aç!</b></div>
+  <div id="opBtns" style="display:none"><button class="btn" id="opOk">Tamam</button><button class="btn alt" id="opAgain">Bir daha aç</button></div>
+</div>
+
+<div class="scr" id="invScr"><div class="card">
+  <button class="x" data-close>✕</button>
+  <h2>⚔️ Eşyalar</h2><div class="sub">Eşyaya tıkla: giy, çıkar, güçlendir. Aynı eşyadan tekrar çıkınca parça olur, parça + altın ile seviye atlar. <span class="gold" id="gI"></span></div>
+  <div class="slots" id="eqSlots"></div>
+  <div class="sum" id="eqSum"></div>
+  <div class="inv" id="invGrid"></div>
+</div></div>
+
+<div class="scr" id="itemDet"><div class="card">
+  <button class="x" id="detX">✕</button>
+  <div id="detBody"></div>
+</div></div>
+
 <div class="scr" id="lvup"><div class="card" style="background:transparent;border:0;box-shadow:none">
   <h2 id="lvTitle" style="color:#fff;text-shadow:0 3px 0 #c94585;font-size:36px">💖 SEVİYE ATLADIN!</h2>
   <div class="sub" id="lvSub" style="color:#fff">Bir güçlendirme seç (1 / 2 / 3)</div>
@@ -155,8 +243,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 'use strict';
 /* =================== KAYIT =================== */
 const KEY = 'sv_save';
-let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1 } };
-try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; } } catch (e) {}
+let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, inv: {}, eq: {}, kutu: [0, 0, 0, 0] };
+try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; M.inv = M.inv || {}; M.eq = M.eq || {}; M.kutu = M.kutu || [0, 0, 0, 0]; } } catch (e) {}
 const saveM = () => { try { localStorage.setItem(KEY, JSON.stringify(M)); } catch (e) {} };
 const $ = id => document.getElementById(id);
 
@@ -239,6 +327,51 @@ function gemSprite(ty) { const sz = [17, 21, 26][ty]; return baked('gem' + ty, s
 const emojiC = {};
 function emo(ch, size) { const k = ch + size; if (emojiC[k]) return emojiC[k]; const c = document.createElement('canvas'), s = Math.ceil(size * 1.4); c.width = c.height = s; const g = c.getContext('2d'); g.font = `${size}px system-ui,"Apple Color Emoji","Segoe UI Emoji"`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, s / 2, s / 2 + size * .06); return emojiC[k] = c; }
 
+/* =================== SANDIK + EŞYA =================== */
+const RAR = [
+  { ad: 'Sıradan',  c: '#a7a0b3', d: '#6e667a', bg: '#eeeaf2', ch: ['#c99a6a', '#8a5a35'] },
+  { ad: 'Nadir',    c: '#4da3ff', d: '#2369c0', bg: '#e3f0ff', ch: ['#6fb8ff', '#2d6fc4'] },
+  { ad: 'Epik',     c: '#b56cff', d: '#7a35c9', bg: '#f1e4ff', ch: ['#c58bff', '#7a35c9'] },
+  { ad: 'Efsanevi', c: '#ffb020', d: '#c47a00', bg: '#fff3d6', ch: ['#ffd25e', '#d08a10'] },
+];
+// görseller gelince img: 'zs_chest_X.png' (kapalı) ve imgOpen eklenecek
+const CHESTS = [
+  { ad: 'Sıradan Sandık',  img: 'zs_chest_0.webp', r: 0, fiyat: 150,  o: [80, 18, 2, 0] },
+  { ad: 'Nadir Sandık',    img: 'zs_chest_1.webp', r: 1, fiyat: 500,  o: [45, 45, 9, 1] },
+  { ad: 'Epik Sandık',     img: 'zs_chest_2.webp', r: 2, fiyat: 1500, o: [10, 50, 35, 5] },
+  { ad: 'Efsanevi Sandık', img: 'zs_chest_3.webp', r: 3, fiyat: 4000, o: [0, 30, 50, 20] },
+];
+const SLOTS = { bas: 'Başlık', zirh: 'Zırh', pelerin: 'Pelerin', silah: 'Silah' };
+// st: hp (can), arm (hasar azaltma), spd (hız), mag (çekim), dmg (hasar), cd (saldırı hızı), crit (kritik)
+const ITEMS = [
+  { id: 'toka',    ad: 'Kedi Kulaklı Toka', s: 'bas', r: 0, ic: '🎀', st: { hp: 15 } },
+  { id: 'kask',    ad: 'Pembe Kask',        s: 'bas', r: 1, ic: '🪖', st: { hp: 28 } },
+  { id: 'migfer',  ad: 'Ay Miğferi',        s: 'bas', r: 2, ic: '⛑️', st: { hp: 42, arm: .03 } },
+  { id: 'tac',     ad: 'Kraliçe Tacı',      s: 'bas', r: 3, ic: '👑', st: { hp: 70, arm: .05 } },
+  { id: 'hirka',   ad: 'Pamuk Hırka',       s: 'zirh', r: 0, ic: '👚', st: { arm: .04 } },
+  { id: 'kzirh',   ad: 'Kurdele Zırhı',     s: 'zirh', r: 1, ic: '🥋', st: { arm: .07 } },
+  { id: 'kristal', ad: 'Kristal Zırh',      s: 'zirh', r: 2, ic: '🛡️', st: { arm: .10, hp: 15 } },
+  { id: 'kimono',  ad: 'Sakura Kimonosu',   s: 'zirh', r: 3, ic: '👘', st: { arm: .15, hp: 25 } },
+  { id: 'atki',    ad: 'Pembe Atkı',        s: 'pelerin', r: 0, ic: '🧣', st: { spd: .04, mag: .1 } },
+  { id: 'kpel',    ad: 'Kedi Pelerini',     s: 'pelerin', r: 1, ic: '🧥', st: { spd: .06, mag: .18 } },
+  { id: 'ypel',    ad: 'Yıldız Pelerini',   s: 'pelerin', r: 2, ic: '🌌', st: { spd: .09, mag: .28 } },
+  { id: 'kanat',   ad: 'Melek Kanatları',   s: 'pelerin', r: 3, ic: '🪽', st: { spd: .14, mag: .45 } },
+  { id: 'tkilic',  ad: 'Tahta Kılıç',       s: 'silah', r: 0, ic: '🗡️', st: { dmg: .08 } },
+  { id: 'sasa',    ad: 'Şeker Asa',         s: 'silah', r: 1, ic: '🍭', st: { cd: .07, dmg: .05 } },
+  { id: 'mizrak',  ad: 'Pati Mızrağı',      s: 'silah', r: 1, ic: '🔱', st: { crit: .05, dmg: .07 } },
+  { id: 'ayasa',   ad: 'Ay Asası',          s: 'silah', r: 2, ic: '🪄', st: { cd: .10, dmg: .12 } },
+  { id: 'ykilic',  ad: 'Yıldız Kılıcı',     s: 'silah', r: 2, ic: '⚔️', st: { dmg: .2, crit: .03 } },
+  { id: 'ekatana', ad: 'Ejder Katana',      s: 'silah', r: 3, ic: '🐉', st: { dmg: .3, cd: .08, crit: .06 } },
+];
+const STN = { hp: ['Can', v => '+' + Math.round(v)], arm: ['Hasar azaltma', v => '%' + Math.round(v * 100)], spd: ['Hız', v => '+%' + Math.round(v * 100)], mag: ['Çekim', v => '+%' + Math.round(v * 100)],
+  dmg: ['Hasar', v => '+%' + Math.round(v * 100)], cd: ['Saldırı hızı', v => '+%' + Math.round(v * 100)], crit: ['Kritik', v => '+%' + Math.round(v * 100)] };
+const ITEM_MAX = 10;
+const itemMul = lv => 1 + .18 * (lv - 1);
+const itemCost = (it, lv) => ({ altin: Math.round([60, 160, 400, 1000][it.r] * Math.pow(lv, 1.45)), parca: lv });
+function eqStats() { const t = { hp: 0, arm: 0, spd: 0, mag: 0, dmg: 0, cd: 0, crit: 0 };
+  for (const sl in SLOTS) { const id = M.eq[sl], o = id && M.inv[id], it = ITEMS.find(x => x.id === id); if (!o || !it) continue; for (const k in it.st) t[k] += it.st[k] * itemMul(o.lv); }
+  t.arm = Math.min(.6, t.arm); t.cd = Math.min(.5, t.cd); return t; }
+
 /* =================== AYARLAR =================== */
 const ENEMIES = {
   slime:  { kind: 'slime',  r: 17, hp: 18,  spd: 62,  dmg: 5,  xp: 1, hues: [330, 200, 140, 50] },
@@ -314,20 +447,20 @@ const cv = $('cv'), ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 function resize() { DPR = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); }
 addEventListener('resize', resize); resize();
-const ground = (() => { const c = document.createElement('canvas'); c.width = c.height = 320; const g = c.getContext('2d');
-  g.fillStyle = '#c9ecc8'; g.fillRect(0, 0, 320, 320);
-  const wrap = (x, y, f) => { for (const ox of [-320, 0, 320]) for (const oy of [-320, 0, 320]) f(x + ox, y + oy); };   // dikişsiz desen
-  for (let i = 0; i < 700; i++) { const x = Math.random() * 320, y = Math.random() * 320, rx = 2 + Math.random() * 5, ry = 1.5 + Math.random() * 3, rot = Math.random() * 3; g.fillStyle = ['#bfe6bd', '#d3f2cf', '#b7e0b8', '#c4eac0'][i % 4]; wrap(x, y, (X, Y) => { g.beginPath(); g.ellipse(X, Y, rx, ry, rot, 0, 7); g.fill(); }); }
-  for (let i = 0; i < 16; i++) { const x = Math.random() * 320, y = Math.random() * 320, col = ['#ffb3d4', '#fff', '#ffe08a', '#d6b8ff'][i % 4];
-    wrap(x, y, (X, Y) => { g.fillStyle = col; for (let p = 0; p < 5; p++) { const a = p / 5 * Math.PI * 2; g.beginPath(); g.arc(X + Math.cos(a) * 3.2, Y + Math.sin(a) * 3.2, 2.6, 0, 7); g.fill(); } g.fillStyle = '#ffd34a'; g.beginPath(); g.arc(X, Y, 2, 0, 7); g.fill(); }); }
-  for (let i = 0; i < 5; i++) { const x = Math.random() * 320, y = Math.random() * 320; g.fillStyle = 'rgba(255,140,190,.35)'; wrap(x, y, (X, Y) => { heartPath(g, X, Y, 9); g.fill(); }); }
-  for (let i = 0; i < 6; i++) { const x = Math.random() * 320, y = Math.random() * 320; g.fillStyle = '#9fd49c'; wrap(x, y, (X, Y) => { for (const [dx, dy] of [[-3, 0], [3, 0], [0, -3]]) { g.beginPath(); g.arc(X + dx, Y + dy, 3, 0, 7); g.fill(); } }); }
+const ground = (() => { const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'), S = 512;
+  // sakin, düşük kontrastlı çayır (göz yormasın)
+  g.fillStyle = '#b9d5b3'; g.fillRect(0, 0, S, S);
+  const wrap = (x, y, f) => { for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) f(x + ox, y + oy); };
+  for (let i = 0; i < 70; i++) { const x = Math.random() * S, y = Math.random() * S, r = 18 + Math.random() * 40; g.fillStyle = ['rgba(170,205,165,.22)', 'rgba(196,224,190,.22)'][i % 2]; wrap(x, y, (X, Y) => { g.beginPath(); g.ellipse(X, Y, r, r * .6, 0, 0, 7); g.fill(); }); }
+  for (let i = 0; i < 120; i++) { const x = Math.random() * S, y = Math.random() * S; g.strokeStyle = 'rgba(140,180,135,.35)'; g.lineWidth = 1.5; wrap(x, y, (X, Y) => { g.beginPath(); g.moveTo(X, Y); g.quadraticCurveTo(X + 1, Y - 4, X + 2, Y - 7); g.stroke(); }); }
+  for (let i = 0; i < 9; i++) { const x = Math.random() * S, y = Math.random() * S, col = ['rgba(255,190,215,.7)', 'rgba(255,255,255,.7)', 'rgba(220,200,255,.7)'][i % 3];
+    wrap(x, y, (X, Y) => { g.fillStyle = col; for (let p = 0; p < 5; p++) { const a = p / 5 * Math.PI * 2; g.beginPath(); g.arc(X + Math.cos(a) * 2.6, Y + Math.sin(a) * 2.6, 2.1, 0, 7); g.fill(); } g.fillStyle = 'rgba(255,220,120,.8)'; g.beginPath(); g.arc(X, Y, 1.5, 0, 7); g.fill(); }); }
   return ctx.createPattern(c, 'repeat'); })();
-const petals = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random(), s: 5 + Math.random() * 6, v: .03 + Math.random() * .05, w: Math.random() * 7, r: Math.random() * 7 }));
+const petals = Array.from({ length: 12 }, () => ({ x: Math.random(), y: Math.random(), s: 5 + Math.random() * 6, v: .03 + Math.random() * .05, w: Math.random() * 7, r: Math.random() * 7 }));
 function drawPetals(dt) {
   if (!M.set.yaprak) return;
   for (const p of petals) { p.y += p.v * dt; p.x += Math.sin(p.w += dt) * .0006 + .008 * dt; p.r += dt * 1.5; if (p.y > 1.05) { p.y = -.05; p.x = Math.random(); } if (p.x > 1.05) p.x = -.05;
-    ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(p.r); ctx.fillStyle = 'rgba(255,170,205,.75)'; ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * .55, 0, 0, 7); ctx.fill(); ctx.restore(); }
+    ctx.save(); ctx.translate(p.x * W, p.y * H); ctx.rotate(p.r); ctx.fillStyle = 'rgba(255,180,210,.5)'; ctx.beginPath(); ctx.ellipse(0, 0, p.s, p.s * .55, 0, 0, 7); ctx.fill(); ctx.restore(); }
 }
 
 /* =================== GİRİŞ =================== */
@@ -356,6 +489,7 @@ function startGame() {
   P = { x: 0, y: 0, r: 20, skin: M.skin,
     maxHp: 100 + 10 * mlv('can'), hp: 0, spd: 215 * (1 + .04 * mlv('hiz')), dmgMul: 1 + .06 * mlv('guc'), magnet: 90 * (1 + .15 * mlv('mik')), xpMul: 1 + .08 * mlv('xp'),
     lv: 1, xp: 0, next: 4, fx: 1, fy: 0, face: 1, inv: 0, revive: mlv('dir'), w: { katana: 1 }, p: {}, cds: {}, hitT: 0, walk: 0 };
+  const E = eqStats(); P.maxHp += Math.round(E.hp); P.spd *= 1 + E.spd; P.magnet *= 1 + E.mag; P.dmgMul *= 1 + E.dmg; P.eqCd = E.cd; P.eqCrit = E.crit; P.eqArm = E.arm;
   P.hp = P.maxHp;
   enemies = []; projs = []; gems = []; picks = []; fx = []; texts = []; pets = []; T = 0; kills = 0; coins = 0; spawnAcc = 0; bossIdx = 0; curBoss = null; cam = { x: 0, y: 0 }; levelQueue = 0; won = false;
   M.oyun++; saveM();
@@ -366,7 +500,7 @@ function startGame() {
 /* =================== İSTATİSTİK =================== */
 const pl = id => P.p[id] || 0, wl = id => P.w[id] || 0;
 const dmgM = () => P.dmgMul * (1 + .12 * pl('guc'));
-const cdM = () => Math.pow(.92, pl('sogum'));
+const cdM = () => Math.pow(.92, pl('sogum')) * (1 - (P.eqCd || 0));
 const spdNow = () => P.spd * (1 + .08 * pl('hiz'));
 const magNow = () => P.magnet * (1 + .4 * pl('mik'));
 
@@ -375,7 +509,7 @@ function spawnEnemy(type, boss) {
   const a = Math.random() * Math.PI * 2, d = Math.hypot(W, H) / 2 + 60;
   const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1 + T / 70 + Math.pow(T / 450, 2) * 2.5;
   let e;
-  if (boss) e = { x, y, r: boss.r, hp: boss.hp * (1 + T / 900), spd: boss.spd, dmg: boss.dmg, xp: 60, boss: boss.ad, img: boss.img };
+  if (boss) e = { x, y, r: boss.r, hp: boss.hp * (1 + T / 900), spd: boss.spd, dmg: boss.dmg, xp: 60, boss: boss.ad, img: boss.img, tier: Math.min(3, BOSSES.indexOf(boss) + 1) };
   else { const K = ENEMIES[type]; e = { x, y, r: K.r, hp: K.hp * m, spd: K.spd * (1 + T / 2500), dmg: K.dmg * (1 + T / 800), xp: K.xp, kind: K.kind, hue: K.hues[(Math.random() * K.hues.length) | 0], ph: Math.random() * 7 }; }
   e.max = e.hp; e.kx = 0; e.ky = 0; e.flash = 0; e.hitCd = {};
   enemies.push(e); return e;
@@ -398,7 +532,7 @@ function spawner(dt) {
 /* =================== HASAR =================== */
 function hurt(e, dmg, kx = 0, ky = 0) {
   if (e.dead) return;
-  dmg *= dmgM(); const crit = Math.random() < .08; if (crit) dmg *= 2;
+  dmg *= dmgM(); const crit = Math.random() < .08 + (P.eqCrit || 0); if (crit) dmg *= 2;
   e.hp -= dmg; e.flash = .1; if (!e.boss) { e.kx += kx; e.ky += ky; }
   if (M.set.sayi && texts.length < 70) texts.push({ x: e.x + (Math.random() - .5) * 10, y: e.y - e.r, v: Math.round(dmg) + (crit ? '💖' : ''), t: .65, crit });
   hitSnd();
@@ -409,7 +543,7 @@ function kill(e) {
   gems.push({ x: e.x, y: e.y, v: e.xp, ph: Math.random() * 7 });
   const r = Math.random();
   if (e.final && !won) { won = true; setTimeout(() => { if (state === 'play' || state === 'lvup') gameOver(true); }, 1200); }
-  if (e.boss) { picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
+  if (e.boss) { const br = e.tier || 1; M.kutu[br]++; saveM(); setTimeout(() => toast(`🎁 ${CHESTS[br].ad} kazandın!`), 900); picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
   else if (r < .025) picks.push({ x: e.x, y: e.y, k: 'coin' });
   else if (r < .033) picks.push({ x: e.x, y: e.y, k: 'cilek' });      // nadiren can
   else if (r < .036) picks.push({ x: e.x, y: e.y, k: 'balik' });      // nadiren mıknatıs
@@ -484,7 +618,7 @@ function update(dt) {
     const dx = P.x - e.x, dy = P.y - e.y, d = Math.hypot(dx, dy) || 1;
     e.x += (dx / d * e.spd + e.kx) * dt; e.y += (dy / d * e.spd + e.ky) * dt; e.kx *= .86; e.ky *= .86; e.flash -= dt; e.dir = dx >= 0 ? 1 : -1;
     for (const o of near(e.x, e.y)) { if (o === e || o.dead) continue; const ox = e.x - o.x, oy = e.y - o.y, od = ox * ox + oy * oy, rr = e.r + o.r; if (od < rr * rr && od > .01) { const q = Math.sqrt(od), push = (rr - q) * .5 * (o.boss ? 1.6 : 1); e.x += ox / q * push; e.y += oy / q * push; } }
-    if (d < e.r + P.r && P.inv <= 0) { const dm = Math.max(1, e.dmg - 2 * pl('zirh')); P.hp -= dm; P.inv = .6; P.hitT = .25; snd(220, .18, 'triangle', .05, .5); if (texts.length < 70) texts.push({ x: P.x, y: P.y - 60, v: '-' + Math.round(dm), t: .7, me: 1 }); }
+    if (d < e.r + P.r && P.inv <= 0) { const dm = Math.max(1, (e.dmg - 2 * pl('zirh')) * (1 - (P.eqArm || 0))); P.hp -= dm; P.inv = .6; P.hitT = .25; snd(220, .18, 'triangle', .05, .5); if (texts.length < 70) texts.push({ x: P.x, y: P.y - 60, v: '-' + Math.round(dm), t: .7, me: 1 }); }
     if (d > Math.hypot(W, H) * 1.2 && !e.boss) { const a = Math.random() * Math.PI * 2, r = Math.hypot(W, H) / 2 + 50; e.x = P.x + Math.cos(a) * r; e.y = P.y + Math.sin(a) * r; }
   }
   if (P.hp <= 0) { if (P.revive > 0) { P.revive--; P.hp = P.maxHp / 2; P.inv = 2; for (const e of enemies) if (!e.boss && Math.hypot(e.x - P.x, e.y - P.y) < 300) hurt(e, 99999); fx.push({ k: 'flash', t: .4 }); toast('🪽 YENİDEN DOĞDUN!'); } else return gameOver(false); }
@@ -557,7 +691,7 @@ function refreshSlots() {
 /* =================== ÇİZİM =================== */
 function draw(dt) {
   ctx.fillStyle = ground; const ox = -cam.x + W / 2, oy = -cam.y + H / 2;
-  ctx.save(); ctx.translate(ox % 320 - 320, oy % 320 - 320); ctx.fillRect(0, 0, W + 640, H + 640); ctx.restore();
+  ctx.save(); ctx.translate(ox % 512 - 512, oy % 512 - 512); ctx.fillRect(0, 0, W + 1024, H + 1024); ctx.restore();
   ctx.save(); ctx.translate(Math.round(ox), Math.round(oy));
   const vis = (x, y, r) => Math.abs(x - cam.x) < W / 2 + r && Math.abs(y - cam.y) < H / 2 + r;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -654,6 +788,83 @@ $('hExit').onclick = () => location.href = 'index.html';
 $('hSkin').onclick = () => { renderSkins(); $('skins').classList.add('on'); };
 $('hUp').onclick = () => { renderShop(); $('shop').classList.add('on'); };
 $('hSet').onclick = () => { renderSet(); $('settings').classList.add('on'); };
+$('hChest').onclick = () => { renderChests(); $('chestScr').classList.add('on'); };
+$('hInv').onclick = () => { renderInv(); $('invScr').classList.add('on'); };
+
+/* ---------- SANDIK EKRANI ---------- */
+function chestHTML(c, big) { const R0 = RAR[c.r];
+  if (c.img) return `<div class="chest ${big ? 'big' : ''}" style="--g:${R0.c}"><img src="${c.img}" alt=""></div>`;
+  return `<div class="chest ${big ? 'big' : ''}" style="--c:${R0.ch[0]};--d:${R0.ch[1]}"><div class="lid"></div><div class="bd"></div><div class="lock"></div></div>`; }
+function renderChests() {
+  $('gC').textContent = `🪙 ${M.altin}`;
+  $('chestList').innerHTML = CHESTS.map((c, i) => `<button class="cc" data-i="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b>
+    <div class="od">${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div>
+    <span class="bt">${M.kutu[i] ? `Aç (${M.kutu[i]} adet)` : `🪙 ${c.fiyat}`}</span>${M.kutu[i] ? `<span class="own">🎁 Bedava sandığın var!</span>` : ''}</button>`).join('');
+  $('chestList').querySelectorAll('.cc').forEach(b => b.onclick = () => buyChest(+b.dataset.i));
+}
+function buyChest(i) {
+  const c = CHESTS[i];
+  if (M.kutu[i] > 0) M.kutu[i]--;
+  else { if (M.altin < c.fiyat) { toast(`${c.fiyat - M.altin} altın daha lazım 🥺`); snd(200, .15, 'triangle', .04); return; } M.altin -= c.fiyat; }
+  // ödülü şimdi belirle, animasyon sonra
+  let r = Math.random() * 100, rar = 0; for (let j = 0; j < 4; j++) { r -= c.o[j]; if (r < 0) { rar = j; break; } }
+  const pool = ITEMS.filter(it => it.r === rar), it = pool[(Math.random() * pool.length) | 0], o = M.inv[it.id], yeni = !o;
+  if (o) o.parca++; else M.inv[it.id] = { lv: 1, parca: 0 };
+  saveM(); renderChests(); playChest(i, it, yeni);
+}
+let opBusy = false;
+function playChest(i, it, yeni) {
+  const c = CHESTS[i], sc = $('opening'), ch = $('opChest'), R0 = RAR[it.r];
+  ch.outerHTML = chestHTML(c, true).replace('class="chest big"', 'class="chest big" id="opChest"');
+  const chest = $('opChest'); $('rays').style.opacity = 0; $('rays').style.setProperty('--rc', R0.c + '88');
+  $('opItem').className = ''; $('opItem').innerHTML = itemIcon(it, M.inv[it.id], true);
+  $('opText').innerHTML = `<b>${c.ad}</b>Dokun ve aç!`; $('opBtns').style.display = 'none';
+  sc.classList.add('on'); opBusy = false; snd(300, .2, 'triangle', .05, .5);
+  setTimeout(() => chest.classList.add('idle'), 600);
+  const open = () => { if (opBusy) return; opBusy = true; chest.classList.remove('idle'); chest.classList.add('shake');
+    [400, 500, 600, 750].forEach((f, k) => setTimeout(() => snd(f, .08, 'square', .03), k * 130));
+    setTimeout(() => { chest.classList.remove('shake'); chest.classList.add('open'); if (c.imgOpen) chest.querySelector('img').src = c.imgOpen;
+      $('rays').style.opacity = 1; burst(R0.c, it.r); const fl = $('flashO'); fl.style.transition = 'none'; fl.style.opacity = it.r >= 2 ? .85 : .5; requestAnimationFrame(() => { fl.style.transition = 'opacity .6s'; fl.style.opacity = 0; });
+      chime(it.r >= 3 ? [523, 659, 784, 1046, 1318, 1568] : it.r >= 2 ? [523, 659, 784, 1046] : [659, 784, 988], 90);
+      setTimeout(() => { $('opItem').classList.add('up');
+        const st = Object.keys(it.st).map(k => `${STN[k][0]} ${STN[k][1](it.st[k])}`).join(' · ');
+        $('opText').innerHTML = `<span style="background:${R0.c};border-radius:99px;padding:2px 12px;font-weight:700">${R0.ad}</span><b>${it.ad}</b>${SLOTS[it.s]} · ${st}<br>${yeni ? '✨ YENİ EŞYA!' : `+1 parça (${M.inv[it.id].parca} parça)`}`;
+        $('opBtns').style.display = ''; $('opAgain').textContent = M.kutu[i] ? `Bir daha aç (${M.kutu[i]})` : `Bir daha aç (🪙 ${c.fiyat})`; $('opAgain').onclick = () => buyChest(i); }, 250);
+    }, 600); };
+  chest.onclick = open; $('opStage').onclick = open;
+}
+$('opOk').onclick = () => { $('opening').classList.remove('on'); renderChests(); };
+function burst(col, r) { const n = 14 + r * 8, cx = innerWidth / 2, cy = innerHeight / 2 - 40, em = ['💖', '✨', '⭐', '🐾', '💗'];
+  for (let k = 0; k < n; k++) { const e = document.createElement('div'), a = Math.random() * Math.PI * 2, d = 120 + Math.random() * 220; e.className = 'spark'; e.textContent = em[k % em.length];
+    e.style.left = cx + 'px'; e.style.top = cy + 'px'; e.style.setProperty('--dx', Math.cos(a) * d + 'px'); e.style.setProperty('--dy', Math.sin(a) * d + 'px'); document.body.appendChild(e); setTimeout(() => e.remove(), 1000); } }
+
+/* ---------- EŞYA EKRANI ---------- */
+function itemIcon(it, o, noBadge) { const R0 = RAR[it.r], c = o && o.lv < ITEM_MAX ? itemCost(it, o.lv) : null, canUp = c && o.parca >= c.parca && M.altin >= c.altin;
+  return `<div class="it" style="--c:${R0.c};--bg:${R0.bg}">${it.img ? `<img src="${it.img}" alt="">` : it.ic}${o ? `<span class="lv">Sv ${o.lv}</span>` : ''}${!noBadge && M.eq[it.s] === it.id ? '<span class="eqm">✓</span>' : ''}${!noBadge && canUp ? '<span class="up">▲</span>' : ''}</div>`; }
+function renderInv() {
+  $('gI').textContent = `🪙 ${M.altin}`;
+  $('eqSlots').innerHTML = Object.keys(SLOTS).map(sl => { const id = M.eq[sl], it = ITEMS.find(x => x.id === id);
+    return `<div>${it ? `<button data-it="${it.id}">${itemIcon(it, M.inv[it.id], true)}</button>` : `<div class="it empty">boş</div>`}${SLOTS[sl]}</div>`; }).join('');
+  const E = eqStats(), parts = Object.keys(E).filter(k => E[k] > 0).map(k => `${STN[k][0]} <b>${STN[k][1](E[k])}</b>`);
+  $('eqSum').innerHTML = parts.length ? parts.join('') : 'Henüz eşya giymedin — sandık aç!';
+  const own = ITEMS.filter(it => M.inv[it.id]).sort((a, b) => b.r - a.r || a.s.localeCompare(b.s));
+  $('invGrid').innerHTML = own.length ? own.map(it => `<button data-it="${it.id}">${itemIcon(it, M.inv[it.id])}</button>`).join('') : '<div class="sub" style="grid-column:1/-1">Envanterin boş. 🎁 Sandıklar\'dan eşya kazan!</div>';
+  document.querySelectorAll('#invScr [data-it]').forEach(b => b.onclick = () => openItem(b.dataset.it));
+}
+function openItem(id) {
+  const it = ITEMS.find(x => x.id === id), o = M.inv[id], R0 = RAR[it.r], worn = M.eq[it.s] === id, c = o.lv < ITEM_MAX ? itemCost(it, o.lv) : null;
+  const line = lv => Object.keys(it.st).map(k => `${STN[k][0]} <b>${STN[k][1](it.st[k] * itemMul(lv))}</b>`).join(' · ');
+  $('detBody').innerHTML = `${itemIcon(it, o, true)}<h2 style="margin-top:4px">${it.ad}</h2>
+    <div class="sub"><span style="background:${R0.c};color:#fff;border-radius:99px;padding:1px 10px;font-weight:700">${R0.ad}</span> · ${SLOTS[it.s]} · Seviye ${o.lv}/${ITEM_MAX}</div>
+    <div style="color:#8a4a70">${line(o.lv)}</div>
+    ${c ? `<div style="color:#9a6ae0;font-size:14px;margin-top:6px">Sonraki seviye: ${line(o.lv + 1)}</div>
+      <div class="bar"><i style="width:${Math.min(100, o.parca / c.parca * 100)}%"></i></div><div style="font-size:13px;color:#8a4a70">Parça ${o.parca} / ${c.parca} · 🪙 ${c.altin}</div>` : '<div style="color:#2f9a5a;font-weight:700;margin-top:8px">✨ MAKSİMUM SEVİYE</div>'}
+    <div style="margin-top:12px"><button class="btn" id="dEq">${worn ? 'Çıkar' : 'Giy'}</button>${c ? `<button class="btn alt" id="dUp" ${o.parca >= c.parca && M.altin >= c.altin ? '' : 'disabled'}>⬆️ Seviye Yükselt</button>` : ''}</div>`;
+  $('dEq').onclick = () => { if (worn) delete M.eq[it.s]; else M.eq[it.s] = it.id; saveM(); chime(worn ? [659, 523] : [523, 784], 70); renderInv(); openItem(id); };
+  if ($('dUp')) $('dUp').onclick = () => { if (o.parca < c.parca || M.altin < c.altin) return; o.parca -= c.parca; M.altin -= c.altin; o.lv++; saveM(); chime([523, 659, 784, 1046, 1318], 70); burst(R0.c, 1); renderInv(); openItem(id); };
+  $('itemDet').classList.add('on');
+}
+$('detX').onclick = () => $('itemDet').classList.remove('on');
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.scr').classList.remove('on'); showMenu(); });
 function showMenu() {
   state = 'menu'; P = null; $('hud').style.display = 'none'; $('title').style.display = 'flex'; music('menu');
