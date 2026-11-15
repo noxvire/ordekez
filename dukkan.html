@@ -186,7 +186,7 @@
 <div id="pause" class="scrn hidden">
   <h2>DURAKLATILDI</h2>
   <button class="mbtn" data-p="go">Devam</button>
-  <button class="mbtn" data-p="rules">Dayının Kuralları</button>
+  <button class="mbtn" data-p="rules">Dükkân Kuralları</button>
   <button class="mbtn" data-p="menu">Ana Menü</button>
   <label style="font-size:14px">Ses <input type="range" id="vol" min="0" max="1" step=".05" value=".8"></label>
   <label style="font-size:14px">Fare hassasiyeti <input type="range" id="sens" min=".3" max="2.5" step=".1" value="1"></label>
@@ -456,9 +456,9 @@ crtScr.userData = { kind: 'tv' }; inter.push(crtScr);
 // güvenlik kamerası (köşede)
 const secCam = new THREE.PerspectiveCamera(75, 96 / 72, .1, 20); secCam.position.set(4.6, 2.7, 3.6); secCam.lookAt(0, .8, -1.5); secCam.layers.enable(2); secCam.layers.enable(3); scene.add(secCam);
 box(.2, .14, .26, lam(0x222222), 4.75, 2.82, 3.75).lookAt(0, .8, -1.5);
-// dayının notu
+// eski çalışanın notu (kaldırıldı)
 const note = plane(.22, .28, lam({ map: ctex(16, 20, (g, w, h) => { g.fillStyle = '#e8dcb8'; g.fillRect(0, 0, w, h); g.fillStyle = '#5a4a30'; for (let y = 3; y < h - 2; y += 3) g.fillRect(2, y, 6 + Math.random() * 7 | 0, 1); }) }), 1.95, 1.062, counterZ + .1, -Math.PI / 2);
-note.rotation.z = .3; note.userData = { kind: 'note' }; inter.push(note);
+note.rotation.z = .3; note.visible = false;
 // telefon
 const phone = new THREE.Group(); phone.position.set(2.85, 1.05, counterZ + .22); scene.add(phone);
 box(.2, .08, .26, lam(0x7a1a1a), 0, .04, 0, phone); box(.24, .06, .07, lam(0x6a1414), 0, .11, 0, phone);
@@ -1142,7 +1142,7 @@ const RULES = `<h3>DÜKKÂN KURALLARI</h3><ol>
 <li>Tanıdığın biri gelirse yüzüne iyi bak. Yüzü <b>yanlışsa</b>, konuşma uzatma.</li>
 <li>Saat 01:00'den sonra televizyon kendi kendine açılırsa <b>arkana bakma.</b></li>
 <li>Elektrik giderse şalter depoda. <b>Feneri (F) kapatma.</b></li>
-</ol><div class="sig">— Necmi Dayın</div><small>E ile kapat</small>`;
+</ol><div class="sig">— N. (senden önceki çalışan, kasanın altına bırakmış)</div><small>E ile kapat</small>`;
 
 // gece senaryoları: m = 22:00'den sonraki dakika
 const NIGHTS = {
@@ -1155,11 +1155,11 @@ const NIGHTS = {
         hi: 'Selam! Burası yeniden mi açıldı? Hayırlı olsun!',
         ask: 'Erdi Kart 64 lazım. Yurtta turnuva var, rezil olmayayım.',
         thanks: 'Eyvallah! Kazanırsam gelip anlatırım.',
-        chat: { q: 'Bu arada... bu dükkân gece hep böyle sessiz mi? Dışarıda tek kişi yok.', o: [['Alışırsın, mahalle sakin.', 1, 0, 'Haklısın, ben kuruntu yapıyorum.'], ['Dayım geceleri kimseyi içeri almazdı aslında...', 0, 0, '...Ne? O zaman neden açıyordu dükkânı?'], ['Korktun mu yoksa?', 2, 10, 'Ben mi? Asla! ...Neyse, ben kaçtım.']] } },
+        chat: { q: 'Bu arada... bu dükkân gece hep böyle sessiz mi? Dışarıda tek kişi yok.', o: [['Alışırsın, mahalle sakin.', 1, 0, 'Haklısın, ben kuruntu yapıyorum.'], ['Benden önceki çalışan bir gece ortadan kaybolmuş...', 0, 0, '...Ne? Ciddi misin? Ben kaçtım.'], ['Korktun mu yoksa?', 2, 10, 'Ben mi? Asla! ...Neyse, ben kaçtım.']] } },
       { m: 85, who: 'teyze', want: ['konsol'], pay: 1600,
         hi: 'Kızım iyi akşamlar. Torunuma şu atari mi neyse, ondan alacağım. PlayKutu mu ne...',
         thanks: 'Allah razı olsun kızım. Gece gece burada tek başına durma, olur mu?',
-        chat: { q: 'Necmi Bey\'in yeğeni sen misin? O da hep gece açardı burayı... Hep birini beklerdi.', o: [['Kimi beklerdi?', 0, 0, '...Bilmem kızım. Gece gelenleri. Hadi hayırlı işler.'], ['Evet, dayımın yerine ben baktım.', 1, 20, 'Aferin kızım. Al, şeker al kendine.']] } },
+        chat: { q: 'Necmi\'nin yerine sen mi geldin? O da hep gece açardı burayı... Hep birini beklerdi. Sonra bir gün... yok oldu.', o: [['Kimi beklerdi?', 0, 0, '...Bilmem kızım. Gece gelenleri. Hadi hayırlı işler.'], ['Evet, işi ben devraldım.', 1, 20, 'Aferin kızım. Al, şeker al kendine.']] } },
       { m: 140, who: 'erdi', want: ['ordekavi'], pay: 200,
         hi: 'ZEYNEP! Duydun mu, Ördek Avcısı 2 çıkmış!!',
         thanks: 'Bu gece uyumuyorum! Ördekler beni bekler!',
@@ -1177,7 +1177,7 @@ const NIGHTS = {
       { m: 100, who: 'ogr', want: ['aysavas'], pay: 250,
         hi: 'Selam. Ay Savaşları var mı? Ödevden kaçmam lazım.',
         thanks: 'Kurtardın beni. Ya da batırdın, sabah anlarız.',
-        chat: { q: 'Bu dükkânı hep merak ederdim. Necmi amca hiç kimseye depoyu göstermezdi.', o: [['Ben de girmedim daha.', 0, 0, 'Bence girme. Şaka şaka. ...Belki de değil.'], ['Depoda sadece koli var.', 1, 5, 'Hm. Öyle olsun.']] } },
+        chat: { q: 'Bu dükkânı hep merak ederdim. Burada önceden çalışan Necmi abi hiç kimseye depoyu göstermezdi. Sonra bir gün ortadan kayboldu.', o: [['Ben de girmedim daha.', 0, 0, 'Bence girme. Şaka şaka. ...Belki de değil.'], ['Depoda sadece koli var.', 1, 5, 'Hm. Öyle olsun.']] } },
       { m: 160, who: 'erdi', want: ['futbol'], pay: 170,
         hi: 'ZEYNEP! Pro Ördek Futbol lazım, bütün mahalleye meydan okudum!',
         thanks: 'Ördekler sahada!',
@@ -1185,8 +1185,8 @@ const NIGHTS = {
       { m: 230, who: 'adam', want: ['sessiz'], pay: 200,
         hi: 'İyi geceler hanımefendi.',
         ask: 'Sessiz Koridor. Rafta son bir tane kaldı sanırım.',
-        thanks: 'Teşekkür ederim. Necmi Bey bu oyunu bana hiç satmazdı. Siz daha... anlayışlısınız.',
-        chat: { q: 'Gece müşterilerine dikkat edin. Hepsi göründükleri gibi değil.', o: [['Ne demek istiyorsunuz?', 0, 0, 'Kuralları okuyun. Necmi Bey onları boşuna yazmadı.'], ['Siz de mi öylesiniz?', 1, 0, '...Hayır. Zil çaldı, değil mi? İyi geceler.']] } },
+        thanks: 'Teşekkür ederim. Sizden önceki çalışan bu oyunu bana hiç satmazdı. Ona ne oldu, bilmiyorsunuz değil mi?',
+        chat: { q: 'Gece müşterilerine dikkat edin. Hepsi göründükleri gibi değil.', o: [['Ne demek istiyorsunuz?', 0, 0, 'Zil çalmadan gelene satmayın. Sizden önceki bunu unutmuştu.'], ['Siz de mi öylesiniz?', 1, 0, '...Hayır. Zil çaldı, değil mi? İyi geceler.']] } },
     ], events: [{ m: 70, f: 'boxFall' }, { m: 190, f: 'tvName' }] },
   3: { title: 'GECE 3', sub: 'Tanıdık yüzler', visits: [
       { m: 6, who: 'cocuk', want: ['zkombat'], pay: 200,
@@ -1212,8 +1212,8 @@ const NIGHTS = {
   4: { title: 'GECE 4', sub: 'Kameralar', visits: [
       { m: 30, who: 'teyze', want: ['kol'], pay: 300,
         hi: 'Kızım yine ben. Torunum kolu kırmış, bir tane daha lazım.',
-        thanks: 'Sağ ol kızım. Bak, Necmi Bey\'in son gecesi de böyle yağmurluydu...',
-        chat: { q: 'Necmi Bey ölmeden önce bana dedi ki: "Kasadaki kız gelirse ona söyle, kendine benzeyene kapıyı açmasın."', o: [['Bu ne demek?', 0, 0, 'Bilmiyorum kızım. Ben de anlamadım. Allah korusun.'], ['Dayım biraz tuhaftı.', 0, 10, 'Tuhaftı ama iyi adamdı. Al kızım, harçlık.']] } },
+        thanks: 'Sağ ol kızım. Bak, Necmi\'nin kaybolduğu gece de böyle yağmurluydu...',
+        chat: { q: 'Necmi kaybolmadan bir gün önce bana dedi ki: "Kasadaki kız gelirse ona söyle, kendine benzeyene kapıyı açmasın."', o: [['Bu ne demek?', 0, 0, 'Bilmiyorum kızım. Ben de anlamadım. Allah korusun.'], ['Onu hiç tanımadım.', 0, 10, 'Tuhaftı ama iyi çocuktu. Al kızım, harçlık.']] } },
       { m: 75, who: 'ogr', fake: true, want: ['erdikart'], pay: 300,
         hi: 'Selam Zeynep. Ben. Ben öğrenciyim. Ödevim var. Ödev.',
         ask: 'Erdi Kart 64. Yurtta. Turnuva. Kazanacağım. Kazanacağım.',
@@ -1221,8 +1221,8 @@ const NIGHTS = {
         refuse: 'Kapattınız. Anladım. Anladım. Anladım.' },
       { m: 150, who: 'kurye', want: ['ordekavi'], pay: 200,
         hi: 'Selam. Bu sefer kendime alacağım. Ördek Avcısı 2.',
-        thanks: 'Bu arada size bir koli var, Necmi Bey adına. Kapının yanına bıraktım.',
-        chat: { q: 'Koliyi bırakan adam "Zeynep\'e verin, depoyu açınca anlar" dedi. Yüzünü göremedim.', o: [['Tamam, sağ ol.', 1, 5, 'Rica ederim. İyi geceler.'], ['Nasıl bir adamdı?', 0, 0, 'Uzun boylu... şapkalı... sesi Necmi Bey\'e benziyordu ama... olamaz değil mi?']] } },
+        thanks: 'Bu arada size bir koli var, Necmi adına. Kapının yanına bıraktım.',
+        chat: { q: 'Koliyi bırakan adam "Zeynep\'e verin, depoyu açınca anlar" dedi. Yüzünü göremedim.', o: [['Tamam, sağ ol.', 1, 5, 'Rica ederim. İyi geceler.'], ['Nasıl bir adamdı?', 0, 0, 'Uzun boylu... şapkalı... sesi... o kaybolan çocuğa benziyordu. Olamaz değil mi?']] } },
       { m: 225, who: 'erdi', want: ['bkr64'], pay: 160,
         hi: 'ZEYNEP... Selam. Bugün biraz sessizim.',
         ask: 'Backrooms 64 ver. Rüyamda bu oyunu oynuyordum.',
@@ -1239,12 +1239,12 @@ const NIGHTS = {
         hi: 'Kızım. Kızım. Kızım.',
         ask: 'Zeynep\'in Günlüğü\'nü ver. Kırmızı kapaklı. Raftaydı.',
         thanks: 'Allah razı olsun kızım. Bundan sonra burası bizim.',
-        refuse: 'Kapattın mı? Necmi de kapatmıştı. Bak ne oldu ona.' },
+        refuse: 'Kapattın mı? Necmi de kapatmıştı. Bak, şimdi nerede?' },
       { m: 120, who: 'erdi', want: ['zkombat', 'erdikart'], pay: 420,
         hi: 'ZEYNEP! Gerçek Erdi burada! Kanıt: ördekleri seviyorum!',
         ask: 'Zeynep Kombat ve Erdi Kart 64 lazım. Son gecene özel, hepimiz oynayacağız!',
         thanks: 'Yarın sabah hepimiz burada oyun oynuyoruz, söz!',
-        chat: { q: 'Zeynep, sabah olunca bu dükkânı kapatacak mısın? Bence burası... yaşıyor.', o: [['Hayır, dayımın dükkânı. Kalacak.', 2, 20, 'İşte benim Zeynep\'im! Al, ördek pulu, şans getirir.'], ['Bilmiyorum Erdi.', 1, 0, 'Ne karar verirsen yanındayım.']] } },
+        chat: { q: 'Zeynep, sabah olunca bu dükkânı kapatacak mısın? Bence burası... yaşıyor.', o: [['Hayır, artık burası benim. Kalacak.', 2, 20, 'İşte benim Zeynep\'im! Al, ördek pulu, şans getirir.'], ['Bilmiyorum Erdi.', 1, 0, 'Ne karar verirsen yanındayım.']] } },
     ], events: [{ m: 190, f: 'powerCut' }], finale: true },
 };
 const FAKE_GAMES = { bkr0: 'Backrooms 0', gunluk: "Zeynep'in Günlüğü" };
@@ -1621,7 +1621,7 @@ const EV = {
   },
   tvName() { N.tvMode = 'name'; N.tvT = 3; SND.static(2.5); glitch = .6; },
   flicker() { for (let i = 0; i < 8; i++) setTimeout(() => { tubes.forEach(t => t.off = Math.random() < .6); SND.click(); }, i * 160); setTimeout(() => { tubes.forEach(t => t.off = true); SND.clunk(); }, 1400); setTimeout(() => { tubes.forEach(t => t.off = false); SND.clunk(); }, 3600); },
-  phoneDayi() { N.phone = { ringT: 0, rings: 0, msg: ['...Zeynep? Benim. Necmi dayın.', 'Bu gece televizyona bakma kızım.', 'Bakarsan... arkanı dönme.', '...Kuralları unutma. Zil çalmadan gelen...'] }; },
+  phoneDayi() { N.phone = { ringT: 0, rings: 0, msg: ['...Zeynep? Benim. Necmi. Senden önce orada çalışan.', 'Bu gece televizyona bakma.', 'Bakarsan... arkanı dönme.', '...Kuralları unutma. Zil çalmadan gelen...'] }; },
   tvCam() { N.tvMode = 'cam'; N.tvT = 14; spawnGhost(); SND.static(1); toast('Televizyon kendi kendine açıldı...', 3); },
   powerCut() { N.power = false; for (const t of tubes) t.off = true; SND.clunk(); setTimeout(() => toast('Elektrik gitti! Şalter depoda. F ile feneri aç.', 5), 600); N.tvMode = 'off'; ambNodes && (ambNodes.hg.gain.value = 0); depoL.intensity = 0; spawnDepoGhost(); },
 };
@@ -1706,7 +1706,7 @@ function promptFor(f) {
     case 'counter': return held ? `Tezgâha koy` : '';
     case 'cItem': return handsFull() ? '' : 'Geri al';
     case 'register': return 'Kasayı aç';
-    case 'note': return 'Dayının notunu oku';
+    case 'note': return '';
     case 'tv': return '';
     case 'phone': return N && N.phone ? 'Telefonu aç' : '';
     case 'cust': return N && N.cust && (N.cust.st === 'wait' || N.cust.st === 'arrived') ? 'Konuş' : '';
@@ -1745,7 +1745,7 @@ function interact() {
     case 'rack': if (carryKoli) unpackKoli(); break;
     case 'shopDoor': doorUser = doorUser ? 0 : 1; SND.drawer(); if (doorUser) SND.bell(); break;
     case 'sign':
-      if (!N.opened) { N.opened = true; N.gap = 3; setShopOpen(true); SND.click(); SND.bell(); toast('Dükkân açıldı. Müşteriler gelecek.', 2.5); $('hint').classList.add('hidden'); hintT = 0; if (S.night === 1) setTimeout(() => { if (hintT < 100) hint('Kasanın yanındaki notu oku (E). Müşteri gelince ona bak ve E bas.', 9); }, 1500); updateHud(true); }
+      if (!N.opened) { N.opened = true; N.gap = 3; setShopOpen(true); SND.click(); SND.bell(); toast('Dükkân açıldı. Müşteriler gelecek.', 2.5); $('hint').classList.add('hidden'); hintT = 0; if (S.night === 1) setTimeout(() => { if (hintT < 100) hint('Kasaya geç. Müşteri gelince ona bak ve E bas.', 9); }, 1500); updateHud(true); }
       else if (N.allDone && !N.shopClosed) { N.shopClosed = true; N.closedAt = performance.now(); setShopOpen(false); SND.click(); SND.drawer(); toast('Dükkân kapandı.', 2.5); $('hint').classList.add('hidden'); hintT = 0; }
       else if (!N.allDone) toast('Daha müşteri gelecek, dükkân açık kalmalı.');
       break;
@@ -1990,7 +1990,7 @@ function showEnding() {
   S.ended = true; S.best = Math.max(S.best || 0, S.money); try { localStorage.setItem('dk_end_' + (good ? 'iyi' : 'kotu'), '1'); } catch (e) {}
   el.innerHTML = good ? `<h2>SABAH OLDU</h2>
     <p>Kapıdaki tabelayı <b>KAPALI</b> tarafına çevirdin. Dışarıda yağmur dinmiş, gökyüzü mor.</p>
-    <p>Telefon son bir kez çaldı. Hışırtının arasından dayının sesi: <i>"Aferin kızım. Artık burası senin."</i></p>
+    <p>Telefon son bir kez çaldı. Hışırtının arasından Necmi'nin sesi: <i>"Aferin. Artık burası senin."</i></p>
     <p>Erdi kapıda, elinde ördek pulu ve iki oyun koluyla bekliyordu. <i>"ZEYNEP! Sabah turnuvası!"</i></p>
     <p style="color:#9ee870">İYİ SON — Dükkânın Sahibi</p>`
     : `<h2>SABAH OLMADI</h2>
