@@ -200,6 +200,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <button class="x" data-close>✕</button>
   <h2>🎁 Sandıklar</h2><div class="sub">Savaşta düşmanlardan nadiren sandık düşer ve buraya gelir (4 yuva). Açmaya başla, süre dolunca aç: her sandıktan 5 eşya çıkar! <span class="gold" id="gC"></span></div>
   <div class="chests" id="chestList"></div>
+  <h2 style="font-size:22px;margin-top:18px">🛒 Sandık Mağazası</h2><div class="sub">Altınla alınan sandık beklemeden hemen açılır.</div>
+  <div class="chests" id="chestShop"></div>
 </div></div>
 
 <div id="flashO"></div>
@@ -341,10 +343,10 @@ const RAR = [
 // görseller gelince img: 'zs_chest_X.png' (kapalı) ve imgOpen eklenecek
 // savaşta düşen sandıklar 4 yuvada bekler; açılma süresi dolunca 5 eşya verir
 const CHESTS = [
-  { ad: 'Sıradan Sandık',  img: 'zs_chest_0.webp', r: 0, sure: 3 * 60,    altin: 30,  o: [80, 18, 2, 0] },
-  { ad: 'Nadir Sandık',    img: 'zs_chest_1.webp', r: 1, sure: 20 * 60,   altin: 100, o: [45, 45, 9, 1] },
-  { ad: 'Epik Sandık',     img: 'zs_chest_2.webp', r: 2, sure: 60 * 60,   altin: 300, o: [10, 50, 35, 5] },
-  { ad: 'Efsanevi Sandık', img: 'zs_chest_3.webp', r: 3, sure: 3 * 3600,  altin: 800, o: [0, 30, 50, 20] },
+  { ad: 'Sıradan Sandık',  img: 'zs_chest_0.webp', r: 0, fiyat: 300, sure: 3 * 60,    altin: 30,  o: [80, 18, 2, 0] },
+  { ad: 'Nadir Sandık',    img: 'zs_chest_1.webp', r: 1, fiyat: 1000, sure: 20 * 60,   altin: 100, o: [45, 45, 9, 1] },
+  { ad: 'Epik Sandık',     img: 'zs_chest_2.webp', r: 2, fiyat: 3000, sure: 60 * 60,   altin: 300, o: [10, 50, 35, 5] },
+  { ad: 'Efsanevi Sandık', img: 'zs_chest_3.webp', r: 3, fiyat: 8000, sure: 3 * 3600,  altin: 800, o: [0, 30, 50, 20] },
 ];
 // düşmanlardan sandık düşme şansı (öldürme başına)
 const CHEST_DROP = [.0005, .00015, .00004, .00001];
@@ -849,19 +851,26 @@ function renderChests() {
     else st = `<span class="own" style="color:#8a4a70">⏱ ${fmtD(c.sure)}</span><span class="bt" ${opening ? 'style="opacity:.5"' : ''}>${opening ? 'Sırada bekliyor' : 'Açmaya başla'}</span>`;
     return `<button class="cc" data-i="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b><div class="od">${CHEST_ITEMS} eşya · ${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div>${st}</button>`; }).join('');
   $('chestList').querySelectorAll('.cc[data-i]').forEach(b => b.onclick = () => tapChest(+b.dataset.i));
+  $('chestShop').innerHTML = CHESTS.map((c, i) => `<button class="cc" data-b="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b><div class="od">${CHEST_ITEMS} eşya · ${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div><span class="bt">🪙 ${c.fiyat}</span></button>`).join('');
+  $('chestShop').querySelectorAll('.cc').forEach(b => b.onclick = () => { const i = +b.dataset.b, c = CHESTS[i];
+    if (M.altin < c.fiyat) { toast(`${c.fiyat - M.altin} altın daha lazım 🥺`); snd(200, .15, 'triangle', .04); return; }
+    if (!confirm(`${c.ad} ${c.fiyat} altına alınıp açılsın mı?`)) return;
+    M.altin -= c.fiyat; openLoot(i); });
   clearInterval(chestTimer); chestTimer = setInterval(() => { if (!$('chestScr').classList.contains('on')) return clearInterval(chestTimer); if (!$('opening').classList.contains('on')) renderChests(); }, 1000);
 }
 function tapChest(i) {
   const k = M.kutular[i]; if (!k) return; const L = left(k);
   if (!k.bas) { if (!TEST && M.kutular.some(x => x && x.bas && left(x) > 0)) { toast('Aynı anda tek sandık açılabilir ⏳'); return; } k.bas = Date.now(); saveM(); chime([523, 659], 80); return renderChests(); }
   if (L > 0) { const c = skipCost(k); if (M.altin < c) { toast(`${c - M.altin} altın daha lazım 🥺`); return; } if (!confirm(`${c} altın harcayıp hemen açılsın mı?`)) return; M.altin -= c; }
-  // ödülleri belirle
-  const ch = CHESTS[k.r], loot = [];
+  M.kutular[i] = null; openLoot(k.r);
+}
+function openLoot(ci) {
+  const ch = CHESTS[ci], loot = [];
   for (let n = 0; n < CHEST_ITEMS; n++) { let r = Math.random() * 100, rar = 0; for (let j = 0; j < 4; j++) { r -= ch.o[j]; if (r < 0) { rar = j; break; } }
     const pool = ITEMS.filter(it => it.r === rar), it = pool[(Math.random() * pool.length) | 0], yeni = !M.inv[it.id];
     if (yeni) M.inv[it.id] = { lv: 1, parca: 0 }; else M.inv[it.id].parca++; loot.push({ it, yeni }); }
   loot.sort((a, b) => a.it.r - b.it.r);   // en iyisi en sonda
-  M.altin += ch.altin; M.kutular[i] = null; saveM(); renderChests(); playChest(k.r, loot);
+  M.altin += ch.altin; saveM(); renderChests(); playChest(ci, loot);
 }
 let opBusy = false;
 function playChest(ci, loot) {
