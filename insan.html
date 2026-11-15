@@ -100,21 +100,21 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = false;
 const rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType });
 const postMat = new THREE.ShaderMaterial({
-  uniforms: { tex: { value: rt.texture }, time: { value: 0 }, peep: { value: 0 }, aspect: { value: 1 }, flash: { value: 0 } },
+  uniforms: { tex: { value: rt.texture }, time: { value: 0 }, peep: { value: 0 }, aspect: { value: 1 }, flash: { value: 0 }, lens: { value: 1 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`,
-  fragmentShader: `uniform sampler2D tex; uniform float time, peep, aspect, flash; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tex; uniform float time, peep, aspect, flash, lens; varying vec2 vUv;
     float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     vec3 aces(vec3 x){ return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14), 0., 1.); }
     void main(){
       vec2 q = vUv - .5; vec2 uv = vUv; vec3 c;
       if (peep > 0.) {
         vec2 e = q * 2.; float r2 = dot(e, e);
-        uv = .5 + q * (.84 + .2 * r2);                      // balık gözü
+        uv = .5 + q * mix(1., .84 + .2 * r2, lens);          // balık gözü (fotoğrafta zaten var)
         c = texture2D(tex, uv).rgb;
         float l = dot(c, vec3(.3, .59, .11));
         l += (h(vUv * 640. + fract(time * 7.) * 91.) - .5) * .08;   // gece görüşü karıncalanması
         c = vec3(.18, .95, .72) * l * 1.15 + vec3(.0, .02, .015);
-        c *= smoothstep(1.12, .86, length(e * vec2(.92, 1.05)));   // oval mercek kenarı
+        c *= mix(1., smoothstep(1.12, .86, length(e * vec2(.92, 1.05))), lens);   // oval mercek kenarı
         c *= .92 + .08 * sin(vUv.y * 900. + time * 30.);
       } else {
         c = texture2D(tex, uv).rgb; c = aces(c * 1.1); c = pow(c, vec3(1. / 2.2));
@@ -275,7 +275,7 @@ box(.8, .5, .3, M.wood, .7, .25, 6.4); solid(.25, 1.15, 6.2, 6.6); box(.04, 1.8,
   // duvar saati
   const clk = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .04, 24), std(ctex(128, 128, (g, w, h) => { g.fillStyle = '#d8d0b8'; g.beginPath(); g.arc(64, 64, 62, 0, 7); g.fill(); g.fillStyle = '#111'; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28; g.fillRect(64 + Math.cos(a) * 52 - 2, 64 + Math.sin(a) * 52 - 2, 4, 4); } g.strokeStyle = '#111'; g.lineWidth = 4; g.beginPath(); g.moveTo(64, 64); g.lineTo(64, 24); g.moveTo(64, 64); g.lineTo(94, 70); g.stroke(); }), .6)); clk.rotation.x = Math.PI / 2; clk.position.set(-4, 2.05, 3.08); clk.rotation.z = Math.PI; scene.add(clk);
   // prizler ve anahtarlar
-  for (const [x, y, z, r] of [[-1.3, 1.3, 3.2, Math.PI / 2], [1.3, 1.3, -1.2, -Math.PI / 2], [-6.95, .3, 1, Math.PI / 2], [-3, .3, -2.95, 0], [1.3, 1.3, 3.8, -Math.PI / 2]]) { const b = box(.08, .12, .02, std(0xd8d4c8, .6), x, y, z, scene, false); b.rotation.y = r; }
+  for (const [x, y, z, r] of [[-1.3, 1.3, 2.75, Math.PI / 2], [1.3, 1.3, -1.2, -Math.PI / 2], [-6.95, .3, 1, Math.PI / 2], [-3, .3, -2.95, 0], [1.3, 1.3, 3.8, -Math.PI / 2]]) { const b = box(.08, .12, .02, std(0xd8d4c8, .6), x, y, z, scene, false); b.rotation.y = r; }
   // mutfak üst/alt dolaplar, evye, ocak, çaydanlık
   const cab = std(0x6a5a44, .6);
   box(3.2, .7, .35, cab, 4.3, 1.95, 6.8, scene, false); for (let i = 0; i < 4; i++) box(.02, .2, .02, M.metal, 3.1 + i * .8, 1.75, 6.62, scene, false);
@@ -302,7 +302,7 @@ const gun = new THREE.Group(); gun.position.set(5.92, 1.5, -.5); gun.rotation.y 
    v: ziyaretçi, s: üzerinde görünen işaretler (insanlarda yanıltıcı tek işaret olabilir)
    ===================================================================== */
 const CHARS = {
-  remzi:  { ad: 'Remzi', h: 1.72, look: { skin: '#cfa384', hair: '#8a857c', style: 'cap', cap: '#2e3e5e', top: '#3e4e6e', bot: '#2a2a30', shoe: '#1a1410', old: 1, mustache: 1, eye: '#5a4a32' }, v: 0, s: [],
+  remzi:  { ad: 'Remzi', h: 1.76, hi: 'Ehm... merhaba?', peep: 'ni_peep_remzi.jpg', look: { skin: '#c8a088', hair: '#1a1410', style: 'bald', top: '#141414', bot: '#1e1e22', shoe: '#1a1410', beard: 1, eye: '#2a1e14' }, v: 0, s: [],
             who: 'Remzi. Mahallenin postacısıyım, beni tanırsın.', why: 'Evime yetişemedim. Güneş doğmadan bir yere sığınmam lazım. Bir gece... sadece bir gece.',
             yes: 'Allah razı olsun evladım. Ayakkabılarımı çıkarırım, merak etme.', no: 'Anlıyorum... Herkes korkuyor. Kendine iyi bak.', talk: 'Kırk yıl mektup taşıdım. Hiçbir mektup bu kadar korkutmadı beni.' },
   selin:  { ad: 'Selin', h: 1.66, look: { skin: '#e3bfa2', hair: '#2a1a14', style: 'long', top: '#8a2a26', bot: '#20202a', shoe: '#101010', eye: '#3a2a1a', lips: '#b0605a' }, v: 1, s: ['dis', 'koltuk'],
@@ -644,13 +644,23 @@ const peepBg = (() => { const c = document.createElement('canvas'); c.width = 12
   // sundurma lambasının ışığı
   const lg = g.createRadialGradient(600, 560, 20, 600, 560, 520); lg.addColorStop(0, 'rgba(255,255,255,.16)'); lg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = lg; g.fillRect(0, 0, W, Hh);
   return c; })();
+const peepPhotos = {};
 function drawPeep(t) {
-  const g = peepCv.getContext('2d'); g.drawImage(peepBg, 0, 0);
-  if (visitorP && figCache[visitorP.id]) {
-    const f = figCache[visitorP.id], near = visitorP.near, hgt = 600 * (CHARS[visitorP.id].h / 1.75) * (1 + near * .9), w = hgt * f.width / f.height;
-    const x = 470 - w / 2 + Math.sin(t * .9) * 4 * (CHARS[visitorP.id].v ? 2 : 1), y = 690 + near * 380 - hgt;
-    g.save(); g.filter = 'brightness(1.15) contrast(1.15)'; g.drawImage(f, x, y, w, hgt); g.restore();
-    const sh = g.createLinearGradient(0, y + hgt * .55, 0, y + hgt); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,.5)'); g.fillStyle = sh; g.fillRect(x, y + hgt * .55, w, hgt * .45);
+  const g = peepCv.getContext('2d'), W = 1280, Hh = 720, id = visitorP && visitorP.id, c = id && CHARS[id];
+  postMat.uniforms.lens.value = 1;
+  if (c && c.peep) {   // ziyaretçinin kendi fotoğrafı (kapı deliğinden yakın çekim)
+    let im = peepPhotos[id]; if (!im) { im = peepPhotos[id] = new Image(); im.src = c.peep; }
+    if (im.complete && im.naturalWidth) {
+      const z = 1 + visitorP.near * .3 + Math.sin(t * .7) * .006, sc = Hh / im.height * z, w = im.width * sc, h = im.height * sc;
+      g.fillStyle = '#000'; g.fillRect(0, 0, W, Hh); g.drawImage(im, W * .36 - w / 2 + Math.sin(t * .9) * 3, (Hh - h) / 2 - visitorP.near * 80, w, h);
+      postMat.uniforms.lens.value = 0; peepTex.needsUpdate = true; return;
+    }
+  }
+  g.drawImage(peepBg, 0, 0);
+  if (c && figCache[id]) {   // yakın çekim: baş ve gövde deliği doldurur
+    const f = figCache[id], near = visitorP.near, hgt = 1650 * (1 + near * .5), w = hgt * f.width / f.height;
+    const x = W * .42 - w / 2 + Math.sin(t * .9) * 4 * (c.v ? 2 : 1), y = 70 - near * 260 - hgt * .02;
+    g.save(); g.filter = 'brightness(1.2) contrast(1.15)'; g.drawImage(f, x, y, w, hgt); g.restore();
   }
   peepTex.needsUpdate = true;
 }
@@ -662,7 +672,7 @@ function endPeep() { peepOn = false; postMat.uniforms.peep.value = 0; postMat.un
 function doorMenu(first) {
   if (!visitorP) return;
   const c = CHARS[visitorP.id], A = G.asked, nm = A.who ? c.ad : '???';
-  const greet = first ? (c.v && G.night >= 2 ? '...Merhaba. Merhaba. İçeri alır mısın?' : 'Merhaba! Orada biri var mı? Lütfen kapıyı aç...') : '(Kapının önünde bekliyor.)';
+  const greet = first ? c.hi || (c.v && G.night >= 2 ? '...Merhaba. Merhaba. İçeri alır mısın?' : 'Merhaba! Orada biri var mı? Lütfen kapıyı aç...') : '(Kapının önünde bekliyor.)';
   menuDlg(nm, greet, [
     { t: 'Kimsin?', dis: A.who, f: () => { A.who = 1; say(c.ad, c.who, null, () => doorMenu()); } },
     { t: 'Neden geldin?', dis: A.why, f: () => { A.why = 1; say(nm, c.why, null, () => doorMenu()); } },
