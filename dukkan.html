@@ -583,7 +583,7 @@ box(.4, .06, .4, basic({ color: 0xfff0d8 }), 1.5, H - .04, -5.8);
 box(1.0, 2.1, .55, lam(TX.woodD), -1.4, 1.05, -7.15); box(.02, 1.9, .01, lam(0x111111), -1.4, 1.05, -6.87); box(.04, .12, .03, lam(0xc9a227), -1.32, 1.1, -6.86); box(.04, .12, .03, lam(0xc9a227), -1.48, 1.1, -6.86);
 solid(-1.9, -.9, -7.45, -6.85);
 // masa + eski bilgisayar
-box(1.2, .06, .6, lam(TX.wood), -1.55, .75, -5.2); for (const [x, z] of [[-2.1, -5.45], [-1.0, -5.45], [-2.1, -4.95], [-1.0, -4.95]]) box(.05, .75, .05, lam(TX.woodD), x + .05, .375, z);
+box(.62, .06, 1.25, lam(TX.wood), -1.68, .75, -5.2); for (const [x, z] of [[-1.95, -5.77], [-1.42, -5.77], [-1.95, -4.63], [-1.42, -4.63]]) box(.05, .75, .05, lam(TX.woodD), x, .375, z);
 // modern bilgisayar: odaya (bize) dönük ince monitör, klavye, mouse, kasa
 const pcM = lam(0x1a1c22), pcScrTex = ctex(64, 36, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#2a3a8a'); gr.addColorStop(1, '#8a3ad8'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.55)'; g.fillRect(0, h - 4, w, 4); g.fillStyle = '#ffd84a'; g.fillRect(2, h - 3, 3, 2); for (let i = 0; i < 4; i++) { g.fillStyle = '#e8e8f0'; g.fillRect(3, 3 + i * 6, 4, 4); } g.fillStyle = '#fff'; g.font = '6px monospace'; g.fillText('ZeynepOS', 22, 18); });
 const pcBody = box(.04, .36, .62, pcM, -1.86, 1.13, -5.2);                       // monitör kasası
@@ -591,10 +591,10 @@ const pcScr = box(.005, .32, .58, basic({ map: pcScrTex }), -1.835, 1.13, -5.2);
 box(.04, .18, .05, pcM, -1.9, .87, -5.2); box(.16, .015, .2, pcM, -1.88, .785, -5.2); // ayak
 const pcKb = box(.16, .02, .44, lam(0x24262c), -1.45, .79, -5.2); box(.14, .005, .4, basic({ color: 0x6a3ad8 }), -1.45, .802, -5.2);
 box(.1, .025, .06, pcM, -1.42, .79, -4.88);                                          // mouse
-const pcTower = box(.42, .46, .2, pcM, -1.75, .23, -5.62); box(.38, .4, .005, basic({ color: 0x3a2a6a }), -1.75, .23, -5.517); box(.02, .3, .006, basic({ color: 0xb04aff }), -1.6, .23, -5.514);
+const pcTower = box(.42, .46, .2, pcM, -1.72, .23, -5.55); box(.38, .4, .005, basic({ color: 0x3a2a6a }), -1.72, .23, -5.447); box(.02, .3, .006, basic({ color: 0xb04aff }), -1.57, .23, -5.444);
 const pcGlow = new THREE.PointLight(0x7a5aff, 1.4, 2.2, 1.6); pcGlow.position.set(-1.6, 1.1, -5.2); scene.add(pcGlow);
 for (const m of [pcBody, pcScr, pcKb]) { m.userData = { kind: 'pc' }; inter.push(m); }
-solid(-1.95, -1.0, -5.5, -4.9); solid(-1.97, -1.53, -5.73, -5.5);
+solid(-2.0, -1.37, -5.83, -4.57);
 // halı, poster, pencere
 plane(1.8, 1.2, lam({ map: ctex(16, 12, (g, w, h) => { g.fillStyle = '#6a2a3a'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d8b070'; g.strokeRect(1.5, 1.5, w - 3, h - 3); g.fillStyle = '#d8b070'; g.fillRect(7, 5, 2, 2); }) }), 2.0, .005, -5.8, -Math.PI / 2);
 plane(.55, .8, lam(posterTex('KEDİ\nKULÜBÜ', '🐈‍⬛', '#3a2a5a', '♥')), 1.2, 1.7, -7.48);
