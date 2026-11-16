@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Ördekez Tıkla — Ördekez</title>
+<title>Erdiye Bas — Ördekez</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{height:100%;background:#0e0c14;color:#f1ecff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
@@ -31,7 +32,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
   background:radial-gradient(circle at 35% 30%,#ffe98a 0%,#ffbf1f 45%,#d98400 80%,#9b5a00 100%);
   box-shadow:0 14px 0 #6b3d00,0 22px 40px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5);
   transition:transform .06s,box-shadow .06s;display:flex;align-items:center;justify-content:center}
-#bigBtn img{width:54%;height:auto;margin-top:-20%;pointer-events:none;filter:drop-shadow(0 6px 6px rgba(90,50,0,.45));transition:transform .06s}
+#bigBtn img{width:66%;height:auto;margin-top:-14%;pointer-events:none;filter:drop-shadow(0 6px 6px rgba(90,50,0,.45));transition:transform .06s}
 #bigBtn.p img{transform:scale(.9) rotate(-4deg)}
 #bigBtn:active,#bigBtn.p{transform:translateY(10px) scale(.97);box-shadow:0 4px 0 #6b3d00,0 8px 20px rgba(0,0,0,.6),inset 0 -10px 30px rgba(120,60,0,.5),inset 0 10px 25px rgba(255,255,255,.5)}
 #bigBtn .lbl{position:absolute;bottom:10%;font-size:clamp(13px,2.4vw,18px);font-weight:900;letter-spacing:3px;color:#5a3300;text-shadow:0 1px 0 rgba(255,255,255,.5)}
@@ -154,6 +155,7 @@ table.lb .rk{font-weight:900;width:40px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#241d38;border:1px solid #4a3d80;padding:12px 18px;border-radius:12px;font-weight:700;transition:transform .3s;z-index:400;max-width:90vw;text-align:center}
 #toast.on{transform:translateX(-50%) translateY(0)}
 .burst{position:fixed;inset:0;pointer-events:none;z-index:150;opacity:0;transition:opacity .4s}
+#gameTitle{font-family:"Lilita One",system-ui;font-size:clamp(26px,4.6vw,44px);letter-spacing:2px;color:#ffd84a;text-shadow:0 4px 0 #b05a00,0 0 18px rgba(255,180,40,.55);margin-bottom:4px;transform:rotate(-2deg)}
 </style>
 </head>
 <body>
@@ -168,10 +170,11 @@ table.lb .rk{font-weight:900;width:40px}
       <button class="back" onclick="location.href='index.html'">← Oyunlar</button>
       <div class="g"><button class="back" id="muteBtn">🔊</button></div>
     </div>
+    <div id="gameTitle">ERDİYE BAS</div>
     <div id="money">0</div>
     <div id="rates"></div>
     <div id="bonus"></div>
-    <div id="btnWrap"><div id="ring"></div><button id="bigBtn" aria-label="Tıkla"><img src="ordek_ikon.png" alt="" draggable="false"><span class="lbl">TIKLA</span></button></div>
+    <div id="btnWrap"><div id="ring"></div><button id="bigBtn" aria-label="Tıkla"><img src="erdi_kafa.webp" alt="" draggable="false"><span class="lbl">BAS!</span></button></div>
     <div id="frenzy"></div>
     <div id="myBadges" title="Rozetlerin"></div>
     <div id="golden">🌟</div>
