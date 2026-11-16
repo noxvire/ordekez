@@ -21,6 +21,13 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #tTop{position:absolute;top:2%;right:1.5%;display:flex;gap:.8vmin;flex-wrap:wrap;justify-content:flex-end}
 .pill{background:rgba(255,240,250,.92);color:#b0407a;font-weight:700;font-size:clamp(11px,1.7vmin,18px);padding:.8vmin 1.6vmin;border-radius:99px;border:2px solid #f6a8cf;box-shadow:0 3px 0 #d980ad}
 .pill:active{transform:translateY(2px);box-shadow:0 1px 0 #d980ad}
+#hDaily{position:absolute;top:2%;left:1.8%;animation:dly 1.6s ease-in-out infinite}#hDaily.done{animation:none;opacity:.7}
+@keyframes dly{0%,100%{transform:scale(1)}50%{transform:scale(1.08) rotate(-2deg)}}
+#tUser{position:absolute;bottom:2.5%;left:1.8%;color:#fff;font-size:clamp(10px,1.5vmin,15px);text-shadow:0 2px 4px #000}
+.dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:14px 0}
+.dgrid>div{background:#fff;border:3px solid #ffd0e6;border-radius:14px;padding:8px 2px;font-size:12px;color:#a0507e;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:4px}
+.dgrid>div.got{background:#e9ffe9;border-color:#8be0a0;opacity:.75}.dgrid>div.now{border-color:#ff6fae;box-shadow:0 0 0 3px #ff6fae55;transform:scale(1.06)}
+.dgrid img{width:34px;height:34px;object-fit:contain}.dgrid .ic{font-size:24px}
 #tBest{position:absolute;top:9%;left:1.8%;color:#fff;font-size:clamp(10px,1.6vmin,16px);text-shadow:0 2px 4px #000;line-height:1.4}
 #hud{position:fixed;inset:0;pointer-events:none;display:none;color:#fff}
 #xpbar{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(560px,70vw);height:18px;background:rgba(255,255,255,.75);border:3px solid #fff;border-radius:99px;overflow:hidden;box-shadow:0 3px 0 rgba(176,64,122,.5)}
@@ -143,6 +150,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .sum{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:14px;color:#8a4a70;background:#fff;border-radius:14px;padding:8px;border:2px solid #ffd0e6}
 .sum b{color:#e04f95}
 #itemDet .card{max-width:420px}
+#dmgTab{margin:4px auto 10px;max-width:400px;text-align:left}
+.dt-h{font-weight:800;color:#d0407f;text-align:center;margin-bottom:4px;font-size:15px}
+.dt-r{display:grid;grid-template-columns:26px 1fr 90px 48px 34px;align-items:center;gap:6px;font-size:13px;color:#8a4a70;padding:2px 0}
+.dt-ic{font-size:18px;text-align:center}.dt-n small{color:#b07ea0}.dt-r b{color:#e04f95;text-align:right}.dt-p{color:#b07ea0;text-align:right}
+.dt-b{height:9px;background:#f3d6e6;border-radius:99px;overflow:hidden}.dt-b i{display:block;height:100%;background:linear-gradient(90deg,#ff8ac2,#c58bff);border-radius:99px}
+#over .card{max-height:96vh;overflow:auto}
 #itemDet .it{width:120px;height:120px;font-size:60px;margin:6px auto 14px}
 .bar{height:12px;background:#f3d6e6;border-radius:99px;overflow:hidden;margin:6px auto;max-width:240px}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,#ff8ac2,#c58bff)}
@@ -161,6 +174,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
     <button class="hot" id="hSet" aria-label="Ayarlar"></button>
     <div id="tTop"><span class="pill" id="tGold">🪙 0</span><button class="pill" id="hExit">← Siteye dön</button></div>
     <div id="tBest"></div>
+    <button class="pill" id="hDaily">🎁 Günlük Ödül</button>
+    <div id="tUser"></div>
   </div>
 </div>
 
@@ -205,6 +220,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <div class="sub" style="margin-top:12px">Hareket: WASD / ok tuşları · Telefonda ekrana basıp sürükle<br>Duraklat: Esc · Seçim: 1 / 2 / 3</div>
 </div></div>
 
+<div class="scr" id="daily"><div class="card" style="max-width:640px">
+  <button class="x" data-close>✕</button>
+  <h2>🎁 Günlük Ödül</h2><div class="sub" id="dSub"></div>
+  <div class="dgrid" id="dGrid"></div>
+  <button class="btn" id="dClaim">Ödülü Al</button>
+</div></div>
 <div class="scr" id="chestScr"><div class="card">
   <button class="x" data-close>✕</button>
   <h2>🎁 Sandıklar</h2><div class="sub">Savaşta düşmanlardan nadiren sandık düşer ve buraya gelir (4 yuva). Açmaya başla, süre dolunca aç: her sandıktan 5 eşya çıkar! <span class="gold" id="gC"></span></div>
@@ -249,6 +270,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <img id="overImg" style="height:150px;filter:drop-shadow(0 6px 6px rgba(150,60,110,.35))" alt="">
   <h2 id="overT"></h2>
   <div class="stats" id="oStats"></div>
+  <div id="dmgTab"></div>
   <div class="gold" id="earned" style="font-size:24px;margin-bottom:4px"></div><div id="scoreNote" style="font-size:14px;color:#a0507e;margin-bottom:8px"></div>
   <button class="btn" id="again">Tekrar Oyna</button><button class="btn alt" id="toMenu">Ana Menü</button>
 </div></div>
@@ -259,6 +281,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 const KEY = 'sv_save';
 let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1, mvol: 60, evol: 80 }, inv: {}, eq: {}, kutular: [null, null, null, null] };
 try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1, mvol: 60, evol: 80 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; M.inv = M.inv || {}; M.eq = M.eq || {}; M.kutular = M.kutular || [null, null, null, null]; } } catch (e) {}
+M.toz = M.toz || [0, 0, 0, 0]; M.gunluk = M.gunluk || { gun: 0, son: '' };
 
 let saveM = () => { try { localStorage.setItem(KEY, JSON.stringify(M)); } catch (e) {} };
 const $ = id => document.getElementById(id);
@@ -548,8 +571,8 @@ const gkey = (x, y) => ((x / GRID) | 0) * 100000 + ((y / GRID) | 0);
 
 function startGame() {
   P = { x: 0, y: 0, r: 20, skin: M.skin,
-    maxHp: 80 + 12 * mlv('can'), hp: 0, spd: 205 * (1 + .03 * mlv('hiz')), dmgMul: .85 * (1 + .08 * mlv('guc')), magnet: 80 * (1 + .12 * mlv('mik')), xpMul: .95 + .06 * mlv('xp'),
-    lv: 1, xp: 0, next: 4, fx: 1, fy: 0, face: 1, inv: 0, revive: mlv('dir'), w: { katana: 1 }, p: {}, cds: {}, hitT: 0, walk: 0 };
+    maxHp: 100 + 12 * mlv('can'), hp: 0, spd: 205 * (1 + .03 * mlv('hiz')), dmgMul: .85 * (1 + .08 * mlv('guc')), magnet: 95 * (1 + .12 * mlv('mik')), xpMul: 1 + .06 * mlv('xp'),
+    lv: 1, xp: 0, next: 4, fx: 1, fy: 0, face: 1, inv: 0, revive: mlv('dir'), w: { katana: 1 }, p: {}, cds: {}, dmgBy: {}, hitT: 0, walk: 0 };
   const E = eqStats(); P.maxHp += Math.round(E.hp); P.spd *= 1 + E.spd; P.magnet *= 1 + E.mag; P.dmgMul *= 1 + E.dmg; P.eqCd = E.cd; P.eqCrit = E.crit; P.eqArm = E.arm; P.xpMul *= 1 + E.xp; P.chests = [];
   P.hp = P.maxHp;
   enemies = []; projs = []; gems = []; picks = []; fx = []; texts = []; pets = []; T = 0; kills = 0; coins = 0; spawnAcc = 0; bossIdx = 0; curBoss = null; cam = { x: 0, y: 0 }; levelQueue = 0; won = false;
@@ -568,25 +591,27 @@ const magNow = () => P.magnet * (1 + .4 * pl('mik'));
 /* =================== DÜŞMANLAR =================== */
 function spawnEnemy(type, boss) {
   const a = Math.random() * Math.PI * 2, d = Math.hypot(W, H) / 2 + 60;
-  const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1.35 + T / 55 + Math.pow(T / 380, 2) * 3.5;
+  const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1.05 + T / 50 + Math.pow(T / 360, 2) * 3.8;
   let e;
   if (boss) e = { sprite: boss.sprite, x, y, r: boss.r, hp: boss.hp * (1 + T / 900), spd: boss.spd, dmg: boss.dmg, xp: 60, boss: boss.ad, img: boss.img, tier: Math.min(3, BOSSES.indexOf(boss) + 1) };
-  else { const K = ENEMIES[type]; e = { x, y, r: K.r, hp: K.hp * m, spd: K.spd * (1 + T / 2500), dmg: K.dmg * 1.25 * (1 + T / 800), xp: K.xp, kind: K.kind, hue: K.hues[(Math.random() * K.hues.length) | 0], ph: Math.random() * 7 }; }
+  else { const K = ENEMIES[type]; e = { x, y, r: K.r, hp: K.hp * m, spd: K.spd * (1 + T / 2500), dmg: K.dmg * (1 + T / 600), xp: K.xp, kind: K.kind, hue: K.hues[(Math.random() * K.hues.length) | 0], ph: Math.random() * 7 }; }
   e.max = e.hp; e.kx = 0; e.ky = 0; e.flash = 0; e.hitCd = {};
   enemies.push(e); return e;
 }
+const ENEMY_CAP = [35, 55, 75, 95, 115];   // 0-3, 3-6, 6-9, 9-12, 12-15. dakikalar
 function spawner(dt) {
   const finalUp = bossIdx >= BOSSES.length;            // son patron sahnede: sadece az sayıda yardımcı
-  const rate = (1.3 + T / 26 + Math.pow(T / 240, 2) * 6) * (finalUp ? .25 : 1);
-  spawnAcc += rate * dt;
-  const cap = 220 + T / 1.6;
+  // ekrandaki düşman sayısı sabit: biri ölünce yerine yenisi gelir (dalgaya göre hedef sayı artar)
+  const target = finalUp ? 25 : ENEMY_CAP[Math.min(ENEMY_CAP.length - 1, Math.floor(T / 180))];
+  let alive = 0; for (const e of enemies) if (!e.dead && !e.boss) alive++;
+  spawnAcc = Math.min(spawnAcc + (4 + T / 30) * dt, Math.max(0, target - alive));
   const types = NEWTYPES.filter(n => T >= n.t).map(n => n.k);
-  while (spawnAcc >= 1) { spawnAcc--; if (enemies.length > cap) continue;
+  while (spawnAcc >= 1) { spawnAcc--;
     // en yeni tür daha sık, eskiler de gelmeye devam
     const r = Math.random(), k = r < .35 ? types[types.length - 1] : types[(Math.random() * types.length) | 0];
     spawnEnemy(k); }
   for (const n of NEWTYPES) if (n.ad && T - dt < n.t && T >= n.t) { toast(n.ad); chime([523, 659, 523, 784], 90, 'square', .03); }
-  if (Math.floor((T - dt) / 60) !== Math.floor(T / 60) && T > 5 && !finalUp) { const n = 20 + T / 8, ty = types[types.length - 1]; for (let i = 0; i < n; i++) { const e = spawnEnemy(ty); const a = i / n * Math.PI * 2, d = Math.hypot(W, H) / 2 + 40; e.x = P.x + Math.cos(a) * d; e.y = P.y + Math.sin(a) * d; } toast('💢 Etrafın sarıldı!'); }
+  if (Math.floor((T - dt) / 60) !== Math.floor(T / 60) && T > 5 && !finalUp) { const n = Math.min(30, 12 + T / 20), ty = types[types.length - 1]; for (let i = 0; i < n; i++) { const e = spawnEnemy(ty); const a = i / n * Math.PI * 2, d = Math.hypot(W, H) / 2 + 40; e.x = P.x + Math.cos(a) * d; e.y = P.y + Math.sin(a) * d; } toast('💢 Etrafın sarıldı!'); }
   if (bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t) { const b = BOSSES[bossIdx++]; curBoss = spawnEnemy(null, b); curBoss.final = !!b.final; toast(b.final ? `👑 SON PATRON: ${b.ad}!` : `👑 ${b.ad} GELDİ!`); chime([392, 330, 262, 196], 120, 'square', .04); }
 }
 
@@ -594,6 +619,7 @@ function spawner(dt) {
 function hurt(e, dmg, kx = 0, ky = 0) {
   if (e.dead) return;
   dmg *= dmgM(); const crit = Math.random() < .08 + (P.eqCrit || 0); if (crit) dmg *= 2;
+  if (SRC && P.dmgBy) P.dmgBy[SRC] = (P.dmgBy[SRC] || 0) + Math.min(dmg, Math.max(0, e.hp));
   e.hp -= dmg; e.flash = .1; if (!e.boss) { e.kx += kx; e.ky += ky; }
   if (M.set.sayi && texts.length < 70) texts.push({ x: e.x + (Math.random() - .5) * 10, y: e.y - e.r, v: Math.round(dmg) + (crit ? '💖' : ''), t: .65, crit });
   hitSnd();
@@ -622,7 +648,7 @@ function onScreen() { return enemies.filter(e => !e.dead && Math.abs(e.x - P.x) 
 function cdReady(id, base) { P.cds[id] = (P.cds[id] || 0) - DT; if (P.cds[id] > 0) return false; P.cds[id] = base * cdM(); return true; }
 function near(x, y) { const out = []; const cx = (x / GRID) | 0, cy = (y / GRID) | 0; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const a = grid.get((cx + i) * 100000 + (cy + j)); if (a) for (const e of a) out.push(e); } return out; }
 const aoe = (x, y, rad, dmg, push) => { for (const e of enemies) { if (e.dead) continue; const dx = e.x - x, dy = e.y - y, d = Math.hypot(dx, dy) || 1; if (d < rad + e.r) hurt(e, dmg, dx / d * push, dy / d * push); } };
-let sparkBudget = 0;
+let sparkBudget = 0, SRC = null;
 const KAT = { dmg: [0, 18, 21, 24, 27, 36], reach: [0, 140, 155, 170, 185, 225], cd: [0, 1.15, 1.1, 1.05, .98, .78], wide: [0, 55, 60, 66, 72, 95] };
 function katanaHit(l) {
   const t = nearest(300), sx = t ? (t.x >= P.x ? 1 : -1) : P.face, sy = t ? (t.y >= P.y ? 1 : -1) : 1;
@@ -638,17 +664,17 @@ function katanaHit(l) {
 }
 let katanaQ = 0;
 function weapons(dt) {
-  const L = P.w;
+  const L = P.w; SRC = 'katana';
   if (L.katana) { const l = L.katana; if (cdReady('katana', KAT.cd[l])) katanaHit(l); }
-  if (L.kalp) { const l = L.kalp; if (cdReady('kalp', [0, .9, .85, .75, .7, .55][l])) {
+  SRC = 'kalp'; if (L.kalp) { const l = L.kalp; if (cdReady('kalp', [0, .9, .85, .75, .7, .55][l])) {
     const n = [0, 1, 2, 2, 3, 5][l], dmg = [0, 12, 12, 16, 16, 20][l], pierce = l >= 4 ? 3 : 1, used = new Set();
     for (let i = 0; i < n; i++) { const t = nearest(700, used) || nearest(700); let ax = P.fx, ay = P.fy; if (t) { used.add(t); ax = t.x - P.x; ay = t.y - P.y; } const d = Math.hypot(ax, ay) || 1, sp = 520;
       const s = (i - (n - 1) / 2) * .1, c = Math.cos(s), si = Math.sin(s);
       projs.push({ x: P.x, y: P.y - 10, vx: (ax / d * c - ay / d * si) * sp, vy: (ax / d * si + ay / d * c) * sp, r: [0, 10, 12, 13, 14, 18][l], sz: [0, 18, 22, 24, 26, 34][l], gold: l >= 5, dmg, pierce: l >= 5 ? 5 : pierce, t: 1.4, hit: new Set() }); }
     snd(1500, .05, 'sine', .015, 1.3); } }
-  if (L.sevgi) { const l = L.sevgi, rad = [0, 72, 90, 90, 112, 142][l], dmg = [0, 5, 5, 8, 8, 13][l];
+  SRC = 'sevgi'; if (L.sevgi) { const l = L.sevgi, rad = [0, 72, 90, 90, 112, 142][l], dmg = [0, 5, 5, 8, 8, 13][l];
     if (cdReady('sevgi', .45)) for (const e of enemies) { if (e.dead) continue; const dx = e.x - P.x, dy = e.y - P.y, d = Math.hypot(dx, dy) || 1; if (d < rad + e.r) hurt(e, dmg, l >= 4 ? dx / d * 60 : 0, l >= 4 ? dy / d * 60 : 0); } }
-  if (L.ordek) { const l = L.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, dmg = [0, 12, 13, 18, 19, 34][l], hr = [0, 16, 18, 20, 22, 28][l]; orbitA += dt * (l >= 3 ? 3.6 : 2.7);
+  SRC = 'ordek'; if (L.ordek) { const l = L.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, dmg = [0, 12, 13, 18, 19, 34][l], hr = [0, 16, 18, 20, 22, 28][l]; orbitA += dt * (l >= 3 ? 3.6 : 2.7);
     for (let i = 0; i < n; i++) { const a = orbitA + i / n * Math.PI * 2, x = P.x + Math.cos(a) * rad, y = P.y + Math.sin(a) * rad;
       for (const e of near(x, y)) { if (!e.dead && (e.x - x) ** 2 + (e.y - y) ** 2 < (e.r + hr) ** 2 && !(e.hitCd.ordek > T)) { hurt(e, dmg, Math.cos(a) * 120, Math.sin(a) * 120); e.hitCd.ordek = T + .35; } } } }
   if (L.pati) { const l = L.pati; if (cdReady('pati', [0, 2.5, 2.5, 2.3, 1.7, 1.5][l])) {
@@ -659,13 +685,14 @@ function weapons(dt) {
     const n = [0, 2, 3, 3, 5, 7][l], dmg = [0, 22, 22, 31, 31, 50][l], list = onScreen();
     for (let i = 0; i < n && list.length; i++) { const e = list.splice((Math.random() * list.length) | 0, 1)[0]; fx.push({ k: 'yildiz', x: e.x, y: e.y, t: .4, e, dmg, done: false, sz: [0, 30, 36, 40, 44, 58][l], rb: l >= 5, hue: (Math.random() * 6) | 0 }); }
     chime([1568, 2093], 60, 'sine', .02); } }
-  if (L.kedicik) { const l = L.kedicik, n = l >= 5 ? 3 : l >= 3 ? 2 : 1, dmg = [0, 14, 20, 21, 23, 40][l], sp = l >= 4 ? 420 : 320;
+  SRC = 'kedicik'; if (L.kedicik) { const l = L.kedicik, n = l >= 5 ? 3 : l >= 3 ? 2 : 1, dmg = [0, 14, 20, 21, 23, 40][l], sp = l >= 4 ? 420 : 320;
     while (pets.length < n) pets.push({ x: P.x, y: P.y, t: null, cd: 0, face: 1 });
     pets.forEach((pt, i) => { pt.cd -= dt;
       if (!pt.t || pt.t.dead || Math.hypot(pt.t.x - P.x, pt.t.y - P.y) > 450) pt.t = nearest(380);
       const tx = pt.t ? pt.t.x : P.x + (i - .5) * 40, ty = pt.t ? pt.t.y : P.y + 30, dx = tx - pt.x, dy = ty - pt.y, d = Math.hypot(dx, dy) || 1;
       if (d > 8) { pt.x += dx / d * Math.min(d, sp * dt); pt.y += dy / d * Math.min(d, sp * dt); pt.face = dx >= 0 ? 1 : -1; }
       if (pt.t && d < pt.t.r + 14 && pt.cd <= 0) { hurt(pt.t, dmg, dx / d * 80, dy / d * 80); pt.cd = l >= 4 ? .35 : .5; fx.push({ k: 'isir', x: pt.t.x, y: pt.t.y, t: .2 }); } }); }
+  SRC = null;
 }
 
 /* =================== GÜNCELLEME =================== */
@@ -691,13 +718,14 @@ function update(dt) {
   }
   if (P.hp <= 0) { if (P.revive > 0) { P.revive--; P.hp = P.maxHp / 2; P.inv = 2; for (const e of enemies) if (!e.boss && Math.hypot(e.x - P.x, e.y - P.y) < 300) hurt(e, 99999); fx.push({ k: 'flash', t: .4 }); toast('🪽 YENİDEN DOĞDUN!'); } else return gameOver(false); }
   weapons(dt);
-  for (const p of projs) { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
+  SRC = 'kalp'; for (const p of projs) { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
     for (const e of near(p.x, p.y)) { if (e.dead || p.hit.has(e)) continue; if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 < (e.r + p.r) ** 2) { p.hit.add(e); hurt(e, p.dmg, p.vx * .08, p.vy * .08); if (fx.length < 260) fx.push({ k: 'kalpb', x: e.x, y: e.y, s: p.sz * 2.6, gold: p.gold, t: .32 }); if (--p.pierce <= 0) { p.t = 0; break; } } } }
-  projs = projs.filter(p => p.t > 0);
+  SRC = null; projs = projs.filter(p => p.t > 0);
   for (const f of fx) {
-    if (f.k === 'patiIn' && !f.done && f.t < .2) { f.done = true; fx.push({ k: 'patis', x: f.x, y: f.y, r: f.r, gold: f.gold, t: .4 }); shake = Math.max(shake, f.gold ? 6 : 3); aoe(f.x, f.y, f.r, f.dmg, 160); snd(160, .2, 'sine', .06, .5); for (let i = 0; i < 4; i++) fx.push({ k: 'kalpcik', x: f.x + (Math.random() - .5) * f.r, y: f.y, vy: -80, t: .6 }); }
-    if (f.k === 'yildiz' && !f.done && f.t < .12) { f.done = true; if (!f.e.dead) hurt(f.e, f.dmg); aoe(f.x, f.y, f.sz, f.dmg * .3, 40); fx.push({ k: 'yildizb2', x: f.x, y: f.y - f.sz * .3, s: f.sz * 2.6, tint: f.rb ? RBOW[f.hue] : 0, t: .35 }); }
+    if (f.k === 'patiIn' && !f.done && f.t < .2) { f.done = true; SRC = 'pati'; fx.push({ k: 'patis', x: f.x, y: f.y, r: f.r, gold: f.gold, t: .4 }); shake = Math.max(shake, f.gold ? 6 : 3); aoe(f.x, f.y, f.r, f.dmg, 160); snd(160, .2, 'sine', .06, .5); for (let i = 0; i < 4; i++) fx.push({ k: 'kalpcik', x: f.x + (Math.random() - .5) * f.r, y: f.y, vy: -80, t: .6 }); }
+    if (f.k === 'yildiz' && !f.done && f.t < .12) { f.done = true; SRC = 'yildiz'; if (!f.e.dead) hurt(f.e, f.dmg); aoe(f.x, f.y, f.sz, f.dmg * .3, 40); fx.push({ k: 'yildizb2', x: f.x, y: f.y - f.sz * .3, s: f.sz * 2.6, tint: f.rb ? RBOW[f.hue] : 0, t: .35 }); }
   }
+  SRC = null;
   const mag = magNow(); let got = false;
   for (const g of gems) { const dx = P.x - g.x, dy = P.y - g.y, d = Math.hypot(dx, dy) || 1; if (g.pull || d < mag) { g.pull = true; const s = Math.max(380, 900 - d); g.x += dx / d * s * dt; g.y += dy / d * s * dt; } if (d < P.r + 10) { g.got = true; got = true; addXp(g.v); } }
   if (got) { if (sndBudget < 0) snd(1800 + Math.random() * 400, .04, 'sine', .012); gems = gems.filter(g => !g.got); }
@@ -719,7 +747,7 @@ function update(dt) {
   
 }
 let lvlDelay = 0;
-function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(5 + (P.lv - 1) * 5.5 + Math.pow(P.lv - 1, 1.7)); levelQueue++; } if (levelQueue && state === 'play' && lvlDelay <= 0) { lvlDelay = .5; fx.push({ k: 'lvl', t: .5 }); chime([784, 988, 1318], 60, 'sine', .04); } }
+function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(4 + (P.lv - 1) * 4 + Math.pow(P.lv - 1, 1.65)); levelQueue++; } if (levelQueue && state === 'play' && lvlDelay <= 0) { lvlDelay = .5; fx.push({ k: 'lvl', t: .5 }); chime([784, 988, 1318], 60, 'sine', .04); } }
 
 /* =================== SEVİYE ATLAMA =================== */
 function choices(n) {
@@ -850,9 +878,16 @@ function gameOver(win) {
   $('overImg').src = skinSrc(P.skin); $('overImg').style.transform = win ? '' : 'rotate(-8deg)';
   $('overT').textContent = win ? '🏆 HAYATTA KALDIN!' : '💔 Yoruldun…';
   $('oStats').innerHTML = `<span>Süre</span><b>${fmtT(T)}</b><span>Seviye</span><b>${P.lv}</b><span>Yenilen</span><b>${kills}</b><span>Toplanan altın</span><b>${coins}</b><span>En iyi süre</span><b>${fmtT(M.best)}</b>`;
+  renderDmg();
   $('earned').innerHTML = `+${earned} 🪙` + (P.chests.length ? `<div style="font-size:17px;color:#d0407f;margin-top:4px">🎁 ${P.chests.map(r => CHESTS[r].ad).join(', ')} yuvalarına eklendi!</div>` : '');
   $('over').classList.add('on'); chime(win ? [523, 659, 784, 1046, 1318] : [523, 440, 349, 262], 140);
   submitScore(win);
+}
+function renderDmg() {
+  const rows = Object.entries(P.dmgBy || {}).filter(r => r[1] > 0).sort((a, b) => b[1] - a[1]), tot = rows.reduce((a, r) => a + r[1], 0) || 1, top = rows.length ? rows[0][1] : 1;
+  const fmt = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e4 ? (v / 1e3).toFixed(1) + 'B' : Math.round(v) + '';
+  $('dmgTab').innerHTML = rows.length ? `<div class="dt-h">⚔️ Hasar Tablosu</div>` + rows.map(([k, v]) => { const W0 = WEAPONS[k];
+    return `<div class="dt-r"><span class="dt-ic">${W0.ic}</span><span class="dt-n">${W0.ad} <small>Sv ${P.w[k] || 0}${(P.w[k] || 0) >= 5 ? ' ✨' : ''}</small></span><span class="dt-b"><i style="width:${v / top * 100}%"></i></span><b>${fmt(v)}</b><small class="dt-p">%${Math.round(v / tot * 100)}</small></div>`; }).join('') : '';
 }
 function submitScore(win) {
   if (TEST) { $('scoreNote').textContent = '🧪 Test modunda skor kaydedilmez'; return; }
@@ -912,7 +947,7 @@ async function tapChest(i) {
 function openLoot(ci) {
   const ch = CHESTS[ci], loot = [];
   for (let n = 0; n < CHEST_ITEMS; n++) { let r = Math.random() * 100, rar = 0; for (let j = 0; j < 4; j++) { r -= ch.o[j]; if (r < 0) { rar = j; break; } }
-    const pool = ITEMS.filter(it => it.r === rar), it = pool[(Math.random() * pool.length) | 0], yeni = !M.inv[it.id];
+    const pool = ITEMS.filter(it => it.r === rar), owned = pool.filter(it => M.inv[it.id]), src = owned.length && Math.random() < .5 ? owned : pool, it = src[(Math.random() * src.length) | 0], yeni = !M.inv[it.id];
     if (yeni) M.inv[it.id] = { lv: 1, parca: 0 }; else M.inv[it.id].parca++; loot.push({ it, yeni }); }
   loot.sort((a, b) => a.it.r - b.it.r);   // en iyisi en sonda
   M.altin += ch.altin; saveM(); renderChests(); playChest(ci, loot);
@@ -950,10 +985,10 @@ function burst(col, r) { const n = 14 + r * 8, cx = innerWidth / 2, cy = innerHe
   for (let k = 0; k < n; k++) { const e = document.createElement('div'), a = Math.random() * Math.PI * 2, d = 120 + Math.random() * 220; e.className = 'spark'; e.textContent = em[k % em.length];
     e.style.left = cx + 'px'; e.style.top = cy + 'px'; e.style.setProperty('--dx', Math.cos(a) * d + 'px'); e.style.setProperty('--dy', Math.sin(a) * d + 'px'); document.body.appendChild(e); setTimeout(() => e.remove(), 1000); } }
 /* ---------- EŞYA EKRANI ---------- */
-function itemIcon(it, o, noBadge) { const R0 = RAR[it.r], c = o && o.lv < ITEM_MAX ? itemCost(it, o.lv) : null, canUp = c && o.parca >= c.parca && M.altin >= c.altin;
+function itemIcon(it, o, noBadge) { const R0 = RAR[it.r], c = o && o.lv < ITEM_MAX ? itemCost(it, o.lv) : null, canUp = c && o.parca + M.toz[it.r] >= c.parca && M.altin >= c.altin;
   return `<div class="it" style="--c:${R0.c};--bg:${R0.bg}">${it.img ? `<img src="${it.img}" alt="">` : it.ic}${o ? `<span class="lv">Sv ${o.lv}</span>` : ''}${!noBadge && M.eq[it.s] === it.id ? '<span class="eqm">✓</span>' : ''}${!noBadge && canUp ? '<span class="up">▲</span>' : ''}</div>`; }
 function renderInv() {
-  $('gI').textContent = `🪙 ${M.altin}`;
+  $('gI').innerHTML = `🪙 ${M.altin}` + (M.toz.some(x => x) ? ' · ' + M.toz.map((v, r) => v ? `<span style="color:${RAR[r].d}">✨${v} ${RAR[r].ad}</span>` : '').filter(Boolean).join(' ') : '');
   $('eqSlots').innerHTML = Object.keys(SLOTS).map(sl => { const id = M.eq[sl], it = ITEMS.find(x => x.id === id);
     return `<div data-slot="${sl}">${it ? `<button data-it="${it.id}" data-from="slot">${itemIcon(it, M.inv[it.id], true)}</button>` : `<div class="it empty">boş</div>`}${SLOTS[sl]}</div>`; }).join('');
   const E = eqStats(), parts = Object.keys(E).filter(k => E[k] > 0).map(k => `${STN[k][0]} <b>${STN[k][1](E[k])}</b>`);
@@ -994,20 +1029,45 @@ function openItem(id) {
     <div class="sub"><span style="background:${R0.c};color:#fff;border-radius:99px;padding:1px 10px;font-weight:700">${R0.ad}</span> · ${SLOTS[it.s]} · Seviye ${o.lv}/${ITEM_MAX}</div>
     <div style="color:#8a4a70">${line(o.lv)}</div>
     ${c ? `<div style="color:#9a6ae0;font-size:14px;margin-top:6px">Sonraki seviye: ${line(o.lv + 1)}</div>
-      <div class="bar"><i style="width:${Math.min(100, o.parca / c.parca * 100)}%"></i></div><div style="font-size:13px;color:#8a4a70">Parça ${o.parca} / ${c.parca} · 🪙 ${c.altin}</div>` : '<div style="color:#2f9a5a;font-weight:700;margin-top:8px">✨ MAKSİMUM SEVİYE</div>'}
-    <div style="margin-top:12px"><button class="btn" id="dEq">${worn ? 'Çıkar' : 'Giy'}</button>${c ? `<button class="btn alt" id="dUp" ${o.parca >= c.parca && M.altin >= c.altin ? '' : 'disabled'}>⬆️ Seviye Yükselt</button>` : ''}</div>`;
+      <div class="bar"><i style="width:${Math.min(100, (o.parca + M.toz[it.r]) / c.parca * 100)}%"></i></div><div style="font-size:13px;color:#8a4a70">Parça ${o.parca} / ${c.parca}${M.toz[it.r] ? ` <span style="color:${R0.d}">(+${M.toz[it.r]} ✨ ${R0.ad} tozu)</span>` : ''} · 🪙 ${c.altin}</div>` : '<div style="color:#2f9a5a;font-weight:700;margin-top:8px">✨ MAKSİMUM SEVİYE</div>'}
+    <div style="margin-top:12px"><button class="btn" id="dEq">${worn ? 'Çıkar' : 'Giy'}</button>${c ? `<button class="btn alt" id="dUp" ${o.parca + M.toz[it.r] >= c.parca && M.altin >= c.altin ? '' : 'disabled'}>⬆️ Seviye Yükselt</button>` : ''}${!worn ? `<button class="btn alt" id="dDis" style="background:linear-gradient(#bfb3cc,#8e819e)">🔨 Parçala</button>` : ''}</div>
+    <div style="font-size:12px;color:#a0809a;margin-top:8px">Parçalanan eşya, aynı nadirlikteki <b>tüm eşyalarda</b> parça yerine kullanılabilen ✨ toz verir.</div>`;
   $('dEq').onclick = () => { if (worn) delete M.eq[it.s]; else M.eq[it.s] = it.id; saveM(); chime(worn ? [659, 523] : [523, 784], 70); renderInv(); openItem(id); };
-  if ($('dUp')) $('dUp').onclick = () => { if (o.parca < c.parca || M.altin < c.altin) return; o.parca -= c.parca; M.altin -= c.altin; o.lv++; saveM(); chime([523, 659, 784, 1046, 1318], 70); burst(R0.c, 1); renderInv(); openItem(id); };
+  if ($('dUp')) $('dUp').onclick = () => { if (o.parca + M.toz[it.r] < c.parca || M.altin < c.altin) return; const fromP = Math.min(o.parca, c.parca); o.parca -= fromP; M.toz[it.r] -= c.parca - fromP; M.altin -= c.altin; o.lv++; saveM(); chime([523, 659, 784, 1046, 1318], 70); burst(R0.c, 1); renderInv(); openItem(id); };
+  if ($('dDis')) $('dDis').onclick = async () => { const got = disVal(o);
+    if (!await ask(itemIcon(it, o, true), it.ad, `Bu eşya yok olacak ve <b>${got} ✨ ${R0.ad} tozu</b> vereceksin. Emin misin?`, 'Parçala')) return;
+    delete M.inv[id]; M.toz[it.r] += got; saveM(); chime([659, 523, 392], 70); burst(R0.c, 0); $('itemDet').classList.remove('on'); renderInv(); toast(`+${got} ✨ ${R0.ad} tozu`); };
   $('itemDet').classList.add('on');
 }
+const disVal = o => 1 + o.parca + Math.round(((o.lv - 1) * o.lv / 2) * .7);
 $('detX').onclick = () => $('itemDet').classList.remove('on');
+/* ---------- GÜNLÜK ÖDÜL ---------- */
+const DAILY = [{ a: 100 }, { a: 150 }, { k: 0 }, { a: 250 }, { a: 400 }, { k: 1 }, { k: 2, a: 500 }];
+const dayStr = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function dailyState() { const today = dayStr(), y = new Date(); y.setDate(y.getDate() - 1);
+  const g = M.gunluk, claimed = g.son === today, streakOk = g.son === dayStr(y) || claimed;
+  const idx = claimed ? (g.gun - 1) % 7 : streakOk ? g.gun % 7 : 0;   // bugünkü (ya da alınan) gün
+  return { claimed, idx, base: claimed ? g.gun - 1 - idx : streakOk ? g.gun - idx : 0 }; }
+function renderDaily() { const st = dailyState();
+  $('dSub').innerHTML = st.claimed ? 'Bugünün ödülünü aldın, yarın yine gel! 💖' : 'Her gün gel, seriyi bozma! Bir gün kaçırırsan 1. güne dönersin.';
+  $('dGrid').innerHTML = DAILY.map((d, i) => `<div class="${i < st.idx || (i === st.idx && st.claimed) ? 'got' : i === st.idx ? 'now' : ''}">${i + 1}. Gün${d.k != null ? `<img src="${CHESTS[d.k].img}" alt="">` : '<span class="ic">🪙</span>'}${d.k != null ? CHESTS[d.k].ad.split(' ')[0] : ''}${d.a ? `<span>${d.a} 🪙</span>` : ''}${i < st.idx || (i === st.idx && st.claimed) ? '✅' : ''}</div>`).join('');
+  $('dClaim').disabled = st.claimed; $('dClaim').textContent = st.claimed ? 'Yarın gel ⏳' : 'Ödülü Al';
+  $('hDaily').classList.toggle('done', st.claimed); }
+$('hDaily').onclick = () => { renderDaily(); $('daily').classList.add('on'); };
+$('dClaim').onclick = () => { const st = dailyState(); if (st.claimed) return; const d = DAILY[st.idx]; let msg = [];
+  if (d.a) { M.altin += d.a; msg.push(`+${d.a} 🪙`); }
+  if (d.k != null) { const f = M.kutular.indexOf(null); if (f >= 0) { M.kutular[f] = { r: d.k, bas: null }; msg.push(`🎁 ${CHESTS[d.k].ad}`); } else { M.altin += CHESTS[d.k].fiyat; msg.push(`Sandık yuvaların dolu → +${CHESTS[d.k].fiyat} 🪙`); } }
+  M.gunluk = { gun: st.idx + 1 + (st.idx === 6 ? 0 : 0), son: dayStr() }; if (st.idx === 6) M.gunluk.gun = 7;
+  saveM(); chime([523, 659, 784, 1046, 1318], 80); burst('#ff6fae', 2); toast(msg.join(' · ')); renderDaily(); $('tGold').textContent = `🪙 ${M.altin}`; };
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.scr').classList.remove('on'); if (state === 'pause') { $('pause').classList.add('on'); return; } showMenu(); });
 $('pSet').onclick = () => { renderSet(); $('pause').classList.remove('on'); $('settings').classList.add('on'); };
 function showMenu() {
   if (TEST && !document.getElementById('testBand')) { const b = document.createElement('div'); b.id = 'testBand'; b.textContent = '🧪 TEST MODU — sınırsız altın (gerçek kaydına dokunmaz)'; b.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);background:#ff3d5a;color:#fff;font-weight:700;padding:3px 14px;border-radius:0 0 10px 10px;z-index:100;font-size:13px'; document.body.appendChild(b); }
   state = 'menu'; P = null; $('hud').style.display = 'none'; $('title').style.display = 'flex'; music('menu');
   ['lvup', 'pause', 'over'].forEach(id => $(id).classList.remove('on'));
-  $('tGold').textContent = `🪙 ${M.altin}`;
+  $('tGold').textContent = `🪙 ${M.altin}`; $('hDaily').classList.toggle('done', dailyState().claimed);
+  { let u = null, tk = null; try { u = localStorage.getItem('ordekez_user'); tk = localStorage.getItem('ordekez_token'); } catch (e) {}
+    $('tUser').innerHTML = TEST ? '🧪 Test modu: skorlar tabloya gitmez' : tk ? `👤 ${u || 'Giriş yapıldı'} · skorların tabloya gidiyor` : '⚠️ Giriş yapılmadı — skorun tabloya gitmez. <a href="index.html" style="color:#ffd0e6">Ana sayfadan giriş yap</a>'; }
   $('tBest').innerHTML = M.oyun ? `🏆 En iyi: ${fmtT(M.best)} · 💀 ${M.bestKill}${M.kazandi ? ` · ${M.kazandi} zafer` : ''}` : '';
 }
 function renderSkins() {
