@@ -83,6 +83,13 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 @keyframes supGlow{50%{box-shadow:0 0 0 3px #7fdcff,0 0 40px #b7a2ff}}
 .sl.sup{background:linear-gradient(160deg,#c8f4ff,#dccbff)!important;box-shadow:0 0 12px #6fd8ff}
 .mate{margin:6px 0 2px;padding:4px 6px;border-radius:10px;background:linear-gradient(90deg,#e6f8ff,#f0e8ff);color:#5a6fb0;font-size:11.5px;font-weight:700;line-height:1.35}.mate span{white-space:nowrap}.mate .has{color:#2f9a5a}
+.hvRow{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:10px;flex-wrap:wrap}.hvRow>i{font-style:normal;color:#fff;font-weight:700;font-size:13px;text-shadow:0 2px 0 #c94585;width:100%;text-align:center}
+.hv{width:74px;background:rgba(255,245,252,.92);border:2px solid #f6a8cf;border-radius:14px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.hv span{font-size:22px}.hv b{font-size:12px;color:#d0407f}.hv small{font-size:10px;color:#8a4a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px}
+.hv.emp{opacity:.45;border-style:dashed}.hv.emp span{color:#c07aa0}.hv.sup{background:linear-gradient(160deg,#d8f6ff,#e6d8ff);border-color:#7fdcff}
+#lvHave{margin-top:8px;display:flex;justify-content:center;gap:10px 26px;flex-wrap:wrap}#lvHave .hvRow{max-width:340px}
+#lvup .card{max-height:100vh;overflow:auto}
+@media (max-height:560px){.hv{width:60px}.hv span{font-size:18px}.hv small{display:none}}
 .opt{width:230px;background:#fff;border:4px solid #ffd0e6;border-radius:22px;padding:14px;text-align:center;box-shadow:0 6px 0 #f3b3d3;transition:transform .12s,border-color .12s}
 .opt:hover,.opt:focus{transform:translateY(-6px) rotate(-1deg);border-color:#ff6fae}
 .opt .ic{font-size:46px;line-height:1.1}.opt b{display:block;font-size:19px;color:#d0407f;margin-top:4px}
@@ -287,6 +294,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <h2 id="lvTitle" style="color:#fff;text-shadow:0 3px 0 #c94585;font-size:36px">💖 SEVİYE ATLADIN!</h2>
   <div class="sub" id="lvSub" style="color:#fff">Bir güçlendirme seç (1 / 2 / 3)</div>
   <div class="opts" id="opts"></div>
+  <div id="lvHave"></div>
 </div></div>
 
 <div class="scr" id="pause"><div class="card" style="max-width:420px">
@@ -662,7 +670,7 @@ function spawner(dt) {
   for (const n of NEWTYPES) if (n.ad && T - dt < n.t && T >= n.t) { toast(n.ad); chime([523, 659, 523, 784], 90, 'square', .03); }
   if (Math.floor((T - dt) / 60) !== Math.floor(T / 60) && T > 5 && !finalUp) { const n = Math.min(30, 12 + T / 20), ty = types[types.length - 1]; for (let i = 0; i < n; i++) { const e = spawnEnemy(ty); const a = i / n * Math.PI * 2, d = Math.hypot(W, H) / 2 + 40; e.x = P.x + Math.cos(a) * d; e.y = P.y + Math.sin(a) * d; } toast('💢 Etrafın sarıldı!'); }
   // elit: 1. dakikadan sonra yaklaşık her 40 sn'de bir (patron sahnedeyken gelmez)
-  eliteT -= dt; if (T > 60 && eliteT <= 0 && !(curBoss && !curBoss.dead) && !(bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t - 8)) { eliteT = 34 + Math.random() * 14; makeElite(spawnEnemy(types[types.length - 1])); toast('⚡ ELİT DÜŞMAN GELDİ!'); chime([330, 440, 330, 494], 90, 'square', .035); }
+  eliteT -= dt; if (T > 120 && eliteT <= 0 && !(curBoss && !curBoss.dead) && !(bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t - 8)) { eliteT = 95 + Math.random() * 35; makeElite(spawnEnemy(types[types.length - 1])); toast('⚡ ELİT DÜŞMAN GELDİ!'); chime([330, 440, 330, 494], 90, 'square', .035); }
   if (bossIdx < BOSSES.length && !introDone[bossIdx] && T >= BOSSES[bossIdx].t - 3) { introDone[bossIdx] = 1; bossIntro(BOSSES[bossIdx]); }
   if (bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t) { const b = BOSSES[bossIdx++]; curBoss = spawnEnemy(null, b); curBoss.final = !!b.final; toast(b.final ? `👑 SON PATRON: ${b.ad}!` : `👑 ${b.ad} GELDİ!`); chime([392, 330, 262, 196], 120, 'square', .04); }
 }
@@ -903,6 +911,9 @@ function showLevelUp(chest) {
   $('lvTitle').textContent = chest ? '🎁 HEDİYE KUTUSU!' : `💖 SEVİYE ${P.lv - levelQueue + 1}!`;
   $('lvSub').textContent = chest ? 'Kutudan çıkan güçlendirme' : 'Bir güçlendirme seç (1 / 2 / 3)';
   $('opts').innerHTML = ops.map(optHTML).join('');
+  { const slot = (D, lv, max, sup) => `<div class="hv${sup ? ' sup' : ''}"><span>${D.ic}</span><b>${sup ? '💎' : `${lv}/${max}`}</b><small>${D.ad}</small></div>`, empty = n => Array.from({ length: n }, () => '<div class="hv emp"><span>＋</span><small>boş</small></div>').join('');
+    const ws = Object.keys(P.w), ps = Object.keys(P.p);
+    $('lvHave').innerHTML = `<div class="hvRow"><i>⚔️ Yetenekler ${ws.length}/${MAXW}</i>${ws.map(id => slot(WEAPONS[id], P.w[id], MAXLV, P.w[id] >= SUPLV)).join('')}${empty(MAXW - ws.length)}</div><div class="hvRow"><i>🎒 Eşyalar ${ps.length}/${MAXP}</i>${ps.map(id => slot(PASSIVES[id], P.p[id], MAXLV)).join('')}${empty(MAXP - ps.length)}</div>`; }
   [...$('opts').children].forEach((b, i) => b.onclick = () => {
     applyOpt(ops[i]); chime([784, 1046], 60);
     if (chest) { chestLeft--; if (chestLeft > 0) return showLevelUp(true); } else levelQueue--;
