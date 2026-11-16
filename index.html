@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ördekez</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Lilita+One&family=Fredoka:wght@600;700&family=Bungee&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Lilita+One&family=Fredoka:wght@600;700&family=Bungee&family=VT323&family=Creepster&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -534,10 +534,17 @@
   @keyframes wing{to{transform:rotate(-30deg)}} @keyframes wingr{from{transform:scaleX(-1)}to{transform:scaleX(-1) rotate(-30deg)}}
   .tt-fw{font-family:'Lilita One',sans-serif;line-height:1.05}
   .tt-fw small{font-size:.6em;color:#fff;opacity:.8}
-  .tt-fw .fire{background:linear-gradient(0deg,#ff2a00,#ff8a00 45%,#ffe14a 80%);background-size:100% 200%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 6px rgba(255,90,0,.8));animation:fire 1.2s ease-in-out infinite alternate}
-  .tt-fw .water{background:linear-gradient(90deg,#1ea0ff,#7fe4ff,#1e6bff,#7fe4ff,#1ea0ff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 6px rgba(40,160,255,.8));animation:water 2.5s linear infinite}
-  @keyframes fire{from{background-position:0 0;filter:drop-shadow(0 0 4px rgba(255,90,0,.7))}to{background-position:0 100%;filter:drop-shadow(0 0 10px rgba(255,140,0,1))}}
-  @keyframes water{to{background-position:200% 0}}
+  .tt-fw .fire{color:#ffb02e;-webkit-text-stroke:5px #6a1200;paint-order:stroke fill;text-shadow:0 0 8px rgba(255,90,0,.9);animation:fire .5s ease-in-out infinite alternate}
+  .tt-fw .water{color:#7fe0ff;-webkit-text-stroke:5px #002d66;paint-order:stroke fill;text-shadow:0 0 8px rgba(40,160,255,.9);display:inline-block;animation:water 1.8s ease-in-out infinite}
+  .tt-fw small{-webkit-text-stroke:3px #3a1a40;paint-order:stroke fill}
+  @keyframes fire{from{color:#ffd23a;text-shadow:0 0 6px #ff6a00,0 -2px 10px #ff3000}to{color:#ff8a1e;text-shadow:0 0 12px #ff3000,0 -5px 16px #ffb000}}
+  @keyframes water{0%,100%{transform:translateY(0);color:#7fe0ff}50%{transform:translateY(-3px);color:#bdf1ff}}
+  .tt-br{display:inline-flex;align-items:baseline;gap:8px}
+  .tt-br small{font-family:'VT323',monospace;font-size:1.1em;color:#f3df6a;-webkit-text-stroke:4px #3a3000;paint-order:stroke fill;text-shadow:0 0 8px rgba(240,220,90,.9);animation:fluor 4s infinite}
+  .tt-br b{font-family:'Creepster',cursive;font-weight:400;font-size:1.25em;letter-spacing:2px;color:#ff1a1a;-webkit-text-stroke:3px #2a0000;paint-order:stroke fill;text-shadow:0 0 10px rgba(255,0,0,.8),0 6px 4px rgba(120,0,0,.9);display:inline-block;animation:glitch 3.2s infinite}
+  @keyframes fluor{0%,7%,9%,40%,42%,100%{opacity:1}8%,41%{opacity:.25}}
+  @keyframes glitch{0%,86%,100%{transform:none;filter:none}88%{transform:translate(-3px,1px) skewX(-8deg);filter:hue-rotate(-20deg)}90%{transform:translate(3px,-1px) skewX(6deg)}92%{transform:translate(-1px,0) scale(1.08)}94%{transform:none}}
+  .card:hover .tt-br b{animation:glitch .4s infinite}
   .tt-dk{display:inline-flex;align-items:center;gap:7px;flex-wrap:nowrap;line-height:1;white-space:nowrap}
   .tt-dk small{font-family:'VT323',monospace;font-size:1.05em;color:#ffe9b0}
   .tt-dk b{font-family:'Bungee',sans-serif;font-size:.78em;color:#fff;padding:3px 9px;border:3px solid #ff4fa3;border-radius:8px;text-shadow:0 0 6px #ff4fa3,0 0 14px #ff4fa3;box-shadow:0 0 10px #ff4fa3,inset 0 0 8px #ff4fa3;animation:neon 3s infinite}
@@ -611,7 +618,7 @@
     <div class="cards games">
       <button class="card" id="playDuck"><img class="ic-img" src="karakter.png" alt=""><span class="tt-flappy"><i class="fl-w">🪶</i>Flappy <b>Erdy</b><i class="fl-w r">🪶</i></span></button>
       <button class="card" id="playFW"><span class="ic-duo"><img src="ates.png" alt=""><img src="su.png" alt=""></span><span class="tt-fw"><b class="fire">Ateşli Erdi</b> <small>ve</small> <b class="water">Zeynepsu</b></span></button>
-      <button class="card" id="playBR"><img class="ic-img mon" src="zeynep_canavar.png" alt=""><span>Backrooms: <b class="red">Zeynep</b></span></button>
+      <button class="card" id="playBR"><img class="ic-img mon" src="zeynep_canavar.png" alt=""><span class="tt-br"><small>Backrooms:</small><b>Zeynep</b></span></button>
       <button class="card" id="playDK" onclick="location.href='dukkan.html'"><img class="ic-img" src="dk_zeynep.png" alt="" style="image-rendering:pixelated;border-radius:8px"><span class="tt-dk"><small>Zeynep'in</small><b>DÜKKÂNI</b><i class="dk-open">AÇIK</i></span></button>
       <button class="card" id="playNI" data-soon style="opacity:.55;cursor:not-allowed;position:relative"><span class="ic-img" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#16120e;border-radius:8px">🚪</span><span class="tt-ni"><small>No, I'm Not a</small><b>Ördekez<i>🦆</i></b><em>ÇOK YAKINDA</em></span></button>
       <button class="card" id="playSV" onclick="location.href='survivor.html'"><img class="ic-img" src="zs_skin_0.webp" alt="" style="width:2.7rem;height:2.7rem;object-fit:cover;object-position:50% 12%;image-rendering:auto;background:radial-gradient(circle at 35% 30%,#ffd0e6,#ff6fae);border-radius:50%"><span class="tt-sv"><small>Zeynep</small><b><i class="ear l"></i><i class="ear r"></i>Survival</b><i class="paw">🐾</i></span></button>
