@@ -492,8 +492,8 @@ const ENEMIES = {
 };
 const BOSSES = [
   { t: 300, ad: 'KELERDY',       ai: 'kel',  unvan: 'Kel Kafalı Kral',     img: 'tk_kelerdy.jpg', sprite: 'zs_boss_kelerdy.webp', hp: 5000,  r: 60, spd: 66, dmg: 18 },
-  { t: 600, ad: 'TEPEGÖZ ERDİ',  ai: 'tepe', unvan: 'Tek Gözlü Dev',       img: 'tk_erdi_normal.jpg', sprite: 'zs_boss_tepegoz.webp', eye: true, hp: 18000, r: 70, spd: 74, dmg: 26 },
-  { t: 900, ad: 'DİKTATÖR ERDİ', ai: 'dik',  unvan: 'Ördekez\'in Zalim Lideri', img: 'tk_erdi_diktator.jpg', sprite: 'zs_boss_diktator.webp', hp: 45000, r: 80, spd: 70, dmg: 34, final: true },
+  { t: 600, ad: 'TEPEGÖZ ERDİ',  ai: 'tepe', unvan: 'Tek Gözlü Dev',       img: 'tk_erdi_normal.jpg', eye: true, hp: 18000, r: 70, spd: 74, dmg: 26 },
+  { t: 900, ad: 'DİKTATÖR ERDİ', ai: 'dik',  unvan: 'Ördekez\'in Zalim Lideri', img: 'tk_erdi_diktator.jpg', hp: 45000, r: 80, spd: 70, dmg: 34, final: true },
 ];
 const WIN_T = 900;                     // 15 dk: son patron gelir, onu yenince kazanırsın
 // her 3 dakikada yeni yaratık türü
@@ -1270,7 +1270,7 @@ function renderSet() {
   document.querySelectorAll('.vol').forEach(r => { r.value = M.set[r.dataset.v]; r.oninput = () => { M.set[r.dataset.v] = +r.value; applyVol(); }; r.onchange = () => { saveM(); if (r.dataset.v === 'evol') snd(880, .08, 'sine', .05); }; });
 }
 
-[...new Set([...BOSSES.flatMap(b => [b.sprite, b.img]), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp', ...['kalp', 'kalpb', 'pati', 'patis', 'yildiz', 'yildizb', 'halka', 'halka_g', 'kedi', 'aslan', 'ordek', 'ordek_g', 'puf', 'lvl'].map(n => `zs_fx_${n}.webp`)])].forEach(img);
+[...new Set([...BOSSES.flatMap(b => [b.sprite, b.img]).filter(Boolean), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp', ...['kalp', 'kalpb', 'pati', 'patis', 'yildiz', 'yildizb', 'halka', 'halka_g', 'kedi', 'aslan', 'ordek', 'ordek_g', 'puf', 'lvl'].map(n => `zs_fx_${n}.webp`)])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
 (() => { if (TEST || !M.bestKill || M.sentKill >= M.bestKill) return; let tk = null; try { tk = localStorage.getItem('ordekez_token'); } catch (e) {} if (!tk) return;
   fetch('https://servvglgsudtjouqknvx.supabase.co/rest/v1/rpc/skor_kaydet', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J' },
