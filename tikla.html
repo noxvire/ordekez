@@ -632,21 +632,24 @@ function refresh() {
 /* ============ DÖNGÜ ============ */
 let last = performance.now(), autoAcc = 0, saveAcc = 0, achAcc = 0, pushAcc = 25;
 function loop(now) {
-  const dt = Math.min(1, (now - last) / 1000); last = now;
+  const raw = Math.max(0, (now - last) / 1000), dt = Math.min(1, raw); last = now;
   if (frenzyT > 0) { frenzyT -= dt; $('frenzy').textContent = frenzyT > 0 ? `🌟 ×5 — ${Math.ceil(frenzyT)} sn` : ''; }
-  const ar = autoRate(); if (ar) { autoAcc += ar * dt; while (autoAcc >= 1) { autoAcc -= 1; const v = perAuto(); gain(v); const r = $('bigBtn').getBoundingClientRect(); floatText(r.left + r.width * (.2 + Math.random() * .6), r.top + r.height * .25, '🤖 +' + fmt(v)); refresh(); } }
+  const ar = autoRate();
+  if (ar && raw > 2) { autoAcc += ar * raw; const n = Math.floor(autoAcc); autoAcc -= n; if (n) { const x = n * perAuto(); gain(x); refresh(); if (raw > 20) toast(`🤖 Sen yokken robotlar ${fmt(x)} 🪙 kazandı!`); } }
+  else if (ar) { autoAcc += ar * dt; while (autoAcc >= 1) { autoAcc -= 1; const v = perAuto(); gain(v); const r = $('bigBtn').getBoundingClientRect(); floatText(r.left + r.width * (.2 + Math.random() * .6), r.top + r.height * .25, '🤖 +' + fmt(v)); refresh(); } }
   saveAcc += dt; if (saveAcc > 3) { saveAcc = 0; save(); }
   achAcc += dt; if (achAcc > 1) { achAcc = 0; checkAch(); }
   pushAcc += dt; if (pushAcc > 30) { pushAcc = 0; pushProfile(); }
   requestAnimationFrame(loop);
 }
-(() => { const away = Math.min(3600, (Date.now() - (S.son || Date.now())) / 1000), ps = perSec();
-  if (away > 30 && ps > 0) { const x = ps * away * .25; gain(x); setTimeout(() => toast(`🤖 Sen yokken robotlar ${fmt(x)} 🪙 kazandı!`), 500); } })();
+(() => { const away = Math.min(24 * 3600, (Date.now() - (S.son || Date.now())) / 1000), ps = perSec();
+  if (away > 30 && ps > 0) { const x = ps * away; gain(x); setTimeout(() => toast(`🤖 Sen yokken robotlar ${fmt(x)} 🪙 kazandı!`), 500); } })();
 window.addEventListener('pagehide', () => { save(); pushProfile(true, true); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); pushProfile(false, true); } });
 if (TEST) { const b = document.createElement('div'); b.textContent = '🧪 TEST MODU — sınırsız para (gerçek kaydına dokunmaz)'; b.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);background:#ff3d5a;color:#fff;font-weight:900;padding:4px 14px;border-radius:0 0 10px 10px;z-index:600;font-size:13px'; document.body.appendChild(b); }
 buildUps(); buildPacks(); refresh(); scheduleGolden(); checkAch(); requestAnimationFrame(loop);
 window.__tk = { openPre, S, CARDS, PACKS, refresh, buyPack, rollCard, checkAch, openCol, openDet };
 </script>
+<script src="guncel.js"></script>
 </body>
 </html>

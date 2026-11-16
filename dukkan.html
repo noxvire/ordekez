@@ -203,7 +203,7 @@
 <div id="title"></div>
 <div id="fade"></div>
 <div id="scare" class="hidden"><canvas width="64" height="76"></canvas></div>
-<div id="mob" class="hidden">Bu oyun klavye ve fare ile oynanır 🙏 Bilgisayardan gir.</div>
+
 
 <script type="module">
 import * as THREE from './three-uzay.js';
@@ -211,7 +211,7 @@ import * as THREE from './three-uzay.js';
 const $ = id => document.getElementById(id);
 const rand = (a, b) => a + Math.random() * (b - a), pick = a => a[(Math.random() * a.length) | 0];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-if (matchMedia('(pointer: coarse)').matches) $('mob').classList.remove('hidden');
+const TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
 
 /* =====================================================================
    PSX GÖRÜNÜMÜ: düşük çözünürlük + köşe titremesi + renk kısma + dither
@@ -1345,7 +1345,7 @@ function startNight() {
    ARAYÜZ: başlık, ipucu, diyalog
    ===================================================================== */
 let hintT = 0, toastT = 0;
-function hint(t, dur = 7) { const h = $('hint'); h.textContent = t; h.classList.remove('hidden'); hintT = dur; }
+function hint(t, dur = 7) { const h = $('hint'); if (TOUCH) t = t.replace(/\bE bas/g, '✋ butonuna bas').replace(/\bE ile/g, '✋ ile'); h.textContent = t; h.classList.remove('hidden'); hintT = dur; }
 function toast(t, dur = 2.6) { const e = $('toast'); e.innerHTML = t; e.classList.add('on'); toastT = dur; }
 function showTitle(a, b) { const e = $('title'); e.innerHTML = a + (b ? `<small>${b}</small>` : ''); e.classList.add('on'); setTimeout(() => e.classList.remove('on'), 3200); }
 
@@ -1940,8 +1940,9 @@ function updatePlayer(dt) {
   let fx = 0, fz = 0;
   if (keys.KeyW || keys.ArrowUp) fz -= 1; if (keys.KeyS || keys.ArrowDown) fz += 1;
   if (keys.KeyA || keys.ArrowLeft) fx -= 1; if (keys.KeyD || keys.ArrowRight) fx += 1;
-  const l = Math.hypot(fx, fz); if (l > 0) { fx /= l; fz /= l; }
-  const sp = (keys.ShiftLeft ? 2.6 : 1.8) * dt, sn = Math.sin(P.yaw), cs = Math.cos(P.yaw);
+  if (TJ.on) { fx = TJ.x; fz = TJ.y; }
+  const l = Math.hypot(fx, fz); if (l > 1) { fx /= l; fz /= l; }
+  const sp = (keys.ShiftLeft || TJ.run ? 2.6 : 1.8) * dt, sn = Math.sin(P.yaw), cs = Math.cos(P.yaw);
   const dx = (fx * cs + fz * sn) * sp, dz = (-fx * sn + fz * cs) * sp;
   if (!collide(P.pos.x + dx, P.pos.z)) P.pos.x += dx;
   if (!collide(P.pos.x, P.pos.z + dz)) P.pos.z += dz;
@@ -2197,6 +2198,50 @@ addEventListener('keydown', e => {
   if (e.code === 'Escape') pause();
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
+/* ---------- TELEFON KONTROLLERİ: sol joystick, sağda sürükleyerek bak, butonlar ---------- */
+var TJ = { on: false, x: 0, y: 0, run: false };
+if (TOUCH) {
+  const st = document.createElement('style');
+  st.textContent = `#tc{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}#tc.on{display:block}
+  #tcJoy{position:absolute;left:22px;bottom:22px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.35);pointer-events:auto;touch-action:none}
+  #tcJoy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.7)}
+  #tcLook{position:absolute;right:0;top:0;width:58%;height:100%;pointer-events:auto;touch-action:none}
+  .tcb{position:absolute;pointer-events:auto;touch-action:none;border-radius:50%;border:2px solid rgba(255,255,255,.6);background:rgba(20,10,20,.55);color:#fff;font:700 15px system-ui;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}
+  .tcb:active{background:rgba(255,255,255,.35)}
+  #tcE{right:26px;bottom:34px;width:84px;height:84px;font-size:30px}#tcQ{right:124px;bottom:26px;width:56px;height:56px;font-size:13px}
+  #tcF{right:26px;bottom:134px;width:52px;height:52px;font-size:20px}#tcP{right:14px;top:14px;width:44px;height:44px;font-size:16px}
+  #tcRun{left:166px;bottom:30px;width:54px;height:54px;font-size:20px}
+  #tcCamL,#tcCamR{top:50%;width:60px;height:60px;font-size:24px;display:none}#tcCamL{left:20px}#tcCamR{right:20px}
+  #tc.cam #tcCamL,#tc.cam #tcCamR{display:flex}#tc.cam #tcJoy,#tc.cam #tcLook,#tc.cam #tcRun,#tc.cam #tcF,#tc.cam #tcQ{display:none}
+  #tc.dlg #tcJoy,#tc.dlg #tcRun,#tc.dlg #tcQ,#tc.dlg #tcF,#tc.dlg #tcLook{display:none}#tc.dlg #tcE{bottom:auto;top:70px}`;
+  document.head.appendChild(st);
+  const tc = document.createElement('div'); tc.id = 'tc';
+  tc.innerHTML = '<div id="tcLook"></div><div id="tcJoy"><i></i></div><div class="tcb" id="tcRun">🏃</div><div class="tcb" id="tcE">✋</div><div class="tcb" id="tcQ">Bırak</div><div class="tcb" id="tcF">🔦</div><div class="tcb" id="tcP">⏸</div><div class="tcb" id="tcCamL">◀</div><div class="tcb" id="tcCamR">▶</div>';
+  document.body.appendChild(tc);
+  const key = code => { dispatchEvent(new KeyboardEvent('keydown', { code, key: code })); setTimeout(() => dispatchEvent(new KeyboardEvent('keyup', { code, key: code })), 60); };
+  const tap = (id, fn) => $(id).addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); fn(); }, { passive: false });
+  tap('tcE', () => { ac && ac(); if (state === 'play' && !dlg && $('paper').classList.contains('hidden')) interact(); else key('KeyE'); });
+  tap('tcQ', () => key('KeyQ')); tap('tcF', () => key('KeyF')); tap('tcP', () => { if (state === 'pause') resume(); else key('Escape'); });
+  tap('tcCamL', () => key('KeyA')); tap('tcCamR', () => key('KeyD'));
+  tap('tcRun', () => { TJ.run = !TJ.run; $('tcRun').style.background = TJ.run ? 'rgba(255,200,60,.6)' : ''; });
+  const joy = $('tcJoy'), knob = joy.querySelector('i'); let jid = null;
+  const jmove = t => { const r = joy.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, R0 = r.width / 2;
+    let dx = (t.clientX - cx) / R0, dy = (t.clientY - cy) / R0; const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; }
+    TJ.x = dx; TJ.y = dy; TJ.on = true; knob.style.transform = `translate(${dx * R0 * .55}px,${dy * R0 * .55}px)`; };
+  joy.addEventListener('touchstart', e => { e.preventDefault(); const t = e.changedTouches[0]; jid = t.identifier; jmove(t); }, { passive: false });
+  joy.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === jid) jmove(t); }, { passive: false });
+  const jend = e => { for (const t of e.changedTouches) if (t.identifier === jid) { jid = null; TJ.on = false; TJ.x = TJ.y = 0; knob.style.transform = ''; } };
+  joy.addEventListener('touchend', jend); joy.addEventListener('touchcancel', jend);
+  const look = $('tcLook'); let lid = null, lx = 0, ly = 0, lt0 = 0, moved = 0;
+  look.addEventListener('touchstart', e => { e.preventDefault(); const t = e.changedTouches[0]; lid = t.identifier; lx = t.clientX; ly = t.clientY; lt0 = performance.now(); moved = 0; }, { passive: false });
+  look.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) if (t.identifier === lid) {
+    const dx = t.clientX - lx, dy = t.clientY - ly; lx = t.clientX; ly = t.clientY; moved += Math.abs(dx) + Math.abs(dy);
+    if (state === 'play' && !dlg) { const k = .0052 * SET.sens; P.yaw -= dx * k; P.pitch = clamp(P.pitch - dy * k, -1.35, 1.35); } } }, { passive: false });
+  look.addEventListener('touchend', e => { for (const t of e.changedTouches) if (t.identifier === lid) { lid = null;
+    if (moved < 10 && performance.now() - lt0 < 300) { if (dlg) key('KeyE'); else if (!$('paper').classList.contains('hidden')) key('KeyE'); } } });
+  setInterval(() => { const vis = state === 'play' || state === 'cam'; tc.classList.toggle('on', vis); tc.classList.toggle('cam', state === 'cam'); tc.classList.toggle('dlg', !!dlg);
+    $('tcQ').style.display = state === 'play' && !dlg && held ? 'flex' : 'none'; }, 150);
+}
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 /* =====================================================================
@@ -2252,5 +2297,7 @@ showMenu();
 requestAnimationFrame(frame);
 window.__dk = { openPC, openCam, closeCam, closePC, get pcTab() { return pcTab; }, set pcTab(v) { pcTab = v; renderPC(); }, renderPC, takeFromShelf: id => takeFromShelf(id), get tut() { return tut; }, endNight: () => endNight(), restorePower: () => restorePower(), get S() { return S; }, get N() { return N; }, get P() { return P; }, get state() { return state; }, get focus() { return focus; }, interact, startNight, EV, openTill, get till() { return till; }, get counterItems() { return counterItems; }, setHeld, placeOnCounter, chooseDlg, advanceDlg, say, applySkin, spawnCustomer, solids, playMeow, get meowBuf() { return meowBuf; }, get CAMERA() { return camera; }, get dlg() { return dlg; }, freshSave, setS: s => { S = s; } };
 </script>
+<script src="guncel.js"></script>
+<script src="mobil.js" data-yan="always"></script>
 </body>
 </html>

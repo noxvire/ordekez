@@ -281,6 +281,7 @@
   .br-tbtns button { width: 66px; height: 66px; border-radius: 50%; border: 2px solid rgba(255,255,255,.5); background: rgba(200,160,40,.35); color: #fff;
     font: 800 1.2rem 'Baloo 2', sans-serif; touch-action: none; }
   .br-tbtns button.on { background: rgba(255,200,60,.7); }
+  @media (pointer: coarse) and (max-height: 560px) { .br .br-tbtns { display: grid !important; grid-template-columns: repeat(3, 56px); bottom: 84px; right: 12px; gap: 8px; direction: rtl; } .br .br-tbtns button { width: 56px; height: 56px; font-size: 15px; } }
   @media (pointer: coarse) { .br-tbtns { display: flex; } .br { cursor: default; } #brInv .slot { width: 58px; height: 58px; } #brInv { bottom: 10px; } }
   .br .close { z-index: 5; }
   #brMenu { position: absolute; inset: 0; z-index: 6; background: #000; display: none; align-items: center; justify-content: center; overflow: hidden; }
@@ -3420,6 +3421,26 @@ window.ordekezScore = (oyun, deger, detay) => {
   rpc('skor_kaydet', { p_token: token(), p_oyun: oyun, p_deger: deger, p_detay: detay || {} }).catch(() => {});
 };
 
+/* ---- en iyi skorları otomatik gönder (giriş yapılmışsa; siteye her dönüşte) ---- */
+async function syncBest(){
+  if (!token()) return;
+  const g = k => { try { return ls.getItem(k); } catch(e){ return null; } }, J = k => { try { return JSON.parse(g(k)) || {}; } catch(e){ return {}; } };
+  let sent = J('ordekez_sent'); const items = [];
+  const fl = +g('ordekez_best') || 0; if (fl) items.push(['flappy', fl, {}]);
+  let fwLv = 0, fwT = 0; for (let i = 0; i < 20; i++){ const b = +g('fw_best_' + i); if (b){ fwLv = i + 1; fwT = b; } } if (fwLv) items.push(['atessu', fwLv, { sure: fwT }]);
+  let brBest = 0, brD = ''; for (const d of ['kolay', 'normal', 'kabus']){ const b = +g('br_best_' + d); if (b && (!brBest || b < brBest)){ brBest = b; brD = d; } } if (brBest) items.push(['backrooms', brBest, { zorluk: brD }, true]);
+  const ev = J('ev_best'); if (ev.wave) items.push(['erdivur', ev.wave, { oldurme: ev.kills || 0 }]);
+  const sv = J('sv_save'); if (sv.bestKill) items.push(['survivor', sv.bestKill, { sure: Math.floor(sv.best || 0), kazandi: (sv.kazandi || 0) > 0 }]);
+  let changed = false;
+  for (const [oyun, v, detay, low] of items){
+    const old = sent[oyun]; if (old != null && (low ? v >= old : v <= old)) continue;
+    try { await rpc('skor_kaydet', { p_token: token(), p_oyun: oyun, p_deger: Math.min(99999, v), p_detay: detay }); sent[oyun] = v; changed = true; } catch(e){ if (/Oturum/i.test(e.message)) return; }
+  }
+  if (changed) try { ls.setItem('ordekez_sent', JSON.stringify(sent)); } catch(e){}
+}
+setTimeout(syncBest, 1500);
+window.addEventListener('pageshow', e => { if (e.persisted) syncBest(); });
+
 /* ---- arayüz ---- */
 const chip = document.getElementById('acctChip'), modal = document.getElementById('authModal');
 const form = document.getElementById('authForm'), errEl = document.getElementById('authErr');
@@ -3459,7 +3480,7 @@ form.addEventListener('submit', async e => {
     // bulut + bu cihazdaki ilerlemeyi birleştir, ikisine de yaz
     const m = merge(res.veri || {}), before = JSON.stringify(localData());
     for (const [k, v] of Object.entries(m)) rawSet.call(ls, k, v);
-    dirty = true; await push();
+    dirty = true; await push(); syncBest();
     renderChip(); form.reset();
     if (JSON.stringify(localData()) !== before){ try { sessionStorage.setItem('ordekez_go', 'menu'); } catch(e){} location.reload(); return; }   // oyunlar yeni kaydı görsün
     modal.querySelector('.ok').textContent = mode === 'kayit' ? 'Hesabın açıldı! 🎉' : 'Hoş geldin, ' + res.kullanici_adi + '!';
@@ -3524,5 +3545,7 @@ if (token()){
 document.getElementById('openLeader').addEventListener('click', () => window.ordekezBoard && ordekezBoard());
 try { const g = sessionStorage.getItem('ordekez_go'); if (g === 'menu' || g === 'games'){ sessionStorage.removeItem('ordekez_go'); go(g); } } catch(e){}
 </script>
+<script src="guncel.js"></script>
+<script src="mobil.js" data-yan="#fwPlay,#brPlay"></script>
 </body>
 </html>

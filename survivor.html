@@ -1290,5 +1290,7 @@ showMenu(); requestAnimationFrame(loop);
     body: JSON.stringify({ p_token: tk, p_oyun: 'survivor', p_deger: Math.min(99999, M.bestKill), p_detay: { sure: Math.floor(M.best), kazandi: M.kazandi > 0 } }) }).then(r => { if (r.ok) { M.sentKill = M.bestKill; saveM(); } }).catch(() => {}); })();
 window.__sv = { get fx() { return fx; }, get picks() { return picks; }, get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
 </script>
+<script src="guncel.js"></script>
+<script src="mobil.js" data-yan="always"></script>
 </body>
 </html>
