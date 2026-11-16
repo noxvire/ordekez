@@ -49,6 +49,16 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .sl{width:36px;height:36px;border-radius:12px;background:rgba(255,240,250,.9);border:2px solid #f6a8cf;display:flex;align-items:center;justify-content:center;font-size:19px;position:relative}
 .sl i{position:absolute;bottom:-4px;right:-4px;background:#ff6fae;color:#fff;font-style:normal;font-weight:700;font-size:10px;border-radius:8px;padding:0 4px;border:1px solid #fff}
 .sl.p{border-color:#b9a4ff}
+#bossIntro{position:fixed;inset:0;display:none;align-items:center;justify-content:center;pointer-events:none;z-index:30;background:radial-gradient(circle,rgba(60,0,30,.35),rgba(30,0,20,.75))}
+#bossIntro.on{display:flex;animation:biFade 3s ease forwards}
+@keyframes biFade{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
+.bi-in{display:flex;flex-direction:column;align-items:center;gap:4px;animation:biIn .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes biIn{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.bi-warn{font-weight:800;color:#fff;background:#e0304f;padding:4px 18px;border-radius:99px;font-size:clamp(14px,2.4vw,22px);letter-spacing:2px;animation:biBlink .38s steps(2) infinite;box-shadow:0 0 24px #ff3d6e}
+@keyframes biBlink{50%{background:#7a102a}}
+#bossIntro img{height:min(42vh,320px);filter:drop-shadow(0 0 22px #ff3d8e)}#bossIntro img.ph{width:min(30vh,220px);height:min(30vh,220px);object-fit:cover;border-radius:50%;border:8px solid #ff6fae}
+#bossIntro b{font-size:clamp(30px,6vw,64px);color:#fff;text-shadow:0 4px 0 #b0103a,0 0 30px #ff3d6e;letter-spacing:2px}
+#bossIntro small{font-size:clamp(14px,2.2vw,22px);color:#ffd0e6;font-weight:700}
 #bossbar{position:absolute;top:76px;left:50%;transform:translateX(-50%);width:min(520px,80vw);display:none;text-align:center}
 #bossbar b{font-size:15px;text-shadow:0 2px 0 #7a2050}
 #bossbar div{height:14px;background:rgba(255,255,255,.7);border:3px solid #fff;border-radius:99px;overflow:hidden;margin-top:2px}
@@ -196,6 +206,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <div id="timer">00:00</div>
   <div id="stats"><div id="kills">💀 0</div><div id="coinsH">🪙 0</div></div>
   <div id="slots"><div class="row" id="wSlots"></div><div class="row" id="pSlots"></div></div>
+  <div id="bossIntro"></div>
   <div id="bossbar"><b id="bossName"></b><div><i id="bossFill"></i></div></div>
   <div id="hpwrap"><div id="hpfill"></div><div id="hptxt"></div></div>
   <button id="pauseBtn">⏸</button>
@@ -355,14 +366,15 @@ function monster(kind, r, hue) {
   return cache[k] = { c, h, s };
 }
 // patron: arkadaş fotoğrafı, pembe çerçeve + taç
-function bossSprite(src, r) {
-  const k = 'b' + src + r; if (cache[k]) return cache[k];
+function bossSprite(src, r, eye) {
+  const k = 'b' + src + r + (eye ? 'e' : ''); if (cache[k]) return cache[k];
   const im = img(src); if (!im.complete || !im.naturalWidth) return null;
   const s = Math.ceil(r * 2.8), c = document.createElement('canvas'); c.width = c.height = s; const g = c.getContext('2d'), cx = s / 2, cy = s / 2 + r * .12;
   g.save(); g.beginPath(); g.arc(cx, cy, r, 0, 7); g.clip(); const side = Math.min(im.width, im.height) * .8, sx = (im.width - side) / 2, sy = Math.max(0, im.height * .44 - side / 2); g.drawImage(im, sx, sy, side, side, cx - r, cy - r, r * 2, r * 2); g.restore();
   g.lineWidth = r * .14; g.strokeStyle = '#ff6fae'; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke(); g.lineWidth = r * .05; g.strokeStyle = '#fff'; g.beginPath(); g.arc(cx, cy, r * 1.08, 0, 7); g.stroke();
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `${r * .7}px system-ui`; g.fillText('👑', cx, cy - r * 1.05);
   g.font = `${r * .45}px system-ui`; for (const sd of [-1, 1]) g.fillText('🎀', cx + sd * r * .95, cy - r * .55);
+  if (eye) { const ey = cy - r * .12; g.fillStyle = '#fff'; g.strokeStyle = '#5a2a4a'; g.lineWidth = r * .06; g.beginPath(); g.ellipse(cx, ey, r * .5, r * .36, 0, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#e0306a'; g.beginPath(); g.arc(cx, ey, r * .22, 0, 7); g.fill(); g.fillStyle = '#2a0a20'; g.beginPath(); g.arc(cx, ey, r * .11, 0, 7); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(cx - r * .07, ey - r * .07, r * .05, 0, 7); g.fill(); }
   const h = document.createElement('canvas'); h.width = h.height = s; const hg = h.getContext('2d'); hg.drawImage(c, 0, 0); hg.globalCompositeOperation = 'source-atop'; hg.fillStyle = 'rgba(255,255,255,.7)'; hg.fillRect(0, 0, s, s);
   return cache[k] = { c, h, s };
 }
@@ -479,9 +491,9 @@ const ENEMIES = {
   kedi:   { kind: 'kedi',   r: 21, hp: 60, spd: 96,  dmg: 11, xp: 6, hues: [0] },
 };
 const BOSSES = [
-  { t: 300, ad: 'KELERDY',       img: 'tk_kelerdy.jpg', sprite: 'zs_boss_kelerdy.webp',       hp: 5000,  r: 60, spd: 66, dmg: 18 },
-  { t: 600, ad: 'BEBEK ERDİ',    img: 'tk_erdi_bebek.jpg',    hp: 18000, r: 68, spd: 78, dmg: 26 },
-  { t: 900, ad: 'DİKTATÖR ERDİ', img: 'tk_erdi_diktator.jpg', hp: 45000, r: 80, spd: 72, dmg: 34, final: true },
+  { t: 300, ad: 'KELERDY',       ai: 'kel',  unvan: 'Kel Kafalı Kral',     img: 'tk_kelerdy.jpg', sprite: 'zs_boss_kelerdy.webp', hp: 5000,  r: 60, spd: 66, dmg: 18 },
+  { t: 600, ad: 'TEPEGÖZ ERDİ',  ai: 'tepe', unvan: 'Tek Gözlü Dev',       img: 'tk_erdi_normal.jpg', sprite: 'zs_boss_tepegoz.webp', eye: true, hp: 18000, r: 70, spd: 74, dmg: 26 },
+  { t: 900, ad: 'DİKTATÖR ERDİ', ai: 'dik',  unvan: 'Ördekez\'in Zalim Lideri', img: 'tk_erdi_diktator.jpg', sprite: 'zs_boss_diktator.webp', hp: 45000, r: 80, spd: 70, dmg: 34, final: true },
 ];
 const WIN_T = 900;                     // 15 dk: son patron gelir, onu yenince kazanırsın
 // her 3 dakikada yeni yaratık türü
@@ -604,7 +616,7 @@ function startGame() {
     lv: 1, xp: 0, next: 4, fx: 1, fy: 0, face: 1, inv: 0, revive: mlv('dir'), w: { katana: 1 }, p: {}, cds: {}, dmgBy: {}, hitT: 0, walk: 0 };
   const E = eqStats(); P.maxHp += Math.round(E.hp); P.spd *= 1 + E.spd; P.magnet *= 1 + E.mag; P.dmgMul *= 1 + E.dmg; P.eqCd = E.cd; P.eqCrit = E.crit; P.eqArm = E.arm; P.xpMul *= 1 + E.xp; P.chests = [];
   P.hp = P.maxHp;
-  enemies = []; projs = []; gems = []; picks = []; fx = []; texts = []; pets = []; T = 0; kills = 0; coins = 0; spawnAcc = 0; bossIdx = 0; eliteT = 0; P.elites = 0; P.tookHit = false; P.bossK = []; curBoss = null; cam = { x: 0, y: 0 }; levelQueue = 0; won = false;
+  enemies = []; projs = []; gems = []; picks = []; fx = []; texts = []; pets = []; T = 0; kills = 0; coins = 0; spawnAcc = 0; bossIdx = 0; eliteT = 0; introDone = []; bproj = []; warns = []; beams = []; P.elites = 0; P.tookHit = false; P.bossK = []; curBoss = null; cam = { x: 0, y: 0 }; levelQueue = 0; won = false;
   M.oyun++; saveM();
   document.querySelectorAll('.scr').forEach(s => s.classList.remove('on')); $('title').style.display = 'none'; $('hud').style.display = 'block';
   state = 'play'; last = performance.now(); refreshSlots(); chime([523, 659, 784, 1046], 70); music('savas');
@@ -622,13 +634,19 @@ function spawnEnemy(type, boss) {
   const a = Math.random() * Math.PI * 2, d = Math.hypot(W, H) / 2 + 60;
   const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1.05 + T / 50 + Math.pow(T / 360, 2) * 3.8;
   let e;
-  if (boss) e = { sprite: boss.sprite, x, y, r: boss.r, hp: boss.hp * (1 + T / 900), spd: boss.spd, dmg: boss.dmg, xp: 60, boss: boss.ad, img: boss.img, tier: Math.min(3, BOSSES.indexOf(boss) + 1) };
+  if (boss) e = { sprite: boss.sprite, ai: boss.ai, eye: boss.eye, ph: 0, cd: { a: 3, b: 6, c: 9 }, x, y, r: boss.r, hp: boss.hp * (1 + T / 900), spd: boss.spd, dmg: boss.dmg, xp: 60, boss: boss.ad, img: boss.img, tier: Math.min(3, BOSSES.indexOf(boss) + 1) };
   else { const K = ENEMIES[type]; e = { x, y, r: K.r, hp: K.hp * m, spd: K.spd * (1 + T / 2500), dmg: K.dmg * (1 + T / 600), xp: K.xp, kind: K.kind, hue: K.hues[(Math.random() * K.hues.length) | 0], ph: Math.random() * 7 }; }
   e.max = e.hp; e.kx = 0; e.ky = 0; e.flash = 0; e.hitCd = {};
   enemies.push(e); return e;
 }
 const ENEMY_CAP = [35, 55, 75, 95, 115];   // 0-3, 3-6, 6-9, 9-12, 12-15. dakikalar
-let eliteT = 0;
+let eliteT = 0, introDone = [], bproj = [], warns = [], beams = [];
+function bossIntro(b) { const el = $('bossIntro'), pic = b.sprite && imgOK(b.sprite) ? b.sprite : b.img;
+  el.innerHTML = `<div class="bi-in"><div class="bi-warn">⚠️ PATRON GELİYOR ⚠️</div><img src="${pic}" class="${pic === b.img ? 'ph' : ''}" alt=""><b>${b.ad}</b><small>${b.unvan}</small></div>`;
+  el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); shake = 6;
+  [0, 380, 760, 1140].forEach((d, i) => setTimeout(() => snd(i % 2 ? 330 : 440, .3, 'sawtooth', .035, .9), d));
+  setTimeout(() => el.classList.remove('on'), 3000); }
+const imgOK = src => { const im = img(src); return im.complete && im.naturalWidth > 0; };
 function makeElite(e) { e.elite = true; e.r *= 2.4; e.hp *= 14; e.max = e.hp; e.dmg *= 1.6; e.spd *= .82; e.xp *= 14; return e; }
 function spawner(dt) {
   const finalUp = bossIdx >= BOSSES.length;            // son patron sahnede: sadece az sayıda yardımcı
@@ -645,6 +663,7 @@ function spawner(dt) {
   if (Math.floor((T - dt) / 60) !== Math.floor(T / 60) && T > 5 && !finalUp) { const n = Math.min(30, 12 + T / 20), ty = types[types.length - 1]; for (let i = 0; i < n; i++) { const e = spawnEnemy(ty); const a = i / n * Math.PI * 2, d = Math.hypot(W, H) / 2 + 40; e.x = P.x + Math.cos(a) * d; e.y = P.y + Math.sin(a) * d; } toast('💢 Etrafın sarıldı!'); }
   // elit: 1. dakikadan sonra yaklaşık her 40 sn'de bir (patron sahnedeyken gelmez)
   eliteT -= dt; if (T > 60 && eliteT <= 0 && !(curBoss && !curBoss.dead) && !(bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t - 8)) { eliteT = 34 + Math.random() * 14; makeElite(spawnEnemy(types[types.length - 1])); toast('⚡ ELİT DÜŞMAN GELDİ!'); chime([330, 440, 330, 494], 90, 'square', .035); }
+  if (bossIdx < BOSSES.length && !introDone[bossIdx] && T >= BOSSES[bossIdx].t - 3) { introDone[bossIdx] = 1; bossIntro(BOSSES[bossIdx]); }
   if (bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t) { const b = BOSSES[bossIdx++]; curBoss = spawnEnemy(null, b); curBoss.final = !!b.final; toast(b.final ? `👑 SON PATRON: ${b.ad}!` : `👑 ${b.ad} GELDİ!`); chime([392, 330, 262, 196], 120, 'square', .04); }
 }
 
@@ -676,6 +695,70 @@ function kill(e) {
   else if (r < .0288 && T > 60) picks.push({ x: e.x, y: e.y, k: 'sevgi' });
   fx.push({ k: 'puf', x: e.x, y: e.y, r: e.r, t: .35 });
   if (Math.random() < .35) fx.push({ k: 'kalpcik', x: e.x, y: e.y, vy: -60, t: .7 });
+}
+
+/* =================== PATRON SALDIRILARI =================== */
+function hitP(dm) { if (P.inv > 0 || state !== 'play') return; dm = Math.max(1, (dm - 2 * pl('zirh')) * (1 - (P.eqArm || 0))); P.hp -= dm; P.tookHit = true; P.inv = .6; P.hitT = .3; snd(220, .18, 'triangle', .05, .5); if (texts.length < 70) texts.push({ x: P.x, y: P.y - 60, v: '-' + Math.round(dm), t: .7, me: 1 }); }
+const segD = (px, py, x, y, a, len) => { const dx = Math.cos(a), dy = Math.sin(a), t = Math.max(0, Math.min(len, (px - x) * dx + (py - y) * dy)); return Math.hypot(px - (x + dx * t), py - (y + dy * t)); };
+const angP = e => Math.atan2(P.y - e.y, P.x - e.x);
+function shoot(e, a, sp, ic, dmg, r = 12) { bproj.push({ x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, ic, dmg, r, t: 6 }); }
+function bossUpdate(dt) {
+  const e = curBoss;
+  if (e && !e.dead) {
+    if (!e.rage && e.hp < e.max / 2) { e.rage = true; toast(`😡 ${e.boss} ÖFKELENDİ!`); fx.push({ k: 'flash', t: .4 }); shake = 10; chime([196, 165, 147, 131], 110, 'sawtooth', .05); for (const k in e.cd) e.cd[k] = Math.min(e.cd[k], 1.5); }
+    const R = e.rage ? .62 : 1; for (const k in e.cd) e.cd[k] -= dt;
+    if (e.dashT > 0) { e.dashT -= dt; e.x += e.dvx * dt; e.y += e.dvy * dt; if (Math.random() < .5) fx.push({ k: 'puf', x: e.x, y: e.y + e.r * .5, r: 22, t: .35 }); }
+    if (e.ai === 'kel') {
+      // Kel Parlaması: kafadan ışın (öfkede 3 ışın)
+      if (e.cd.a <= 0) { e.cd.a = 5.5 * R; e.hold = T + 1.4; const a = angP(e); for (const o of e.rage ? [-.45, 0, .45] : [0]) beams.push({ e, a: a + o, len: 900, w: 46, warn: .9, t: .9 + .45, on: .45, dmg: 24, col: 'kel' }); snd(1200, .5, 'sine', .03, 2); }
+      // Kafa Atma: hızlı atılma
+      if (e.cd.b <= 0 && !(e.hold > T)) { e.cd.b = 7 * R; const a = angP(e); warns.push({ x: e.x, y: e.y, a, len: 520, w: e.r * 1.6, t: .7, max: .7, line: true }); e.hold = T + .7;
+        setTimeout(() => { if (e.dead) return; e.dashT = .45; e.dvx = Math.cos(a) * 1150; e.dvy = Math.sin(a) * 1150; shake = Math.max(shake, 5); snd(140, .3, 'sawtooth', .05, .4); }, 700); }
+      if (e.rage && e.cd.c <= 0) { e.cd.c = 4; for (let i = 0; i < 10; i++) shoot(e, i / 10 * Math.PI * 2 + T, 260, '✨', 14); }
+    }
+    if (e.ai === 'tepe') {
+      // Göz Lazeri: süpüren ışın
+      if (e.cd.a <= 0) { e.cd.a = 7 * R; e.hold = T + 2.8; const a = angP(e), sw = e.rage ? Math.PI : Math.PI / 2, dir = Math.random() < .5 ? 1 : -1;
+        beams.push({ e, a: a - dir * sw / 2, sweep: dir * sw, len: 1000, w: 40, warn: .9, t: .9 + 1.6, on: 1.6, dmg: 30, col: 'eye' }); snd(600, .6, 'sawtooth', .03, 1.6); }
+      // Gözyaşı halkası
+      if (e.cd.b <= 0) { e.cd.b = 4.5 * R; const n = e.rage ? 18 : 10, o = Math.random(); for (let i = 0; i < n; i++) shoot(e, (i + o) / n * Math.PI * 2, 230, '💧', 18, 13); snd(900, .2, 'sine', .03, .5); }
+      // Kaya fırlatma: oyuncunun olduğu yere iner
+      if (e.cd.c <= 0) { e.cd.c = 6 * R; for (let i = 0; i < (e.rage ? 4 : 2); i++) { const rx = P.x + (Math.random() - .5) * 220, ry = P.y + (Math.random() - .5) * 220; warns.push({ x: rx, y: ry, r: 80, t: 1.3, max: 1.3, dmg: 32, ic: '🪨' }); } }
+    }
+    if (e.ai === 'dik') {
+      // Asker çağır
+      if (e.cd.a <= 0) { e.cd.a = 10 * R; const types = NEWTYPES.filter(n => T >= n.t).map(n => n.k); for (let i = 0; i < (e.rage ? 10 : 6); i++) { const m = spawnEnemy(types[types.length - 1]), a = i / 6 * Math.PI * 2; m.x = e.x + Math.cos(a) * 130; m.y = e.y + Math.sin(a) * 130; m.asker = true; m.hp *= 1.5; m.max = m.hp; } toast('🪖 Askerler, saldırın!'); snd(300, .3, 'square', .04, .7); }
+      // Emir yağmuru
+      if (e.cd.b <= 0) { e.cd.b = 5.5 * R; const n = e.rage ? 9 : 5; for (let i = 0; i < n; i++) { const rr = i ? 90 + Math.random() * 260 : 0, aa = Math.random() * 7; warns.push({ x: P.x + Math.cos(aa) * rr, y: P.y + Math.sin(aa) * rr, r: 75, t: 1.25 + i * .08, max: 1.25 + i * .08, dmg: 34, ic: '📜' }); } snd(500, .2, 'triangle', .04, .7); }
+      // Kurşun yelpazesi (3 seri)
+      if (e.cd.c <= 0) { e.cd.c = 4 * R; e.hold = T + 1.2; for (let k = 0; k < 3; k++) setTimeout(() => { if (e.dead || state !== 'play') return; const a = angP(e), n = e.rage ? 7 : 5; for (let i = 0; i < n; i++) shoot(e, a + (i - (n - 1) / 2) * .17, 380, '💥', 22, 11); snd(180, .1, 'square', .04, .5); }, k * 350); }
+    }
+  }
+  // ışınlar
+  for (const b of beams) { b.t -= dt; const x = b.e.x, y = b.e.y - b.e.r * .4; if (b.sweep && b.t < b.on) b.a += b.sweep / b.on * dt;
+    if (b.t < b.on && !b.e.dead && segD(P.x, P.y, x, y, b.a, b.len) < b.w / 2 + P.r) hitP(b.dmg); }
+  beams = beams.filter(b => b.t > 0 && !b.e.dead);
+  // uyarı alanları
+  for (const w of warns) { w.t -= dt; if (w.t <= 0 && !w.done) { w.done = true; if (!w.line) { fx.push({ k: 'puf', x: w.x, y: w.y, r: w.r, t: .35 }); shake = Math.max(shake, 4); snd(120, .25, 'sawtooth', .04, .4); if (Math.hypot(P.x - w.x, P.y - w.y) < w.r + P.r * .5) hitP(w.dmg); } } }
+  warns = warns.filter(w => w.t > -.05);
+  // patron mermileri
+  for (const p of bproj) { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt; if (Math.hypot(P.x - p.x, P.y - p.y) < p.r + P.r * .7) { hitP(p.dmg); p.t = 0; } }
+  bproj = bproj.filter(p => p.t > 0);
+}
+function drawBoss() {
+  for (const w of warns) { const k = 1 - Math.max(0, w.t) / w.max;
+    if (w.line) { ctx.save(); ctx.translate(w.x, w.y); ctx.rotate(w.a); ctx.fillStyle = `rgba(255,60,110,${.12 + k * .25})`; ctx.fillRect(0, -w.w / 2, w.len, w.w); ctx.strokeStyle = 'rgba(255,60,110,.7)'; ctx.setLineDash([12, 10]); ctx.lineWidth = 3; ctx.strokeRect(0, -w.w / 2, w.len, w.w); ctx.setLineDash([]); ctx.restore(); continue; }
+    ctx.fillStyle = `rgba(255,50,100,${.1 + k * .25})`; ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, 7); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,60,110,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, 7); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,60,110,.35)'; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * k, 0, 7); ctx.fill();
+    if (w.ic && w.t > 0) { const c = emo(w.ic, 40); ctx.drawImage(c, w.x - c.width / 2, w.y - c.height / 2 - (1 - k) * 320); } }
+  for (const b of beams) { const x = b.e.x, y = b.e.y - b.e.r * .4; ctx.save(); ctx.translate(x, y); ctx.rotate(b.a);
+    if (b.t > b.on) { const k = 1 - (b.t - b.on) / b.warn; ctx.fillStyle = `rgba(255,70,120,${.1 + k * .2})`; ctx.fillRect(0, -b.w / 2, b.len, b.w); ctx.strokeStyle = 'rgba(255,70,120,.6)'; ctx.setLineDash([10, 10]); ctx.lineWidth = 2; ctx.strokeRect(0, -b.w / 2, b.len, b.w); ctx.setLineDash([]); }
+    else { const fl = .8 + Math.sin(T * 40) * .2, g = ctx.createLinearGradient(0, -b.w / 2, 0, b.w / 2), c1 = b.col === 'eye' ? '255,40,90' : '255,220,90';
+      g.addColorStop(0, `rgba(${c1},0)`); g.addColorStop(.3, `rgba(${c1},${.75 * fl})`); g.addColorStop(.5, `rgba(255,255,255,${fl})`); g.addColorStop(.7, `rgba(${c1},${.75 * fl})`); g.addColorStop(1, `rgba(${c1},0)`);
+      ctx.fillStyle = g; ctx.fillRect(0, -b.w / 2, b.len, b.w); ctx.fillStyle = `rgba(255,255,255,${fl})`; ctx.beginPath(); ctx.arc(0, 0, b.w * .7, 0, 7); ctx.fill(); }
+    ctx.restore(); }
+  for (const p of bproj) { const c = emo(p.ic, p.r * 2.6); ctx.drawImage(c, p.x - c.width / 2, p.y - c.height / 2); }
 }
 
 /* =================== SİLAHLAR =================== */
@@ -750,13 +833,14 @@ function update(dt) {
   for (const e of enemies) {
     if (e.dead) continue;
     const dx = P.x - e.x, dy = P.y - e.y, d = Math.hypot(dx, dy) || 1;
-    const es = e.stun > T ? 0 : e.spd; e.x += (dx / d * es + e.kx) * dt; e.y += (dy / d * es + e.ky) * dt; e.kx *= .86; e.ky *= .86; e.flash -= dt; e.dir = dx >= 0 ? 1 : -1;
+    const es = e.stun > T || e.hold > T ? 0 : e.spd * (e.rage ? 1.35 : 1); e.x += (dx / d * es + e.kx) * dt; e.y += (dy / d * es + e.ky) * dt; e.kx *= .86; e.ky *= .86; e.flash -= dt; e.dir = dx >= 0 ? 1 : -1;
     for (const o of near(e.x, e.y)) { if (o === e || o.dead) continue; const ox = e.x - o.x, oy = e.y - o.y, od = ox * ox + oy * oy, rr = e.r + o.r; if (od < rr * rr && od > .01) { const q = Math.sqrt(od), push = (rr - q) * .5 * (o.boss ? 1.6 : 1); e.x += ox / q * push; e.y += oy / q * push; } }
     if (d < e.r + P.r && P.inv <= 0) { const dm = Math.max(1, (e.dmg - 2 * pl('zirh')) * (1 - (P.eqArm || 0))); P.hp -= dm; P.tookHit = true; P.inv = .6; P.hitT = .25; snd(220, .18, 'triangle', .05, .5); if (texts.length < 70) texts.push({ x: P.x, y: P.y - 60, v: '-' + Math.round(dm), t: .7, me: 1 }); }
     if (d > Math.hypot(W, H) * 1.2 && !e.boss) { const a = Math.random() * Math.PI * 2, r = Math.hypot(W, H) / 2 + 50; e.x = P.x + Math.cos(a) * r; e.y = P.y + Math.sin(a) * r; }
   }
   if (P.hp <= 0) { if (P.revive > 0) { P.revive--; P.hp = P.maxHp / 2; P.inv = 2; for (const e of enemies) if (!e.boss && Math.hypot(e.x - P.x, e.y - P.y) < 300) hurt(e, 99999); fx.push({ k: 'flash', t: .4 }); toast('🪽 YENİDEN DOĞDUN!'); } else return gameOver(false); }
   weapons(dt);
+  bossUpdate(dt);
   SRC = 'kalp'; for (const p of projs) { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
     for (const e of near(p.x, p.y)) { if (e.dead || p.hit.has(e)) continue; if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 < (e.r + p.r) ** 2) { p.hit.add(e); hurt(e, p.dmg, p.vx * .08, p.vy * .08); if (p.S) { aoe(e.x, e.y, 80, 16, 70); shake = Math.max(shake, 2); } if (fx.length < 260) fx.push({ k: 'kalpb', x: e.x, y: e.y, s: p.sz * (p.S ? 4.2 : 2.6), gold: p.gold, S: p.S, t: .32 }); if (--p.pierce <= 0) { p.t = 0; break; } } } }
   SRC = null; projs = projs.filter(p => p.t > 0);
@@ -850,15 +934,18 @@ function draw(dt) {
   const vEn = enemies.filter(e => vis(e.x, e.y, e.r * 1.4)).sort((a, b) => a.y - b.y);
   for (const e of vEn) {
     ctx.fillStyle = 'rgba(120,60,100,.18)'; ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * .85, e.r * .8, e.r * .25, 0, 0, 7); ctx.fill();
+    if (e.boss && e.rage) { ctx.save(); ctx.globalAlpha = .45 + Math.sin(T * 10) * .15; const rg = ctx.createRadialGradient(e.x, e.y, e.r * .5, e.x, e.y, e.r * 1.9); rg.addColorStop(0, 'rgba(255,40,60,.6)'); rg.addColorStop(1, 'rgba(255,40,60,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 1.9, 0, 7); ctx.fill(); ctx.restore(); }
     if (e.sprite) { const bs = bossFull(e.sprite); if (bs) { const h = e.r * 3.1, w = h * bs.c.width / bs.c.height, bob = Math.sin(T * 4) * 3, st = 1 + Math.sin(T * 8) * .025;
         ctx.save(); ctx.translate(e.x, e.y + e.r * .9); ctx.scale((e.dir || 1) * (2 - st), st); ctx.drawImage(e.flash > 0 ? bs.h : bs.c, -w / 2, -h - bob, w, h); ctx.restore(); continue; } }
     if (e.elite) { const pr = 1 + Math.sin(T * 6 + e.ph) * .08; ctx.save(); ctx.globalAlpha = .85; const ag = ctx.createRadialGradient(e.x, e.y, e.r * .4, e.x, e.y, e.r * 1.5 * pr); ag.addColorStop(0, 'rgba(255,210,80,.0)'); ag.addColorStop(.6, 'rgba(255,190,60,.55)'); ag.addColorStop(1, 'rgba(255,120,200,0)'); ctx.fillStyle = ag; ctx.beginPath(); ctx.arc(e.x, e.y, e.r * 1.5 * pr, 0, 7); ctx.fill(); ctx.restore(); }
-    const s = e.boss ? bossSprite(e.img, e.r) : monster(e.kind, e.r, e.hue); if (!s) continue;
+    const s = e.boss ? bossSprite(e.img, e.r, e.eye) : monster(e.kind, e.r, e.hue); if (!s) continue;
     const sq = e.boss ? 1 : 1 + Math.sin(T * 9 + e.ph) * .06, by = e.kind === 'ghost' || e.kind === 'bat' ? Math.sin(T * 6 + e.ph) * 4 : 0;
     ctx.save(); ctx.translate(e.x, e.y + by); ctx.scale((e.boss ? 1 : e.dir || 1) * (2 - sq), sq); ctx.drawImage(e.flash > 0 ? s.h : s.c, -s.s / 2, -s.s / 2); ctx.restore();
     if (e.elite) { const c = emo('👑', 26); ctx.drawImage(c, e.x - c.width / 2, e.y + by - e.r - 46 + Math.sin(T * 5) * 2); const bw = e.r * 1.6; ctx.fillStyle = 'rgba(80,30,60,.55)'; ctx.fillRect(e.x - bw / 2, e.y + by - e.r - 14, bw, 6); ctx.fillStyle = '#ffc23a'; ctx.fillRect(e.x - bw / 2, e.y + by - e.r - 14, bw * Math.max(0, e.hp / e.max), 6); }
+    if (e.asker) { const c = emo('🪖', 20); ctx.drawImage(c, e.x - c.width / 2, e.y + by - e.r - 16); }
     if (e.stun > T) { const c = emo('💫', 20); ctx.drawImage(c, e.x - c.width / 2, e.y + by - e.r - 18); }
   }
+  drawBoss();
   for (const pt of pets) { const kl = Math.min(5, P.w.kedicik || 1), KS = sup('kedicik'); ctx.fillStyle = 'rgba(120,60,100,.18)'; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 18, 16, 5, 0, 0, 7); ctx.fill(); frame(KS ? 'zs_fx_aslan_s' : kl >= 5 ? 'zs_fx_aslan' : 'zs_fx_kedi', Math.floor(T * 12 + pets.indexOf(pt)), pt.x, pt.y, KS ? 76 : [0, 42, 46, 48, 50, 62][kl], 0, 1, pt.face); }
   const sk = img(skinSrc(P.skin)), hh = 108;
   ctx.fillStyle = 'rgba(120,60,100,.22)'; ctx.beginPath(); ctx.ellipse(P.x, P.y + 26, 24, 8, 0, 0, 7); ctx.fill();
@@ -894,7 +981,8 @@ function draw(dt) {
   $('timer').textContent = `${String(Math.floor(T / 60)).padStart(2, '0')}:${String(Math.floor(T % 60)).padStart(2, '0')}`;
   $('kills').textContent = '💀 ' + kills; $('coinsH').textContent = '🪙 ' + coins;
   $('hpfill').style.width = Math.max(0, P.hp / P.maxHp * 100) + '%'; $('hptxt').textContent = `${Math.max(0, Math.ceil(P.hp))} / ${P.maxHp}`;
-  if (curBoss && !curBoss.dead) { $('bossbar').style.display = 'block'; $('bossName').textContent = '👑 ' + curBoss.boss; $('bossFill').style.width = Math.max(0, curBoss.hp / curBoss.max * 100) + '%'; } else $('bossbar').style.display = 'none';
+  { const br = curBoss && !curBoss.dead ? (curBoss.rage ? 1.14 : 1.07) : 1; if (MUS.savas.playbackRate !== br) MUS.savas.playbackRate = br; }
+  if (curBoss && !curBoss.dead) { $('bossbar').style.display = 'block'; $('bossName').textContent = (curBoss.rage ? '😡 ' : '👑 ') + curBoss.boss; $('bossFill').style.width = Math.max(0, curBoss.hp / curBoss.max * 100) + '%'; } else $('bossbar').style.display = 'none';
 }
 let tt;
 function toast(m) { const t = $('toast'); t.textContent = m; t.style.opacity = 1; clearTimeout(tt); tt = setTimeout(() => t.style.opacity = 0, 2200); }
@@ -1101,7 +1189,7 @@ const ACH = [
   { id: 'e1',      ic: '⚡', ad: 'Elit Avcısı',      d: 'İlk elit düşmanını yen',                t: 0, rw: 100,  v: () => M.st.elite + (RUN() ? P.elites || 0 : 0), n: 1 },
   { id: 'e50',     ic: '👑', ad: 'Taç Toplayıcı',    d: '50 elit düşman yen',                    t: 2, rw: 800,  v: () => M.st.elite + (RUN() ? P.elites || 0 : 0), n: 50 },
   { id: 'kel',     ic: '🧑‍🦲', ad: 'Kel Kafa',        d: "Kelerdy'yi yen",                         t: 1, rw: 300,  v: () => M.st.boss.KELERDY || (RUN() && P.bossK.includes('KELERDY')) ? 1 : 0, n: 1 },
-  { id: 'bebek',   ic: '🍼', ad: 'Bebek Bakıcısı',   d: "Bebek Erdi'yi yen",                      t: 2, rw: 600,  v: () => M.st.boss['BEBEK ERDİ'] || (RUN() && P.bossK.includes('BEBEK ERDİ')) ? 1 : 0, n: 1 },
+  { id: 'bebek',   ic: '👁️', ad: 'Göz Göze',         d: "Tepegöz Erdi'yi yen",                    t: 2, rw: 600,  v: () => M.st.boss['TEPEGÖZ ERDİ'] || (RUN() && P.bossK.includes('TEPEGÖZ ERDİ')) ? 1 : 0, n: 1 },
   { id: 'win',     ic: '🏆', ad: 'Diktatör Devrildi', d: "Diktatör Erdi'yi yen ve kazan",         t: 3, rw: 1500, v: () => M.kazandi, n: 1 },
   { id: 'win5',    ic: '🎖️', ad: 'Efsane Kedi',      d: '5 kez kazan',                            t: 3, rw: 3000, v: () => M.kazandi, n: 5 },
   { id: 'evo',     ic: '✨', ad: 'Evrim!',           d: 'Bir yeteneği evrimleştir (Sv 5)',       t: 1, rw: 200,  v: () => M.st.evo, n: 1 },
@@ -1182,7 +1270,7 @@ function renderSet() {
   document.querySelectorAll('.vol').forEach(r => { r.value = M.set[r.dataset.v]; r.oninput = () => { M.set[r.dataset.v] = +r.value; applyVol(); }; r.onchange = () => { saveM(); if (r.dataset.v === 'evol') snd(880, .08, 'sine', .05); }; });
 }
 
-[...new Set([...BOSSES.map(b => b.sprite || b.img), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp', ...['kalp', 'kalpb', 'pati', 'patis', 'yildiz', 'yildizb', 'halka', 'halka_g', 'kedi', 'aslan', 'ordek', 'ordek_g', 'puf', 'lvl'].map(n => `zs_fx_${n}.webp`)])].forEach(img);
+[...new Set([...BOSSES.flatMap(b => [b.sprite, b.img]), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp', ...['kalp', 'kalpb', 'pati', 'patis', 'yildiz', 'yildizb', 'halka', 'halka_g', 'kedi', 'aslan', 'ordek', 'ordek_g', 'puf', 'lvl'].map(n => `zs_fx_${n}.webp`)])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
 (() => { if (TEST || !M.bestKill || M.sentKill >= M.bestKill) return; let tk = null; try { tk = localStorage.getItem('ordekez_token'); } catch (e) {} if (!tk) return;
   fetch('https://servvglgsudtjouqknvx.supabase.co/rest/v1/rpc/skor_kaydet', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J' },
