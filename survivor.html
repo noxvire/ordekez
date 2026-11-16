@@ -77,6 +77,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .stats b{color:#e04f95}
 .gold{font-size:20px;font-weight:700;color:#c9852a}
 .setrow{display:flex;justify-content:space-between;align-items:center;background:#fff;border:3px solid #ffd0e6;border-radius:16px;padding:10px 14px;margin:8px auto;max-width:420px;font-size:17px;color:#8a4a70}
+.vol{width:170px;accent-color:#ff6fae;cursor:pointer}
 .tg{width:56px;height:30px;border-radius:99px;background:#e5c9d8;position:relative;transition:background .15s}
 .tg::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 2px 3px rgba(0,0,0,.2)}
 .tg.on{background:#ff6fae}.tg.on::after{left:29px}
@@ -196,6 +197,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <button class="x" data-close>✕</button>
   <h2>⚙️ Ayarlar</h2>
   <div class="setrow">🎵 Müzik <button class="tg" data-s="muzik"></button></div>
+  <div class="setrow">🔉 Müzik sesi <input type="range" min="0" max="100" class="vol" data-v="mvol"></div>
+  <div class="setrow">🔈 Efekt sesi <input type="range" min="0" max="100" class="vol" data-v="evol"></div>
   <div class="setrow">🔔 Ses efektleri <button class="tg" data-s="ses"></button></div>
   <div class="setrow">💯 Hasar sayıları <button class="tg" data-s="sayi"></button></div>
   <div class="setrow">🌸 Uçuşan yapraklar <button class="tg" data-s="yaprak"></button></div>
@@ -239,7 +242,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 <div class="scr" id="pause"><div class="card" style="max-width:420px">
   <h2>⏸ Mola</h2>
   <div class="stats" id="pStats"></div>
-  <button class="btn" id="resume">Devam ▶</button><button class="btn alt" id="quit">Bitir</button>
+  <button class="btn" id="resume">Devam ▶</button><button class="btn alt" id="pSet">⚙️ Ayarlar</button><button class="btn alt" id="quit">Bitir</button>
 </div></div>
 
 <div class="scr" id="over"><div class="card" style="max-width:480px">
@@ -254,8 +257,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 'use strict';
 /* =================== KAYIT =================== */
 const KEY = 'sv_save';
-let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, inv: {}, eq: {}, kutular: [null, null, null, null] };
-try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; M.inv = M.inv || {}; M.eq = M.eq || {}; M.kutular = M.kutular || [null, null, null, null]; } } catch (e) {}
+let M = { altin: 0, up: {}, best: 0, bestKill: 0, kazandi: 0, oyun: 0, skin: 0, acik: { 0: 1 }, set: { muzik: 1, ses: 1, sayi: 1, yaprak: 1, mvol: 60, evol: 80 }, inv: {}, eq: {}, kutular: [null, null, null, null] };
+try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o) { M = Object.assign(M, o); M.set = Object.assign({ muzik: 1, ses: 1, sayi: 1, yaprak: 1, mvol: 60, evol: 80 }, o.set || {}); M.acik = Object.assign({ 0: 1 }, o.acik || {}); if (typeof M.skin !== 'number') M.skin = 0; M.inv = M.inv || {}; M.eq = M.eq || {}; M.kutular = M.kutular || [null, null, null, null]; } } catch (e) {}
 
 let saveM = () => { try { localStorage.setItem(KEY, JSON.stringify(M)); } catch (e) {} };
 const $ = id => document.getElementById(id);
@@ -366,12 +369,12 @@ const CHESTS = [
   { ad: 'Efsanevi Sandık', img: 'zs_chest_3.webp', r: 3, fiyat: 8000, sure: 3 * 3600,  altin: 800, o: [0, 30, 50, 20] },
 ];
 // düşmanlardan sandık düşme şansı (öldürme başına)
-const CHEST_DROP = [.0005, .00015, .00004, .00001];
+const CHEST_DROP = [.00012, .00003, .000008, .000002];   // çok nadir; bir oyunda düşmanlardan en fazla 1 sandık
 const CHEST_ITEMS = 5, CHEST_SLOTS = 4;
 const SLOTS = { kask: 'Kask', kolye: 'Kolye', zirh: 'Zırh', pelerin: 'Pelerin', silah: 'Silah', yuzuk: 'Yüzük', ayakkabi: 'Ayakkabı' };
 // st: hp (can), arm (hasar azaltma), spd (hız), mag (çekim), dmg (hasar), cd (saldırı hızı), crit (kritik), xp
 // [id, ad, yuva, rarity, ikon, ana stat, yan stat]
-const IBASE = { hp: 15, arm: .04, spd: .04, mag: .12, dmg: .08, cd: .05, crit: .02, xp: .05 }, RMUL = [1, 1.8, 2.8, 4.5];
+const IBASE = { hp: 15, arm: .04, spd: .04, mag: .12, dmg: .08, cd: .05, crit: .02, xp: .05 }, RMUL = [1, 1.6, 2.3, 3.4];
 const ITEMS = [
   ['toka','Kedi Kulaklı Toka','kask',0,'🎀','hp'], ['bandana','Kurdele Bandana','kask',0,'🧢','hp','xp'], ['bere','Pamuk Bere','kask',0,'🧶','hp','arm'],
   ['kask','Pembe Kask','kask',1,'🪖','hp'], ['ctac','Çiçek Taç','kask',1,'🌸','hp','xp'], ['kbas','Kedi Kulaklı Başlık','kask',1,'🐱','hp','arm'],
@@ -470,7 +473,7 @@ const metaCost = m => Math.round(m.base * Math.pow(mlv(m.id) + 1, 1.6));
 
 /* =================== SES + MÜZİK =================== */
 let AC = null, master = null;
-function ac() { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9; master.connect(AC.destination); } return AC; }
+function ac() { if (!AC) { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .9 * (M.set.evol / 80); master.connect(AC.destination); } return AC; }
 function snd(f, d = .06, type = 'sine', v = .03, slide = 0) {
   if (!M.set.ses) return;
   try { ac(); const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; if (slide) o.frequency.exponentialRampToValueAtTime(f * slide, AC.currentTime + d);
@@ -481,7 +484,10 @@ const hitSnd = () => { if (sndBudget > 0) return; sndBudget = .06; snd(700 + Mat
 const chime = (notes, gap = 80, type = 'triangle', v = .05) => notes.forEach((f, i) => setTimeout(() => snd(f, .18, type, v), i * gap));
 // müzik: menüde neşeli parça, savaşta ikinci parça (kısık, döngüde)
 const MUS = { menu: new Audio('zs_menu.mp3'), savas: new Audio('zs_battle.mp3') };
-MUS.menu.loop = MUS.savas.loop = true; MUS.menu.volume = .45; MUS.savas.volume = .28; MUS.menu.preload = 'auto';
+MUS.menu.loop = MUS.savas.loop = true; MUS.menu.preload = 'auto';
+let musDuck = 1;
+function applyVol() { const v = M.set.mvol / 100; MUS.menu.volume = Math.min(1, .75 * v); MUS.savas.volume = Math.min(1, .47 * v * musDuck); if (master) master.gain.value = 1.1 * M.set.evol / 100; }
+applyVol();
 let musWant = 'menu';
 function music(which) {
   musWant = which;
@@ -518,6 +524,7 @@ const keys = {};
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (state === 'play' && (e.code === 'Escape' || e.code === 'KeyP')) pauseGame();
+  else if (state === 'pause' && $('settings').classList.contains('on') && e.code === 'Escape') { $('settings').classList.remove('on'); $('pause').classList.add('on'); }
   else if (state === 'pause' && (e.code === 'Escape' || e.code === 'KeyP')) resumeGame();
   else if (state === 'lvup' && /^Digit[1-4]$/.test(e.code)) { const b = $('opts').children[+e.code.slice(5) - 1]; if (b) b.click(); }
   else if (state === 'menu' && e.code === 'Enter' && !document.querySelector('.scr.on')) startGame();
@@ -549,7 +556,7 @@ function startGame() {
 
 /* =================== İSTATİSTİK =================== */
 const pl = id => P.p[id] || 0, wl = id => P.w[id] || 0;
-const dmgM = () => P.dmgMul * (1 + .12 * pl('guc'));
+const dmgM = () => P.dmgMul * (1 + .1 * pl('guc'));
 const cdM = () => Math.pow(.92, pl('sogum')) * (1 - (P.eqCd || 0));
 const spdNow = () => P.spd * (1 + .08 * pl('hiz'));
 const magNow = () => P.magnet * (1 + .4 * pl('mik'));
@@ -557,7 +564,7 @@ const magNow = () => P.magnet * (1 + .4 * pl('mik'));
 /* =================== DÜŞMANLAR =================== */
 function spawnEnemy(type, boss) {
   const a = Math.random() * Math.PI * 2, d = Math.hypot(W, H) / 2 + 60;
-  const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1 + T / 70 + Math.pow(T / 450, 2) * 2.5;
+  const x = P.x + Math.cos(a) * d, y = P.y + Math.sin(a) * d, m = 1 + T / 55 + Math.pow(T / 380, 2) * 3.5;
   let e;
   if (boss) e = { x, y, r: boss.r, hp: boss.hp * (1 + T / 900), spd: boss.spd, dmg: boss.dmg, xp: 60, boss: boss.ad, img: boss.img, tier: Math.min(3, BOSSES.indexOf(boss) + 1) };
   else { const K = ENEMIES[type]; e = { x, y, r: K.r, hp: K.hp * m, spd: K.spd * (1 + T / 2500), dmg: K.dmg * (1 + T / 800), xp: K.xp, kind: K.kind, hue: K.hues[(Math.random() * K.hues.length) | 0], ph: Math.random() * 7 }; }
@@ -594,12 +601,12 @@ function kill(e) {
   const r = Math.random();
   if (e.final && !won) { won = true; setTimeout(() => { if (state === 'play' || state === 'lvup') gameOver(true); }, 1200); }
   if (e.boss && Math.random() < .3) picks.push({ x: e.x + 40, y: e.y, k: 'kutu', r: e.tier || 1 });
-  if (!e.boss) { const cr = Math.random(); let acc = 0; for (let r = 3; r >= 0; r--) { acc += CHEST_DROP[r] * (e.xp >= 4 ? 3 : 1); if (cr < acc) { picks.push({ x: e.x, y: e.y, k: 'kutu', r }); break; } } }
+  if (!e.boss && !P.chestDropped) { const cr = Math.random(); let acc = 0; for (let r = 3; r >= 0; r--) { acc += CHEST_DROP[r] * (e.xp >= 4 ? 3 : 1); if (cr < acc) { picks.push({ x: e.x, y: e.y, k: 'kutu', r }); P.chestDropped = true; break; } } }
   if (e.boss) { picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
   else if (r < .025) picks.push({ x: e.x, y: e.y, k: 'coin' });
-  else if (r < .033) picks.push({ x: e.x, y: e.y, k: 'cilek' });      // nadiren can
-  else if (r < .036) picks.push({ x: e.x, y: e.y, k: 'balik' });      // nadiren mıknatıs
-  else if (r < .0315 && T > 60) picks.push({ x: e.x, y: e.y, k: 'sevgi' });
+  else if (r < .0275) picks.push({ x: e.x, y: e.y, k: 'cilek' });     // nadiren can (%0,25)
+  else if (r < .0283) picks.push({ x: e.x, y: e.y, k: 'balik' });     // çok nadir mıknatıs (%0,08)
+  else if (r < .0288 && T > 60) picks.push({ x: e.x, y: e.y, k: 'sevgi' });
   fx.push({ k: 'puf', x: e.x, y: e.y, r: e.r, t: .35 });
   if (Math.random() < .35) fx.push({ k: 'kalpcik', x: e.x, y: e.y, vy: -60, t: .7 });
 }
@@ -610,15 +617,17 @@ function onScreen() { return enemies.filter(e => !e.dead && Math.abs(e.x - P.x) 
 function cdReady(id, base) { P.cds[id] = (P.cds[id] || 0) - DT; if (P.cds[id] > 0) return false; P.cds[id] = base * cdM(); return true; }
 function near(x, y) { const out = []; const cx = (x / GRID) | 0, cy = (y / GRID) | 0; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const a = grid.get((cx + i) * 100000 + (cy + j)); if (a) for (const e of a) out.push(e); } return out; }
 const aoe = (x, y, rad, dmg, push) => { for (const e of enemies) { if (e.dead) continue; const dx = e.x - x, dy = e.y - y, d = Math.hypot(dx, dy) || 1; if (d < rad + e.r) hurt(e, dmg, dx / d * push, dy / d * push); } };
-const KAT = { dmg: [0, 20, 24, 28, 32, 46], reach: [0, 140, 160, 175, 195, 250], cd: [0, 1.1, 1.0, .95, .85, .6], wide: [0, 55, 60, 66, 72, 95] };
+let sparkBudget = 0;
+const KAT = { dmg: [0, 18, 21, 24, 27, 36], reach: [0, 140, 155, 170, 185, 225], cd: [0, 1.15, 1.1, 1.05, .98, .78], wide: [0, 55, 60, 66, 72, 95] };
 function katanaHit(l) {
   const t = nearest(300), sx = t ? (t.x >= P.x ? 1 : -1) : P.face, sy = t ? (t.y >= P.y ? 1 : -1) : 1;
   // seviye = kılıç sayısı (en çok 4): sağ/sol, sonra yukarı/aşağı
   const dirs = [[sx, 0], [-sx, 0], [0, sy], [0, -sy]].slice(0, Math.min(4, l));
+  sparkBudget = 6;
   const reach = KAT.reach[l], wide = KAT.wide[l], dmg = KAT.dmg[l], gold = l >= 5;
   for (const [dx, dy] of dirs) { fx.push({ k: 'slash', x: P.x, y: P.y - 8, dx, dy, w: reach, h: wide, gold, t: SLASH_T });
     for (const e of enemies) { if (e.dead) continue; const ex = e.x - P.x, ey = e.y - P.y + 8, along = ex * dx + ey * dy, side = Math.abs(ex * dy - ey * dx);
-      if (along > -15 && along < reach + e.r && side < wide + e.r) { hurt(e, dmg, dx * 120, dy * 120); if (fx.length < 260) for (let q = 0; q < 2; q++) fx.push({ k: 'spark', x: e.x, y: e.y, vx: dx * 90 + (Math.random() - .5) * 160, vy: dy * 90 - 60 - Math.random() * 90, t: .45, gold, e: Math.random() < .5 ? 0 : 1 }); } } }
+      if (along > -15 && along < reach + e.r && side < wide + e.r) { hurt(e, dmg, dx * 120, dy * 120); if (sparkBudget-- > 0 && fx.length < 160) for (let q = 0; q < 1; q++) fx.push({ k: 'spark', x: e.x, y: e.y, vx: dx * 90 + (Math.random() - .5) * 160, vy: dy * 90 - 60 - Math.random() * 90, t: .45, gold, e: Math.random() < .5 ? 0 : 1 }); } } }
   if (gold) shake = Math.max(shake, 4);
   snd(gold ? 900 : 1200, .12, 'sine', .03, .5);
 }
@@ -705,7 +714,7 @@ function update(dt) {
   
 }
 let lvlDelay = 0;
-function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(4 + (P.lv - 1) * 4.5 + Math.pow(P.lv - 1, 1.6)); levelQueue++; } if (levelQueue && state === 'play' && lvlDelay <= 0) { lvlDelay = .5; fx.push({ k: 'lvl', t: .5 }); chime([784, 988, 1318], 60, 'sine', .04); } }
+function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(5 + (P.lv - 1) * 5.5 + Math.pow(P.lv - 1, 1.7)); levelQueue++; } if (levelQueue && state === 'play' && lvlDelay <= 0) { lvlDelay = .5; fx.push({ k: 'lvl', t: .5 }); chime([784, 988, 1318], 60, 'sine', .04); } }
 
 /* =================== SEVİYE ATLAMA =================== */
 function choices(n) {
@@ -819,16 +828,16 @@ function loop(now) {
 
 /* =================== EKRANLAR =================== */
 const fmtT = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-function pauseGame() { if (state !== 'play') return; state = 'pause'; MUS.savas.volume = .12;
+function pauseGame() { if (state !== 'play') return; state = 'pause'; musDuck = .45; applyVol();
   $('pStats').innerHTML = `<span>Süre</span><b>${fmtT(T)}</b><span>Seviye</span><b>${P.lv}</b><span>Yenilen</span><b>${kills}</b><span>Can</span><b>${Math.ceil(P.hp)} / ${P.maxHp}</b>`;
   $('pause').classList.add('on'); }
-function resumeGame() { $('pause').classList.remove('on'); state = 'play'; last = performance.now(); MUS.savas.volume = .28; }
+function resumeGame() { $('pause').classList.remove('on'); state = 'play'; last = performance.now(); musDuck = 1; applyVol(); }
 $('resume').onclick = resumeGame; $('pauseBtn').onclick = pauseGame;
 $('quit').onclick = () => { $('pause').classList.remove('on'); gameOver(false); };
 function gameOver(win) {
   state = 'over'; joy = null; $('joy').style.display = 'none'; $('lvup').classList.remove('on'); $('pause').classList.remove('on');
   const earned = Math.round((coins + kills / 25 + Math.floor(T / 30) * 2 + (win ? 150 : 0)) * (1 + .15 * mlv('altin')));
-  MUS.savas.volume = .28; music(win ? 'menu' : 'menu');
+  musDuck = 1; applyVol(); music('menu');
   for (const r of P.chests) { const f = M.kutular.indexOf(null); if (f >= 0) M.kutular[f] = { r, bas: null }; }
   M.altin += earned; if (T > M.best) M.best = T; if (kills > M.bestKill) M.bestKill = kills; if (win) M.kazandi++; saveM();
   $('overImg').src = skinSrc(P.skin); $('overImg').style.transform = win ? '' : 'rotate(-8deg)';
@@ -983,7 +992,8 @@ function openItem(id) {
   $('itemDet').classList.add('on');
 }
 $('detX').onclick = () => $('itemDet').classList.remove('on');
-document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.scr').classList.remove('on'); showMenu(); });
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.scr').classList.remove('on'); if (state === 'pause') { $('pause').classList.add('on'); return; } showMenu(); });
+$('pSet').onclick = () => { renderSet(); $('pause').classList.remove('on'); $('settings').classList.add('on'); };
 function showMenu() {
   if (TEST && !document.getElementById('testBand')) { const b = document.createElement('div'); b.id = 'testBand'; b.textContent = '🧪 TEST MODU — sınırsız altın (gerçek kaydına dokunmaz)'; b.style.cssText = 'position:fixed;top:0;left:50%;transform:translateX(-50%);background:#ff3d5a;color:#fff;font-weight:700;padding:3px 14px;border-radius:0 0 10px 10px;z-index:100;font-size:13px'; document.body.appendChild(b); }
   state = 'menu'; P = null; $('hud').style.display = 'none'; $('title').style.display = 'flex'; music('menu');
@@ -1008,10 +1018,12 @@ function renderShop() {
 }
 function renderSet() {
   document.querySelectorAll('.tg').forEach(b => { b.classList.toggle('on', !!M.set[b.dataset.s]); b.onclick = () => { M.set[b.dataset.s] = M.set[b.dataset.s] ? 0 : 1; saveM(); renderSet(); snd(880, .06, 'sine', .04); if (b.dataset.s === 'muzik') music(musWant); }; });
+  document.querySelectorAll('.vol').forEach(r => { r.value = M.set[r.dataset.v]; r.oninput = () => { M.set[r.dataset.v] = +r.value; applyVol(); }; r.onchange = () => { saveM(); if (r.dataset.v === 'evol') snd(880, .08, 'sine', .05); }; });
 }
+
 [...new Set([...BOSSES.map(b => b.img), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp', ...['kalp', 'kalpb', 'pati', 'patis', 'yildiz', 'yildizb', 'halka', 'halka_g', 'kedi', 'aslan', 'ordek', 'ordek_g', 'puf', 'lvl'].map(n => `zs_fx_${n}.webp`)])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
-window.__sv = { get picks() { return picks; }, get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
+window.__sv = { get fx() { return fx; }, get picks() { return picks; }, get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
 </script>
 </body>
 </html>
