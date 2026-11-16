@@ -336,6 +336,10 @@ function heartSprite(sz, gold) { return baked('h' + sz + gold, sz * 2, sz * 2, (
 function duckSprite(gold) { const im = img('ordek_ikon.png'); if (!im.complete || !im.naturalWidth) return null; return baked('duck' + gold, 60, 72, (g) => { if (gold) { g.shadowColor = '#ffc93c'; g.shadowBlur = 16; } g.drawImage(im, 15, 15, 30, 41); }); }
 function gemSprite(ty) { const sz = [17, 21, 26][ty]; return baked('gem' + ty, sz * 2, sz * 2, (g, w, h) => { g.shadowColor = ['#ff3d8f', '#9a5cff', '#ffb000'][ty]; g.shadowBlur = 10; g.fillStyle = ['#ff5ea6', '#a978ff', '#ffc93c'][ty]; heartPath(g, w / 2, h / 2 - sz / 2, sz); g.fill(); g.shadowBlur = 0; g.strokeStyle = '#fff'; g.lineWidth = 3; g.stroke();
   g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.ellipse(w / 2 - sz * .2, h / 2 - sz * .22, sz * .1, sz * .07, -.6, 0, 7); g.fill(); }); }
+const SLASH_T = .3;
+function sparkSprite(gold, e) { return baked('sp' + gold + e, 24, 24, g => { g.shadowColor = gold ? '#ffb000' : '#ff5ea6'; g.shadowBlur = 6; g.fillStyle = gold ? '#ffd84a' : e ? '#ff7eb6' : '#fff';
+  if (e) { heartPath(g, 12, 5, 13); g.fill(); } else { g.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? 3 : 10, a = i / 8 * Math.PI * 2; g.lineTo(12 + Math.cos(a) * r, 12 + Math.sin(a) * r); } g.fill(); } }); }
+let shake = 0;
 const emojiC = {};
 function emo(ch, size) { const k = ch + size; if (emojiC[k]) return emojiC[k]; const c = document.createElement('canvas'), s = Math.ceil(size * 1.4); c.width = c.height = s; const g = c.getContext('2d'); g.font = `${size}px system-ui,"Apple Color Emoji","Segoe UI Emoji"`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, s / 2, s / 2 + size * .06); return emojiC[k] = c; }
 
@@ -605,9 +609,10 @@ function katanaHit(l) {
   // seviye = kılıç sayısı (en çok 4): sağ/sol, sonra yukarı/aşağı
   const dirs = [[sx, 0], [-sx, 0], [0, sy], [0, -sy]].slice(0, Math.min(4, l));
   const reach = KAT.reach[l], wide = KAT.wide[l], dmg = KAT.dmg[l], gold = l >= 5;
-  for (const [dx, dy] of dirs) { fx.push({ k: 'slash', x: P.x, y: P.y - 8, dx, dy, w: reach, h: wide, gold, t: .25 });
+  for (const [dx, dy] of dirs) { fx.push({ k: 'slash', x: P.x, y: P.y - 8, dx, dy, w: reach, h: wide, gold, t: SLASH_T });
     for (const e of enemies) { if (e.dead) continue; const ex = e.x - P.x, ey = e.y - P.y + 8, along = ex * dx + ey * dy, side = Math.abs(ex * dy - ey * dx);
-      if (along > -15 && along < reach + e.r && side < wide + e.r) hurt(e, dmg, dx * 120, dy * 120); } }
+      if (along > -15 && along < reach + e.r && side < wide + e.r) { hurt(e, dmg, dx * 120, dy * 120); if (fx.length < 260) for (let q = 0; q < 2; q++) fx.push({ k: 'spark', x: e.x, y: e.y, vx: dx * 90 + (Math.random() - .5) * 160, vy: dy * 90 - 60 - Math.random() * 90, t: .45, gold, e: Math.random() < .5 ? 0 : 1 }); } } }
+  if (gold) shake = Math.max(shake, 4);
   snd(gold ? 900 : 1200, .12, 'sine', .03, .5);
 }
 let katanaQ = 0;
@@ -687,7 +692,7 @@ function update(dt) {
         else toast('🎁 Sandık yuvaların dolu! Sandık kayboldu 🥺'); } } }
   picks = picks.filter(k => !k.got);
   enemies = enemies.filter(e => !e.dead);
-  for (const f of fx) { f.t -= dt; if (f.k === 'kalpcik') f.y += f.vy * dt; } fx = fx.filter(f => f.t > 0);
+  for (const f of fx) { f.t -= dt; if (f.k === 'kalpcik') f.y += f.vy * dt; else if (f.k === 'spark') { f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; } } fx = fx.filter(f => f.t > 0);
   for (const t of texts) { t.t -= dt; t.y -= 40 * dt; } texts = texts.filter(t => t.t > 0);
   
 }
@@ -736,7 +741,8 @@ function refreshSlots() {
 function draw(dt) {
   ctx.fillStyle = ground; const ox = -cam.x + W / 2, oy = -cam.y + H / 2;
   ctx.save(); ctx.translate(ox % 512 - 512, oy % 512 - 512); ctx.fillRect(0, 0, W + 1024, H + 1024); ctx.restore();
-  ctx.save(); ctx.translate(Math.round(ox), Math.round(oy));
+  shake = Math.max(0, shake - dt * 30); const shx = shake ? (Math.random() - .5) * shake * 2 : 0, shy = shake ? (Math.random() - .5) * shake * 2 : 0;
+  ctx.save(); ctx.translate(Math.round(ox + shx), Math.round(oy + shy));
   const vis = (x, y, r) => Math.abs(x - cam.x) < W / 2 + r && Math.abs(y - cam.y) < H / 2 + r;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   if (P.w.sevgi) { const l = P.w.sevgi, rad = [0, 72, 90, 90, 112, 142][l]; const g = ctx.createRadialGradient(P.x, P.y, rad * .2, P.x, P.y, rad); g.addColorStop(0, 'rgba(255,150,200,0)'); g.addColorStop(1, 'rgba(255,120,190,.25)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(P.x, P.y, rad, 0, 7); ctx.fill();
@@ -764,13 +770,11 @@ function draw(dt) {
   for (const f of fx) {
     if (f.k === 'puf') { const k = 1 - f.t / .35; ctx.fillStyle = `rgba(255,255,255,${.8 * (1 - k)})`; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; ctx.beginPath(); ctx.arc(f.x + Math.cos(a) * f.r * (.4 + k), f.y + Math.sin(a) * f.r * (.4 + k), f.r * .35 * (1 - k * .5), 0, 7); ctx.fill(); } }
     if (f.k === 'kalpcik') { ctx.globalAlpha = Math.min(1, f.t * 2); ctx.fillStyle = '#ff7eb6'; heartPath(ctx, f.x, f.y, 12); ctx.fill(); ctx.globalAlpha = 1; }
-    if (f.k === 'slash') { const k = f.t / .25, w = f.w, hh = f.h; ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(Math.atan2(f.dy, f.dx));
-      const c1 = f.gold ? `rgba(255,205,70,${.9 * k})` : `rgba(255,140,200,${.85 * k})`, c2 = f.gold ? `rgba(255,250,200,${.25 * k})` : `rgba(255,220,240,${.2 * k})`;
-      const g = ctx.createLinearGradient(0, 0, w, 0); g.addColorStop(0, c1); g.addColorStop(1, c2);
-      if (f.gold) { ctx.shadowColor = '#ffd84a'; ctx.shadowBlur = 20; }
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(10, -hh); ctx.quadraticCurveTo(w * 1.15, -hh * .5 - (1 - k) * 20, w * .95, hh * .7); ctx.quadraticCurveTo(w * .7, 0, 10, -hh); ctx.fill(); ctx.shadowBlur = 0;
-      ctx.strokeStyle = `rgba(255,255,255,${k})`; ctx.lineWidth = f.gold ? 5 : 3; ctx.beginPath(); ctx.moveTo(10, -hh); ctx.quadraticCurveTo(w * 1.15, -hh * .5, w * .95, hh * .7); ctx.stroke();
-      ctx.globalAlpha = k; ctx.drawImage(emo('✨', f.gold ? 24 : 16), w * .8 - 12, -hh * .55 - 12); paw(ctx, w * .55, hh * .15, f.gold ? 24 : 16); ctx.restore(); ctx.globalAlpha = 1; }
+    if (f.k === 'slash') { const sh = img(f.gold ? 'zs_slash_g.webp' : 'zs_slash.webp');
+      if (sh.complete && sh.naturalWidth) { const step = sh.naturalWidth / 4, fwd = step - 4, fh = sh.naturalHeight, fr = Math.min(3, Math.floor((1 - f.t / SLASH_T) * 4)), H = f.h * 2.6, Wd = H * fwd / fh, sc = f.w / Wd * 1.05;
+        ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(Math.atan2(f.dy, f.dx)); ctx.scale(sc, 1); ctx.globalAlpha = fr === 3 ? Math.min(1, f.t / (SLASH_T / 4) + .2) : 1;
+        ctx.drawImage(sh, fr * step, 0, fwd, fh, -Wd * .08, -H / 2, Wd, H); ctx.restore(); ctx.globalAlpha = 1; } }
+    if (f.k === 'spark') { const c = sparkSprite(f.gold, f.e); ctx.globalAlpha = Math.min(1, f.t * 3); const z = .6 + f.t; ctx.drawImage(c, f.x - c.width * z / 2, f.y - c.height * z / 2, c.width * z, c.height * z); ctx.globalAlpha = 1; }
     if (f.k === 'patiIn') { const k = Math.min(1, (.45 - f.t) / .25), y = f.y - (1 - k) * 220; paw(ctx, f.x, y, f.r * 1.5, f.t < .1 ? f.t * 10 : 1, f.gold); }
     if (f.k === 'yildiz') { const k = Math.min(1, (.4 - f.t) / .28), c = f.rb ? rainbowStar(f.sz, f.hue) : emo('⭐', f.sz); ctx.drawImage(c, f.x - 120 * (1 - k) - c.width / 2, f.y - 300 * (1 - k) - c.height / 2);
       if (f.t < .12) { ctx.fillStyle = `rgba(255,240,150,${f.t * 6})`; ctx.beginPath(); ctx.arc(f.x, f.y, 34, 0, 7); ctx.fill(); } }
@@ -992,7 +996,7 @@ function renderShop() {
 function renderSet() {
   document.querySelectorAll('.tg').forEach(b => { b.classList.toggle('on', !!M.set[b.dataset.s]); b.onclick = () => { M.set[b.dataset.s] = M.set[b.dataset.s] ? 0 : 1; saveM(); renderSet(); snd(880, .06, 'sine', .04); if (b.dataset.s === 'muzik') music(musWant); }; });
 }
-[...new Set([...BOSSES.map(b => b.img), skinSrc(M.skin), 'ordek_ikon.png'])].forEach(img);
+[...new Set([...BOSSES.map(b => b.img), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp'])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
 window.__sv = { get picks() { return picks; }, get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
 </script>
