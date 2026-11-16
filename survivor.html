@@ -970,13 +970,12 @@ const skipCost = k => Math.max(10, Math.ceil(left(k) / 60) * 6);
 let chestTimer = null;
 function renderChests() {
   $('gC').textContent = `🪙 ${M.altin}`;
-  const opening = M.kutular.some(k => k && k.bas && left(k) > 0);
   $('chestList').innerHTML = M.kutular.map((k, i) => { if (!k) return `<div class="cc" style="--c:#e8cfe0;--d:#b07a9a;opacity:.75"><div class="chest" style="display:flex;align-items:center;justify-content:center;font-size:40px;opacity:.4">🔒</div><b>Boş yuva</b><div class="od">Savaşta düşen sandıklar buraya gelir</div></div>`;
     const c = CHESTS[k.r], L = left(k), ready = k.bas && L <= 0;
     let st;
     if (ready) st = `<span class="bt" style="background:#2fbf6a">🎉 AÇ!</span>`;
     else if (k.bas) st = `<span class="own" style="color:${RAR[k.r].d}">⏳ ${fmtD(L)}</span><span class="bt">🪙 ${skipCost(k)} ile hemen aç</span>`;
-    else st = `<span class="own" style="color:#8a4a70">⏱ ${fmtD(c.sure)}</span><span class="bt" ${opening ? 'style="opacity:.5"' : ''}>${opening ? 'Sırada bekliyor' : 'Açmaya başla'}</span>`;
+    else st = `<span class="own" style="color:#8a4a70">⏱ ${fmtD(c.sure)}</span><span class="bt">Açmaya başla</span>`;
     return `<button class="cc" data-i="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b><div class="od">${CHEST_ITEMS} eşya · ${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div>${st}</button>`; }).join('');
   $('chestList').querySelectorAll('.cc[data-i]').forEach(b => b.onclick = () => tapChest(+b.dataset.i));
   $('chestShop').innerHTML = CHESTS.map((c, i) => `<button class="cc" data-b="${i}" style="--c:${RAR[c.r].c};--d:${RAR[c.r].d}">${chestHTML(c)}<b>${c.ad}</b><div class="od">${CHEST_ITEMS} eşya · ${c.o.map((x, j) => x ? `<span style="color:${RAR[j].d}">● ${RAR[j].ad} %${x}</span>` : '').join(' ')}</div><span class="bt">🪙 ${c.fiyat}</span></button>`).join('');
@@ -988,7 +987,7 @@ function renderChests() {
 }
 async function tapChest(i) {
   const k = M.kutular[i]; if (!k) return; const L = left(k);
-  if (!k.bas) { if (!TEST && M.kutular.some(x => x && x.bas && left(x) > 0)) { toast('Aynı anda tek sandık açılabilir ⏳'); return; } k.bas = Date.now(); saveM(); chime([523, 659], 80); return renderChests(); }
+  if (!k.bas) { k.bas = Date.now(); saveM(); chime([523, 659], 80); return renderChests(); }
   if (L > 0) { const c = skipCost(k); if (M.altin < c) { toast(`${c - M.altin} altın daha lazım 🥺`); return; } if (!await ask(chestHTML(CHESTS[k.r]), CHESTS[k.r].ad, `Beklemeden ${c} 🪙 ile hemen açılsın mı?`, 'Hemen aç')) return; M.altin -= c; }
   M.kutular[i] = null; openLoot(k.r);
 }
