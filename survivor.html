@@ -600,8 +600,9 @@ function kill(e) {
   gems.push({ x: e.x, y: e.y, v: e.xp, ph: Math.random() * 7 });
   const r = Math.random();
   if (e.final && !won) { won = true; setTimeout(() => { if (state === 'play' || state === 'lvup') gameOver(true); }, 1200); }
-  if (e.boss && Math.random() < .3) picks.push({ x: e.x + 40, y: e.y, k: 'kutu', r: e.tier || 1 });
-  if (!e.boss && !P.chestDropped) { const cr = Math.random(); let acc = 0; for (let r = 3; r >= 0; r--) { acc += CHEST_DROP[r] * (e.xp >= 4 ? 3 : 1); if (cr < acc) { picks.push({ x: e.x, y: e.y, k: 'kutu', r }); P.chestDropped = true; break; } } }
+  const slotFree = () => M.kutular.filter(x => !x).length - P.chests.length - picks.filter(k => k.k === 'kutu').length > 0;
+  if (e.boss && slotFree() && Math.random() < .3) picks.push({ x: e.x + 40, y: e.y, k: 'kutu', r: e.tier || 1 });
+  if (!e.boss && !P.chestDropped && slotFree()) { const cr = Math.random(); let acc = 0; for (let r = 3; r >= 0; r--) { acc += CHEST_DROP[r] * (e.xp >= 4 ? 3 : 1); if (cr < acc) { picks.push({ x: e.x, y: e.y, k: 'kutu', r }); P.chestDropped = true; break; } } }
   if (e.boss) { picks.push({ x: e.x, y: e.y, k: 'sandik' }); for (let i = 0; i < 14; i++) picks.push({ x: e.x + (Math.random() - .5) * 100, y: e.y + (Math.random() - .5) * 100, k: 'coin' }); if (e === curBoss) curBoss = null; chime([523, 659, 784, 1046, 1318], 90); }
   else if (r < .025) picks.push({ x: e.x, y: e.y, k: 'coin' });
   else if (r < .0275) picks.push({ x: e.x, y: e.y, k: 'cilek' });     // nadiren can (%0,25)
