@@ -865,7 +865,7 @@ function draw(dt) {
   if (sk.complete && sk.naturalWidth) { const ww = hh * sk.width / sk.height, bob = P.moving ? Math.abs(Math.sin(P.walk)) * 4 : Math.sin(T * 3) * 1.5, sq = P.moving ? 1 + Math.sin(P.walk * 2) * .03 : 1;
     ctx.save(); ctx.translate(P.x, P.y + 28); ctx.scale(P.face * sq, 2 - sq); ctx.globalAlpha = P.inv > 0 && Math.floor(T * 20) % 2 ? .45 : 1; ctx.drawImage(sk, -ww / 2, -hh - bob, ww, hh); ctx.restore(); ctx.globalAlpha = 1; }
   if (P.w.ordek) { const l = Math.min(5, P.w.ordek), S = sup('ordek'), n = duckN(), sc = S ? 2 : [0, 1, 1.15, 1.25, 1.35, 1.8][l]; for (let i = 0; i < n; i++) { const [x, y, a, ring] = duckPos(i, n); frame(S ? 'zs_fx_ordek_s' : l >= 5 ? 'zs_fx_ordek_g' : 'zs_fx_ordek', Math.floor(T * 10 + i), x, y, 40 * sc, Math.sin(T * 8 + i) * .15, 1, (ring ? -1 : 1) * Math.cos(a + Math.PI / 2) >= 0 ? 1 : -1); } }
-  for (const p of projs) frame(p.S ? 'zs_fx_kalp_s' : 'zs_fx_kalp', Math.floor(T * 14 + p.r), p.x, p.y, p.sz * (p.S ? 3.1 : 2.4), Math.atan2(p.vy, p.vx), 1, 1, .78, p.gold && !p.S ? GOLD : 0);
+  for (const p of projs) frame(p.S ? 'zs_fx_kalp_s' : 'zs_fx_kalp', Math.floor(T * 14 + p.r), p.x, p.y, p.sz * (p.S ? 1.9 : 2.4), Math.atan2(p.vy, p.vx), 1, 1, .78, p.gold && !p.S ? GOLD : 0);
   for (const f of fx) {
     if (f.k === 'puf') { const fr = Math.min(3, Math.floor((1 - f.t / .35) * 4)); frame('zs_fx_puf', fr, f.x, f.y, f.r * 3.2); }
     if (f.k === 'kalpcik') { ctx.globalAlpha = Math.min(1, f.t * 2); ctx.fillStyle = '#ff7eb6'; heartPath(ctx, f.x, f.y, 12); ctx.fill(); ctx.globalAlpha = 1; }
@@ -880,7 +880,7 @@ function draw(dt) {
     if (f.k === 'lvl') { const fr = Math.min(3, Math.floor((1 - f.t / .5) * 4)); frame('zs_fx_lvl', fr, P.x, P.y - 40, 200, 0, Math.min(1, f.t * 5)); }
     if (f.k === 'kalpb') { const fr = Math.min(3, Math.floor((1 - f.t / .32) * 4)); frame(sv('zs_fx_kalpb', f.S), fr, f.x, f.y, f.s, 0, 1, 1, .5, f.gold && !f.S ? GOLD : 0); }
     if (f.k === 'yildiz') { const k = Math.min(1, (.4 - f.t) / .28), fr = Math.min(3, Math.floor(k * 3.99)), h = f.sz * 2.6, tint = f.rb ? RBOW[f.hue] : 0;
-      if (f.t >= .12) frame(sv('zs_fx_yildiz', f.S), fr, f.x - 110 * (1 - k) + h * .25, f.y - 260 * (1 - k) - h * .3, h, 0, 1, 1, .5, tint);
+      if (f.t >= .12) frame(sv('zs_fx_yildiz', f.S), fr, f.x - 110 * (1 - k) + h * (f.S ? -.22 : .25), f.y - 260 * (1 - k) - h * .3, h, 0, 1, 1, .5, tint);
     }
     if (f.k === 'isir') { ctx.globalAlpha = Math.min(1, f.t * 5); ctx.drawImage(emo('💢', 18), f.x - 12, f.y - 30); ctx.globalAlpha = 1; }
   }
