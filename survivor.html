@@ -500,8 +500,8 @@ const ENEMIES = {
 };
 const BOSSES = [
   { t: 300, ad: 'KELERDY',       ai: 'kel',  unvan: 'Kel Kafalı Kral',     img: 'tk_kelerdy.jpg', sprite: 'zs_boss_kelerdy.webp', hp: 5000,  r: 60, spd: 66, dmg: 18 },
-  { t: 600, ad: 'TEPEGÖZ ERDİ',  ai: 'tepe', unvan: 'Tek Gözlü Dev',       img: 'tk_erdi_normal.jpg', eye: true, hp: 18000, r: 70, spd: 74, dmg: 26 },
-  { t: 900, ad: 'DİKTATÖR ERDİ', ai: 'dik',  unvan: 'Ördekez\'in Zalim Lideri', img: 'tk_erdi_diktator.jpg', hp: 45000, r: 80, spd: 70, dmg: 34, final: true },
+  { t: 600, ad: 'TEPEGÖZ ERDİ',  ai: 'tepe', unvan: 'Tek Gözlü Dev',       img: 'tk_erdi_normal.jpg', sprite: 'zs_boss_tepegoz.webp', eye: true, hp: 18000, r: 70, spd: 74, dmg: 26 },
+  { t: 900, ad: 'DİKTATÖR ERDİ', ai: 'dik',  unvan: 'Ördekez\'in Zalim Lideri', img: 'tk_erdi_diktator.jpg', sprite: 'zs_boss_diktator.webp', hp: 45000, r: 80, spd: 70, dmg: 34, final: true },
 ];
 const WIN_T = 900;                     // 15 dk: son patron gelir, onu yenince kazanırsın
 // her 3 dakikada yeni yaratık türü
@@ -706,6 +706,7 @@ function kill(e) {
 }
 
 /* =================== PATRON SALDIRILARI =================== */
+const beamY = e => e.ai === 'tepe' ? 1.62 : e.ai === 'kel' ? 1.45 : .4;
 function hitP(dm) { if (P.inv > 0 || state !== 'play') return; dm = Math.max(1, (dm - 2 * pl('zirh')) * (1 - (P.eqArm || 0))); P.hp -= dm; P.tookHit = true; P.inv = .6; P.hitT = .3; snd(220, .18, 'triangle', .05, .5); if (texts.length < 70) texts.push({ x: P.x, y: P.y - 60, v: '-' + Math.round(dm), t: .7, me: 1 }); }
 const segD = (px, py, x, y, a, len) => { const dx = Math.cos(a), dy = Math.sin(a), t = Math.max(0, Math.min(len, (px - x) * dx + (py - y) * dy)); return Math.hypot(px - (x + dx * t), py - (y + dy * t)); };
 const angP = e => Math.atan2(P.y - e.y, P.x - e.x);
@@ -743,7 +744,7 @@ function bossUpdate(dt) {
     }
   }
   // ışınlar
-  for (const b of beams) { b.t -= dt; const x = b.e.x, y = b.e.y - b.e.r * .4; if (b.sweep && b.t < b.on) b.a += b.sweep / b.on * dt;
+  for (const b of beams) { b.t -= dt; const x = b.e.x, y = b.e.y - b.e.r * beamY(b.e); if (b.sweep && b.t < b.on) b.a += b.sweep / b.on * dt;
     if (b.t < b.on && !b.e.dead && segD(P.x, P.y, x, y, b.a, b.len) < b.w / 2 + P.r) hitP(b.dmg); }
   beams = beams.filter(b => b.t > 0 && !b.e.dead);
   // uyarı alanları
@@ -760,7 +761,7 @@ function drawBoss() {
     ctx.strokeStyle = 'rgba(255,60,110,.85)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, 7); ctx.stroke();
     ctx.fillStyle = 'rgba(255,60,110,.35)'; ctx.beginPath(); ctx.arc(w.x, w.y, w.r * k, 0, 7); ctx.fill();
     if (w.ic && w.t > 0) { const c = emo(w.ic, 40); ctx.drawImage(c, w.x - c.width / 2, w.y - c.height / 2 - (1 - k) * 320); } }
-  for (const b of beams) { const x = b.e.x, y = b.e.y - b.e.r * .4; ctx.save(); ctx.translate(x, y); ctx.rotate(b.a);
+  for (const b of beams) { const x = b.e.x, y = b.e.y - b.e.r * beamY(b.e); ctx.save(); ctx.translate(x, y); ctx.rotate(b.a);
     if (b.t > b.on) { const k = 1 - (b.t - b.on) / b.warn; ctx.fillStyle = `rgba(255,70,120,${.1 + k * .2})`; ctx.fillRect(0, -b.w / 2, b.len, b.w); ctx.strokeStyle = 'rgba(255,70,120,.6)'; ctx.setLineDash([10, 10]); ctx.lineWidth = 2; ctx.strokeRect(0, -b.w / 2, b.len, b.w); ctx.setLineDash([]); }
     else { const fl = .8 + Math.sin(T * 40) * .2, g = ctx.createLinearGradient(0, -b.w / 2, 0, b.w / 2), c1 = b.col === 'eye' ? '255,40,90' : '255,220,90';
       g.addColorStop(0, `rgba(${c1},0)`); g.addColorStop(.3, `rgba(${c1},${.75 * fl})`); g.addColorStop(.5, `rgba(255,255,255,${fl})`); g.addColorStop(.7, `rgba(${c1},${.75 * fl})`); g.addColorStop(1, `rgba(${c1},0)`);
