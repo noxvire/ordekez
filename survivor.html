@@ -134,7 +134,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .it .up{position:absolute;top:-8px;left:-8px;background:#2fbf6a;color:#fff;font-size:12px;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;animation:bob 1s ease-in-out infinite alternate}
 @keyframes bob{to{transform:translateY(-3px)}}
 .it.empty{border-style:dashed;--c:#e0b8d0;--bg:#fff;opacity:.8;font-size:13px;color:#b07a9a;font-weight:700;box-shadow:none}
-.it img{width:80%;height:80%;object-fit:contain}
+.it img{width:86%;height:86%;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(120,40,90,.25))}
 .slots{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin:6px 0 10px}
 .slots>div{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:13px;color:#a0507e;font-weight:700}
 .inv{display:grid;grid-template-columns:repeat(auto-fill,88px);gap:18px 14px;justify-content:center;margin-top:12px}
@@ -390,7 +390,7 @@ const ITEMS = [
   ['pbot','Pembe Botlar','ayakkabi',1,'👢','spd'], ['sandalet','Çiçek Sandalet','ayakkabi',1,'🌼','spd','xp'], ['babet','Kurdele Babet','ayakkabi',1,'🥿','spd','arm'],
   ['bbot','Bulut Botları','ayakkabi',2,'☁️','spd','mag'], ['kayak','Kristal Ayakkabı','ayakkabi',2,'👠','spd','crit'], ['aybot','Ay Botları','ayakkabi',2,'🌜','spd','arm'],
   ['ibot','Işık Botları','ayakkabi',3,'💫','spd','arm'], ['mbot','Melek Kanatlı Bot','ayakkabi',3,'🪽','spd','mag'], ['ebot','Ejder Botları','ayakkabi',3,'🐉','spd','dmg'],
-].map(([id, ad, s, r, ic, a, b]) => { const st = { [a]: +(IBASE[a] * RMUL[r]).toFixed(3) }; if (b) st[b] = +(IBASE[b] * RMUL[r] * .5).toFixed(3); if (st.hp) st.hp = Math.round(st.hp); return { id, ad, s, r, ic, st }; });
+].map(([id, ad, s, r, ic, a, b]) => { const st = { [a]: +(IBASE[a] * RMUL[r]).toFixed(3) }; if (b) st[b] = +(IBASE[b] * RMUL[r] * .5).toFixed(3); if (st.hp) st.hp = Math.round(st.hp); return { id, ad, s, r, ic, st, img: `zs_it_${id}.webp` }; });
 // TEST MODU: survivor.html?test=1 → ayrı kayıt, sınırsız altın, dolu sandık yuvaları (1 dk kalmış)
 const TEST = /[?&]test=1/.test(location.search);
 if (TEST) { const KEYT = 'sv_test'; let o = null; try { o = JSON.parse(localStorage.getItem(KEYT) || 'null'); } catch (e) {}
