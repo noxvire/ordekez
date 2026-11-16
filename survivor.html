@@ -653,7 +653,8 @@ function bossIntro(b) { const el = $('bossIntro'), pic = b.sprite && imgOK(b.spr
   el.innerHTML = `<div class="bi-in"><div class="bi-warn">⚠️ PATRON GELİYOR ⚠️</div><img src="${pic}" class="${pic === b.img ? 'ph' : ''}" alt=""><b>${b.ad}</b><small>${b.unvan}</small></div>`;
   el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); shake = 6;
   [0, 380, 760, 1140].forEach((d, i) => setTimeout(() => snd(i % 2 ? 330 : 440, .3, 'sawtooth', .035, .9), d));
-  setTimeout(() => el.classList.remove('on'), 3000); }
+  state = 'intro'; for (const k in keys) keys[k] = false;
+  setTimeout(() => { el.classList.remove('on'); if (state === 'intro') { state = 'play'; last = performance.now(); } }, 3000); }
 const imgOK = src => { const im = img(src); return im.complete && im.naturalWidth > 0; };
 function makeElite(e) { e.elite = true; e.r *= 2.4; e.hp *= 14; e.max = e.hp; e.dmg *= 1.6; e.spd *= .82; e.xp *= 14; return e; }
 function spawner(dt) {
@@ -671,7 +672,7 @@ function spawner(dt) {
   if (Math.floor((T - dt) / 60) !== Math.floor(T / 60) && T > 5 && !finalUp) { const n = Math.min(30, 12 + T / 20), ty = types[types.length - 1]; for (let i = 0; i < n; i++) { const e = spawnEnemy(ty); const a = i / n * Math.PI * 2, d = Math.hypot(W, H) / 2 + 40; e.x = P.x + Math.cos(a) * d; e.y = P.y + Math.sin(a) * d; } toast('💢 Etrafın sarıldı!'); }
   // elit: 1. dakikadan sonra yaklaşık her 40 sn'de bir (patron sahnedeyken gelmez)
   eliteT -= dt; if (T > 120 && eliteT <= 0 && !(curBoss && !curBoss.dead) && !(bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t - 8)) { eliteT = 95 + Math.random() * 35; makeElite(spawnEnemy(types[types.length - 1])); toast('⚡ ELİT DÜŞMAN GELDİ!'); chime([330, 440, 330, 494], 90, 'square', .035); }
-  if (bossIdx < BOSSES.length && !introDone[bossIdx] && T >= BOSSES[bossIdx].t - 3) { introDone[bossIdx] = 1; bossIntro(BOSSES[bossIdx]); }
+  if (bossIdx < BOSSES.length && !introDone[bossIdx] && T >= BOSSES[bossIdx].t) { introDone[bossIdx] = 1; bossIntro(BOSSES[bossIdx]); return; }
   if (bossIdx < BOSSES.length && T >= BOSSES[bossIdx].t) { const b = BOSSES[bossIdx++]; curBoss = spawnEnemy(null, b); curBoss.final = !!b.final; toast(b.final ? `👑 SON PATRON: ${b.ad}!` : `👑 ${b.ad} GELDİ!`); chime([392, 330, 262, 196], 120, 'square', .04); }
 }
 
