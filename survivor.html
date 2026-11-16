@@ -72,6 +72,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .opt.combo{background:linear-gradient(160deg,#e9fbff,#efe4ff)!important;border-color:#7fdcff!important;box-shadow:0 0 0 3px #b7a2ff,0 0 26px #6fd8ff!important;animation:supGlow 1.2s ease-in-out infinite}
 @keyframes supGlow{50%{box-shadow:0 0 0 3px #7fdcff,0 0 40px #b7a2ff}}
 .sl.sup{background:linear-gradient(160deg,#c8f4ff,#dccbff)!important;box-shadow:0 0 12px #6fd8ff}
+.mate{margin:6px 0 2px;padding:4px 6px;border-radius:10px;background:linear-gradient(90deg,#e6f8ff,#f0e8ff);color:#5a6fb0;font-size:11.5px;font-weight:700;line-height:1.35}.mate span{white-space:nowrap}.mate .has{color:#2f9a5a}
 .opt{width:230px;background:#fff;border:4px solid #ffd0e6;border-radius:22px;padding:14px;text-align:center;box-shadow:0 6px 0 #f3b3d3;transition:transform .12s,border-color .12s}
 .opt:hover,.opt:focus{transform:translateY(-6px) rotate(-1deg);border-color:#ff6fae}
 .opt .ic{font-size:46px;line-height:1.1}.opt b{display:block;font-size:19px;color:#d0407f;margin-top:4px}
@@ -801,7 +802,9 @@ function optHTML(o, i) {
   if (o.t === 'gold') return `<button class="opt"><div class="ic">🪙</div><b>Altın Kesesi</b><small>+25 altın</small></button>`;
   if (o.t === 'c') { const C = COMBOS[o.id]; return `<button class="opt combo"><div class="ic">${WEAPONS[o.id].ic}${C.ic}</div><b>${C.ad}</b><span class="nw" style="background:linear-gradient(90deg,#3fd3ff,#9a6bff)">💎 SÜPER EVRİM</span><small>${C.d}</small><small style="opacity:.55;font-size:11px">${WEAPONS[o.id].ad} + ${PASSIVES[C.p].ad} · [${i + 1}]</small></button>`; }
   const D = o.t === 'w' ? WEAPONS[o.id] : PASSIVES[o.id], desc = o.t === 'w' ? D.d[o.l] : D.d;
-  return `<button class="opt"><div class="ic">${D.ic}</div><b>${D.ad}</b>${o.l ? `<span class="lv">Seviye ${o.l} → ${o.l + 1}</span>` : `<span class="nw">YENİ!</span>`}<small>${desc}</small><small style="opacity:.55;font-size:11px">${o.t === 'w' ? 'Yetenek' : 'Eşya'} · [${i + 1}]</small></button>`;
+  const mates = o.t === 'w' ? (COMBOS[o.id] ? [[COMBOS[o.id].p, PASSIVES[COMBOS[o.id].p], pl(COMBOS[o.id].p)]] : []) : Object.keys(COMBOS).filter(w => COMBOS[w].p === o.id).map(w => [w, WEAPONS[w], wl(w)]);
+  const mateHTML = mates.length ? `<div class="mate">💎 Süper evrim eşi: ${mates.map(([, M0, ml]) => `<span class="${ml ? 'has' : ''}">${M0.ic} ${M0.ad}${ml ? ` (Sv ${Math.min(5, ml)})` : ''}</span>`).join(' · ')}</div>` : '';
+  return `<button class="opt"><div class="ic">${D.ic}</div><b>${D.ad}</b>${o.l ? `<span class="lv">Seviye ${o.l} → ${o.l + 1}</span>` : `<span class="nw">YENİ!</span>`}<small>${desc}</small>${mateHTML}<small style="opacity:.55;font-size:11px">${o.t === 'w' ? 'Yetenek' : 'Eşya'} · [${i + 1}]</small></button>`;
 }
 function applyOpt(o) {
   if (o.t === 'heal') P.hp = P.maxHp; else if (o.t === 'gold') coins += 25;
