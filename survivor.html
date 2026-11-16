@@ -337,6 +337,13 @@ function duckSprite(gold) { const im = img('ordek_ikon.png'); if (!im.complete |
 function gemSprite(ty) { const sz = [17, 21, 26][ty]; return baked('gem' + ty, sz * 2, sz * 2, (g, w, h) => { g.shadowColor = ['#ff3d8f', '#9a5cff', '#ffb000'][ty]; g.shadowBlur = 10; g.fillStyle = ['#ff5ea6', '#a978ff', '#ffc93c'][ty]; heartPath(g, w / 2, h / 2 - sz / 2, sz); g.fill(); g.shadowBlur = 0; g.strokeStyle = '#fff'; g.lineWidth = 3; g.stroke();
   g.fillStyle = 'rgba(255,255,255,.7)'; g.beginPath(); g.ellipse(w / 2 - sz * .2, h / 2 - sz * .22, sz * .1, sz * .07, -.6, 0, 7); g.fill(); }); }
 const SLASH_T = .3;
+// 4 karelik sprite şeridi çiz: (ad, kare, merkez x/y, yükseklik, dönüş, şeffaflık, yatay çevir, ofset)
+const FX = {}, FX_TINT = {};
+function fxImg(name, tint) { const k = name + (tint || ''); if (FX_TINT[k]) return FX_TINT[k]; const im = img(name + '.webp'); if (!im.complete || !im.naturalWidth) return null; if (!tint) return im;
+  const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const g = c.getContext('2d'); g.filter = tint; g.drawImage(im, 0, 0); return FX_TINT[k] = c; }
+function frame(name, fr, x, y, h, rot = 0, alpha = 1, flip = 1, ax = .5, tint) { const im = fxImg(name, tint); if (!im) return; const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height, step = iw / 4, fw = step - 4, w = h * fw / ih;
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); if (flip !== 1) ctx.scale(flip, 1); if (alpha !== 1) ctx.globalAlpha = alpha; ctx.drawImage(im, (fr & 3) * step, 0, fw, ih, -w * ax, -h / 2, w, h); ctx.restore(); }
+const GOLD = 'hue-rotate(68deg) saturate(1.5) brightness(1.12)', RBOW = [0, 60, 120, 180, 240, 300].map(h => `hue-rotate(${h}deg) saturate(1.5)`);
 function sparkSprite(gold, e) { return baked('sp' + gold + e, 24, 24, g => { g.shadowColor = gold ? '#ffb000' : '#ff5ea6'; g.shadowBlur = 6; g.fillStyle = gold ? '#ffd84a' : e ? '#ff7eb6' : '#fff';
   if (e) { heartPath(g, 12, 5, 13); g.fill(); } else { g.beginPath(); for (let i = 0; i < 8; i++) { const r = i % 2 ? 3 : 10, a = i / 8 * Math.PI * 2; g.lineTo(12 + Math.cos(a) * r, 12 + Math.sin(a) * r); } g.fill(); } }); }
 let shake = 0;
@@ -650,6 +657,7 @@ function weapons(dt) {
 /* =================== GÜNCELLEME =================== */
 function update(dt) {
   DT = dt; T += dt; sndBudget -= dt;
+  if (lvlDelay > 0) { lvlDelay -= dt; if (lvlDelay <= 0 && levelQueue && state === 'play') showLevelUp(); }
   let mx = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), my = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
   if (joy) { mx = joy.dx; my = joy.dy; }
   const ml = Math.hypot(mx, my); P.moving = ml > .1;
@@ -670,11 +678,11 @@ function update(dt) {
   if (P.hp <= 0) { if (P.revive > 0) { P.revive--; P.hp = P.maxHp / 2; P.inv = 2; for (const e of enemies) if (!e.boss && Math.hypot(e.x - P.x, e.y - P.y) < 300) hurt(e, 99999); fx.push({ k: 'flash', t: .4 }); toast('🪽 YENİDEN DOĞDUN!'); } else return gameOver(false); }
   weapons(dt);
   for (const p of projs) { p.x += p.vx * dt; p.y += p.vy * dt; p.t -= dt;
-    for (const e of near(p.x, p.y)) { if (e.dead || p.hit.has(e)) continue; if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 < (e.r + p.r) ** 2) { p.hit.add(e); hurt(e, p.dmg, p.vx * .08, p.vy * .08); if (--p.pierce <= 0) { p.t = 0; break; } } } }
+    for (const e of near(p.x, p.y)) { if (e.dead || p.hit.has(e)) continue; if ((e.x - p.x) ** 2 + (e.y - p.y) ** 2 < (e.r + p.r) ** 2) { p.hit.add(e); hurt(e, p.dmg, p.vx * .08, p.vy * .08); if (fx.length < 260) fx.push({ k: 'kalpb', x: e.x, y: e.y, s: p.sz * 2.6, gold: p.gold, t: .32 }); if (--p.pierce <= 0) { p.t = 0; break; } } } }
   projs = projs.filter(p => p.t > 0);
   for (const f of fx) {
-    if (f.k === 'patiIn' && !f.done && f.t < .2) { f.done = true; aoe(f.x, f.y, f.r, f.dmg, 160); snd(160, .2, 'sine', .06, .5); for (let i = 0; i < 4; i++) fx.push({ k: 'kalpcik', x: f.x + (Math.random() - .5) * f.r, y: f.y, vy: -80, t: .6 }); }
-    if (f.k === 'yildiz' && !f.done && f.t < .12) { f.done = true; if (!f.e.dead) hurt(f.e, f.dmg); aoe(f.x, f.y, f.sz, f.dmg * .3, 40); }
+    if (f.k === 'patiIn' && !f.done && f.t < .2) { f.done = true; fx.push({ k: 'patis', x: f.x, y: f.y, r: f.r, gold: f.gold, t: .4 }); shake = Math.max(shake, f.gold ? 6 : 3); aoe(f.x, f.y, f.r, f.dmg, 160); snd(160, .2, 'sine', .06, .5); for (let i = 0; i < 4; i++) fx.push({ k: 'kalpcik', x: f.x + (Math.random() - .5) * f.r, y: f.y, vy: -80, t: .6 }); }
+    if (f.k === 'yildiz' && !f.done && f.t < .12) { f.done = true; if (!f.e.dead) hurt(f.e, f.dmg); aoe(f.x, f.y, f.sz, f.dmg * .3, 40); fx.push({ k: 'yildizb2', x: f.x, y: f.y - f.sz * .3, s: f.sz * 2.6, tint: f.rb ? RBOW[f.hue] : 0, t: .35 }); }
   }
   const mag = magNow(); let got = false;
   for (const g of gems) { const dx = P.x - g.x, dy = P.y - g.y, d = Math.hypot(dx, dy) || 1; if (g.pull || d < mag) { g.pull = true; const s = Math.max(380, 900 - d); g.x += dx / d * s * dt; g.y += dy / d * s * dt; } if (d < P.r + 10) { g.got = true; got = true; addXp(g.v); } }
@@ -696,7 +704,8 @@ function update(dt) {
   for (const t of texts) { t.t -= dt; t.y -= 40 * dt; } texts = texts.filter(t => t.t > 0);
   
 }
-function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(4 + (P.lv - 1) * 4.5 + Math.pow(P.lv - 1, 1.6)); levelQueue++; } if (levelQueue && state === 'play') showLevelUp(); }
+let lvlDelay = 0;
+function addXp(v) { P.xp += v * P.xpMul; while (P.xp >= P.next) { P.xp -= P.next; P.lv++; P.next = Math.round(4 + (P.lv - 1) * 4.5 + Math.pow(P.lv - 1, 1.6)); levelQueue++; } if (levelQueue && state === 'play' && lvlDelay <= 0) { lvlDelay = .5; fx.push({ k: 'lvl', t: .5 }); chime([784, 988, 1318], 60, 'sine', .04); } }
 
 /* =================== SEVİYE ATLAMA =================== */
 function choices(n) {
@@ -745,14 +754,13 @@ function draw(dt) {
   ctx.save(); ctx.translate(Math.round(ox + shx), Math.round(oy + shy));
   const vis = (x, y, r) => Math.abs(x - cam.x) < W / 2 + r && Math.abs(y - cam.y) < H / 2 + r;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (P.w.sevgi) { const l = P.w.sevgi, rad = [0, 72, 90, 90, 112, 142][l]; const g = ctx.createRadialGradient(P.x, P.y, rad * .2, P.x, P.y, rad); g.addColorStop(0, 'rgba(255,150,200,0)'); g.addColorStop(1, 'rgba(255,120,190,.25)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(P.x, P.y, rad, 0, 7); ctx.fill();
-    const n = 8 + l * 2; for (let i = 0; i < n; i++) { const a = T * 1.2 + i / n * Math.PI * 2; ctx.fillStyle = l >= 5 ? (i % 2 ? '#b07cff' : '#ffc93c') : (i % 2 ? '#ff8ac2' : '#ffc2de'); heartPath(ctx, P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad - 6, 12 + l * 1.5); ctx.fill(); } }
+  if (P.w.sevgi) { const l = P.w.sevgi, rad = [0, 72, 90, 90, 112, 142][l]; frame(l >= 5 ? 'zs_fx_halka_g' : 'zs_fx_halka', Math.floor(T * 8), P.x, P.y, rad * 2.25, T * .6, .5 + Math.sin(T * 4) * .08); }
   if (pl('mik')) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.setLineDash([6, 10]); ctx.lineDashOffset = T * 20; ctx.beginPath(); ctx.arc(P.x, P.y, magNow(), 0, 7); ctx.stroke(); ctx.setLineDash([]); }
   for (const g of gems) { if (!vis(g.x, g.y, 20)) continue; const ty = g.v >= 20 ? 2 : g.v >= 4 ? 1 : 0, c = gemSprite(ty), pul = 1 + Math.sin(T * 7 + g.ph) * .08, b = Math.sin(T * 5 + g.ph) * 2.5;
     ctx.drawImage(c, g.x - c.width * pul / 2, g.y + b - c.height * pul / 2, c.width * pul, c.height * pul); }
   for (const k of picks) if (k.k === 'kutu' && vis(k.x, k.y, 60)) { const im = img(CHESTS[k.r].img); if (im.complete && im.naturalWidth) { const w = 64, h = w * im.height / im.width, b = Math.sin(T * 4) * 4; ctx.save(); ctx.globalAlpha = .55 + Math.sin(T * 6) * .25; ctx.fillStyle = RAR[k.r].c; ctx.beginPath(); ctx.ellipse(k.x, k.y + 18, 34, 12, 0, 0, 7); ctx.fill(); ctx.restore(); ctx.drawImage(im, k.x - w / 2, k.y - h / 2 + b, w, h); } }
   for (const k of picks) if (k.k !== 'kutu' && vis(k.x, k.y, 30)) { const e = { coin: '🪙', cilek: '❤️', balik: '🧲', sevgi: '💝', sandik: '🎁' }[k.k], s = k.k === 'sandik' ? 38 : k.k === 'coin' ? 24 : 30, c = emo(e, s); ctx.drawImage(c, k.x - c.width / 2, k.y - c.height / 2 + Math.sin(T * 4 + k.x) * 3); }
-  for (const f of fx) if (f.k === 'patiIn') { const k = 1 - f.t / .45; ctx.fillStyle = `rgba(255,120,180,${.15 + k * .25})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.stroke(); ctx.setLineDash([]); }
+  for (const f of fx) if (f.k === 'patiIn' && false) { const k = 1 - f.t / .45; ctx.fillStyle = `rgba(255,120,180,${.15 + k * .25})`; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 3; ctx.setLineDash([8, 8]); ctx.stroke(); ctx.setLineDash([]); }
   const vEn = enemies.filter(e => vis(e.x, e.y, e.r * 1.4)).sort((a, b) => a.y - b.y);
   for (const e of vEn) {
     ctx.fillStyle = 'rgba(120,60,100,.18)'; ctx.beginPath(); ctx.ellipse(e.x, e.y + e.r * .85, e.r * .8, e.r * .25, 0, 0, 7); ctx.fill();
@@ -760,24 +768,29 @@ function draw(dt) {
     const sq = e.boss ? 1 : 1 + Math.sin(T * 9 + e.ph) * .06, by = e.kind === 'ghost' || e.kind === 'bat' ? Math.sin(T * 6 + e.ph) * 4 : 0;
     ctx.save(); ctx.translate(e.x, e.y + by); ctx.scale((e.boss ? 1 : e.dir || 1) * (2 - sq), sq); ctx.drawImage(e.flash > 0 ? s.h : s.c, -s.s / 2, -s.s / 2); ctx.restore();
   }
-  for (const pt of pets) { const kl = P.w.kedicik || 1, c = emo(kl >= 5 ? '🦁' : '🐱', [0, 28, 32, 34, 36, 46][kl]); ctx.save(); ctx.translate(pt.x, pt.y + Math.sin(T * 14) * 2); ctx.scale(pt.face, 1); ctx.drawImage(c, -c.width / 2, -c.height / 2); ctx.restore(); }
+  for (const pt of pets) { const kl = P.w.kedicik || 1; ctx.fillStyle = 'rgba(120,60,100,.18)'; ctx.beginPath(); ctx.ellipse(pt.x, pt.y + 18, 16, 5, 0, 0, 7); ctx.fill(); frame(kl >= 5 ? 'zs_fx_aslan' : 'zs_fx_kedi', Math.floor(T * 12 + pets.indexOf(pt)), pt.x, pt.y, [0, 42, 46, 48, 50, 62][kl], 0, 1, pt.face); }
   const sk = img(skinSrc(P.skin)), hh = 108;
   ctx.fillStyle = 'rgba(120,60,100,.22)'; ctx.beginPath(); ctx.ellipse(P.x, P.y + 26, 24, 8, 0, 0, 7); ctx.fill();
   if (sk.complete && sk.naturalWidth) { const ww = hh * sk.width / sk.height, bob = P.moving ? Math.abs(Math.sin(P.walk)) * 4 : Math.sin(T * 3) * 1.5, sq = P.moving ? 1 + Math.sin(P.walk * 2) * .03 : 1;
     ctx.save(); ctx.translate(P.x, P.y + 28); ctx.scale(P.face * sq, 2 - sq); ctx.globalAlpha = P.inv > 0 && Math.floor(T * 20) % 2 ? .45 : 1; ctx.drawImage(sk, -ww / 2, -hh - bob, ww, hh); ctx.restore(); ctx.globalAlpha = 1; }
-  if (P.w.ordek) { const l = P.w.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, sc = [0, 1, 1.15, 1.25, 1.35, 1.8][l], im = img('ordek_ikon.png'); if (im.complete) for (let i = 0; i < n; i++) { const a = orbitA + i / n * Math.PI * 2; ctx.save(); ctx.translate(P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad); ctx.rotate(Math.sin(T * 8 + i) * .25); ctx.scale(sc, sc); const ds = duckSprite(l >= 5); if (ds) ctx.drawImage(ds, -30, -36); ctx.restore(); } }
-  for (const p of projs) { const c = heartSprite(p.sz, p.gold); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(Math.sin(T * 10 + p.x) * .3); ctx.drawImage(c, -c.width / 2, -c.height / 2); ctx.restore(); }
+  if (P.w.ordek) { const l = P.w.ordek, n = [0, 1, 2, 2, 3, 4][l], rad = l >= 4 ? 108 : 84, sc = [0, 1, 1.15, 1.25, 1.35, 1.8][l], im = 1; if (im) for (let i = 0; i < n; i++) { const a = orbitA + i / n * Math.PI * 2; ctx.save(); ctx.translate(P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad); ctx.restore(); frame(l >= 5 ? 'zs_fx_ordek_g' : 'zs_fx_ordek', Math.floor(T * 10 + i), P.x + Math.cos(a) * rad, P.y + Math.sin(a) * rad, 40 * sc, Math.sin(T * 8 + i) * .15, 1, Math.cos(a + Math.PI / 2) * (l >= 3 ? 1 : 1) >= 0 ? 1 : -1); } }
+  for (const p of projs) frame('zs_fx_kalp', Math.floor(T * 14 + p.r), p.x, p.y, p.sz * 2.4, Math.atan2(p.vy, p.vx), 1, 1, .78, p.gold ? GOLD : 0);
   for (const f of fx) {
-    if (f.k === 'puf') { const k = 1 - f.t / .35; ctx.fillStyle = `rgba(255,255,255,${.8 * (1 - k)})`; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; ctx.beginPath(); ctx.arc(f.x + Math.cos(a) * f.r * (.4 + k), f.y + Math.sin(a) * f.r * (.4 + k), f.r * .35 * (1 - k * .5), 0, 7); ctx.fill(); } }
+    if (f.k === 'puf') { const fr = Math.min(3, Math.floor((1 - f.t / .35) * 4)); frame('zs_fx_puf', fr, f.x, f.y, f.r * 3.2); }
     if (f.k === 'kalpcik') { ctx.globalAlpha = Math.min(1, f.t * 2); ctx.fillStyle = '#ff7eb6'; heartPath(ctx, f.x, f.y, 12); ctx.fill(); ctx.globalAlpha = 1; }
     if (f.k === 'slash') { const sh = img(f.gold ? 'zs_slash_g.webp' : 'zs_slash.webp');
       if (sh.complete && sh.naturalWidth) { const step = sh.naturalWidth / 4, fwd = step - 4, fh = sh.naturalHeight, fr = Math.min(3, Math.floor((1 - f.t / SLASH_T) * 4)), H = f.h * 2.6, Wd = H * fwd / fh, sc = f.w / Wd * 1.05;
         ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(Math.atan2(f.dy, f.dx)); ctx.scale(sc, 1); ctx.globalAlpha = fr === 3 ? Math.min(1, f.t / (SLASH_T / 4) + .2) : 1;
         ctx.drawImage(sh, fr * step, 0, fwd, fh, -Wd * .08, -H / 2, Wd, H); ctx.restore(); ctx.globalAlpha = 1; } }
     if (f.k === 'spark') { const c = sparkSprite(f.gold, f.e); ctx.globalAlpha = Math.min(1, f.t * 3); const z = .6 + f.t; ctx.drawImage(c, f.x - c.width * z / 2, f.y - c.height * z / 2, c.width * z, c.height * z); ctx.globalAlpha = 1; }
-    if (f.k === 'patiIn') { const k = Math.min(1, (.45 - f.t) / .25), y = f.y - (1 - k) * 220; paw(ctx, f.x, y, f.r * 1.5, f.t < .1 ? f.t * 10 : 1, f.gold); }
-    if (f.k === 'yildiz') { const k = Math.min(1, (.4 - f.t) / .28), c = f.rb ? rainbowStar(f.sz, f.hue) : emo('⭐', f.sz); ctx.drawImage(c, f.x - 120 * (1 - k) - c.width / 2, f.y - 300 * (1 - k) - c.height / 2);
-      if (f.t < .12) { ctx.fillStyle = `rgba(255,240,150,${f.t * 6})`; ctx.beginPath(); ctx.arc(f.x, f.y, 34, 0, 7); ctx.fill(); } }
+    if (f.k === 'patiIn') { const k = Math.min(1, (.45 - f.t) / .3), fr = Math.min(3, Math.floor(k * 3.99)), y = f.y - (1 - k) * 160 - f.r * .55; frame('zs_fx_pati', fr, f.x, y, f.r * 2.2, 0, f.t < .08 ? f.t * 12 : 1, 1, .5, f.gold ? GOLD : 0); }
+    if (f.k === 'patis') { const fr = Math.min(3, Math.floor((1 - f.t / .4) * 4)); frame('zs_fx_patis', fr, f.x, f.y, f.r * 2.1, 0, 1, 1, .5, f.gold ? GOLD : 0); }
+    if (f.k === 'yildizb2') { const fr = Math.min(3, Math.floor((1 - f.t / .35) * 4)); frame('zs_fx_yildizb', fr, f.x, f.y, f.s, 0, 1, 1, .5, f.tint); }
+    if (f.k === 'lvl') { const fr = Math.min(3, Math.floor((1 - f.t / .5) * 4)); frame('zs_fx_lvl', fr, P.x, P.y - 40, 200, 0, Math.min(1, f.t * 5)); }
+    if (f.k === 'kalpb') { const fr = Math.min(3, Math.floor((1 - f.t / .32) * 4)); frame('zs_fx_kalpb', fr, f.x, f.y, f.s, 0, 1, 1, .5, f.gold ? GOLD : 0); }
+    if (f.k === 'yildiz') { const k = Math.min(1, (.4 - f.t) / .28), fr = Math.min(3, Math.floor(k * 3.99)), h = f.sz * 2.6, tint = f.rb ? RBOW[f.hue] : 0;
+      if (f.t >= .12) frame('zs_fx_yildiz', fr, f.x - 110 * (1 - k) + h * .25, f.y - 260 * (1 - k) - h * .3, h, 0, 1, 1, .5, tint);
+    }
     if (f.k === 'isir') { ctx.globalAlpha = Math.min(1, f.t * 5); ctx.drawImage(emo('💢', 18), f.x - 12, f.y - 30); ctx.globalAlpha = 1; }
   }
   ctx.lineWidth = 3; ctx.strokeStyle = '#fff';
@@ -996,7 +1009,7 @@ function renderShop() {
 function renderSet() {
   document.querySelectorAll('.tg').forEach(b => { b.classList.toggle('on', !!M.set[b.dataset.s]); b.onclick = () => { M.set[b.dataset.s] = M.set[b.dataset.s] ? 0 : 1; saveM(); renderSet(); snd(880, .06, 'sine', .04); if (b.dataset.s === 'muzik') music(musWant); }; });
 }
-[...new Set([...BOSSES.map(b => b.img), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp'])].forEach(img);
+[...new Set([...BOSSES.map(b => b.img), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp', ...['kalp', 'kalpb', 'pati', 'patis', 'yildiz', 'yildizb', 'halka', 'halka_g', 'kedi', 'aslan', 'ordek', 'ordek_g', 'puf', 'lvl'].map(n => `zs_fx_${n}.webp`)])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
 window.__sv = { get picks() { return picks; }, get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
 </script>
