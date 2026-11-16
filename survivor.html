@@ -249,7 +249,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <img id="overImg" style="height:150px;filter:drop-shadow(0 6px 6px rgba(150,60,110,.35))" alt="">
   <h2 id="overT"></h2>
   <div class="stats" id="oStats"></div>
-  <div class="gold" id="earned" style="font-size:24px;margin-bottom:8px"></div>
+  <div class="gold" id="earned" style="font-size:24px;margin-bottom:4px"></div><div id="scoreNote" style="font-size:14px;color:#a0507e;margin-bottom:8px"></div>
   <button class="btn" id="again">Tekrar Oyna</button><button class="btn alt" id="toMenu">Ana Menü</button>
 </div></div>
 
@@ -855,11 +855,13 @@ function gameOver(win) {
   submitScore(win);
 }
 function submitScore(win) {
-  if (TEST) return;
+  if (TEST) { $('scoreNote').textContent = '🧪 Test modunda skor kaydedilmez'; return; }
+  let tk = null; try { tk = localStorage.getItem('ordekez_token'); } catch (e) {}
+  $('scoreNote').innerHTML = tk ? '📊 Skor tablosuna gönderildi' : '⚠️ Skorun tabloya kaydedilmedi — ana sayfadan <b>giriş yap</b>';
   let token = null; try { token = localStorage.getItem('ordekez_token'); } catch (e) {}
   if (!token) return;
   fetch('https://servvglgsudtjouqknvx.supabase.co/rest/v1/rpc/skor_kaydet', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J' },
-    body: JSON.stringify({ p_token: token, p_oyun: 'survivor', p_deger: Math.min(99999, kills), p_detay: { sure: Math.floor(T), seviye: P.lv, kazandi: win, skin: P.skin } }) }).catch(() => {});
+    body: JSON.stringify({ p_token: token, p_oyun: 'survivor', p_deger: Math.min(99999, kills), p_detay: { sure: Math.floor(T), seviye: P.lv, kazandi: win, skin: P.skin } }) }).then(r => { if (r.ok && kills >= (M.sentKill || 0)) { M.sentKill = kills; saveM(); } else if (!r.ok) $('scoreNote').textContent = '⚠️ Skor gönderilemedi (oturum süresi dolmuş olabilir, tekrar giriş yap)'; }).catch(() => {});
 }
 $('again').onclick = startGame;
 $('toMenu').onclick = showMenu;
@@ -1030,6 +1032,9 @@ function renderSet() {
 
 [...new Set([...BOSSES.map(b => b.sprite || b.img), skinSrc(M.skin), 'ordek_ikon.png', 'zs_slash.webp', 'zs_slash_g.webp', ...['kalp', 'kalpb', 'pati', 'patis', 'yildiz', 'yildizb', 'halka', 'halka_g', 'kedi', 'aslan', 'ordek', 'ordek_g', 'puf', 'lvl'].map(n => `zs_fx_${n}.webp`)])].forEach(img);
 showMenu(); requestAnimationFrame(loop);
+(() => { if (TEST || !M.bestKill || M.sentKill >= M.bestKill) return; let tk = null; try { tk = localStorage.getItem('ordekez_token'); } catch (e) {} if (!tk) return;
+  fetch('https://servvglgsudtjouqknvx.supabase.co/rest/v1/rpc/skor_kaydet', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J' },
+    body: JSON.stringify({ p_token: tk, p_oyun: 'survivor', p_deger: Math.min(99999, M.bestKill), p_detay: { sure: Math.floor(M.best), kazandi: M.kazandi > 0 } }) }).then(r => { if (r.ok) { M.sentKill = M.bestKill; saveM(); } }).catch(() => {}); })();
 window.__sv = { get fx() { return fx; }, get picks() { return picks; }, get gems() { return gems; }, get P() { return P; }, get enemies() { return enemies; }, get T() { return T; }, set T(v) { T = v; }, M, startGame, addXp: v => addXp(v), refreshSlots: () => refreshSlots() };
 </script>
 </body>
