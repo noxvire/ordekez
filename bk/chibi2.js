@@ -40,8 +40,8 @@
         paint(g, c, P); hairShine(g, c, P); g.strokeStyle = dk(c, .3); g.lineWidth = 1.2; for (let x = -18; x <= 18; x += 9) { g.beginPath(); g.moveTo(x, -46); g.lineTo(x + 1, -27); g.stroke(); }
         if (f === 0) for (const s of [-1, 1]) paint(g, c, g2 => { g2.moveTo(s * 37, -18); g2.lineTo(s * 38, 6); g2.quadraticCurveTo(s * 32, 8, s * 28, 4); g2.lineTo(s * 29, -18); g2.closePath(); }); } },
     kuyruk: { ad: 'Yüksek At Kuyruğu', back(g, c, f) { const sw = Math.sin(performance.now() / 300) * 4, x = f === 1 ? -26 : f === -1 ? 26 : 0, d = f === 1 ? -1 : f === -1 ? 1 : 0;
-        paint(g, c, g2 => { g2.moveTo(x - 9, -66); g2.quadraticCurveTo(x + d * 38 + sw + (d ? 0 : 26), -62, x + d * 26 + sw + (d ? 0 : 18), 6); g2.quadraticCurveTo(x + d * 10 + (d ? 0 : 6), -20, x + 9, -66); g2.closePath(); });
-        paint(g, c, g2 => { g2.ellipse(0, -32, 36, 37, 0, Math.PI, 0); g2.closePath(); }); },
+        const tail = () => paint(g, c, g2 => { g2.moveTo(x - 9, -66); g2.quadraticCurveTo(x + d * 38 + sw + (d ? 0 : 26), -62, x + d * 26 + sw + (d ? 0 : 18), 6); g2.quadraticCurveTo(x + d * 10 + (d ? 0 : 6), -20, x + 9, -66); g2.closePath(); });
+        if (f !== 2) tail(); paint(g, c, g2 => { g2.ellipse(0, -32, 36, 37, 0, Math.PI, 0); g2.closePath(); }); if (f === 2) tail(); },
       front(g, c, f) { if (f === 2) { paint(g, '#ff4f8a', g2 => g2.ellipse(0, -66, 10, 6, 0, 0, 7)); return; } const P = g2 => { g2.moveTo(-36, -20); g2.quadraticCurveTo(-36, -68, 0, -68); g2.quadraticCurveTo(36, -68, 36, -20); g2.quadraticCurveTo(16, -48, -10, -30); g2.quadraticCurveTo(-22, -40, -36, -20); };
         paint(g, c, P); hairShine(g, c, P); paint(g, '#ff4f8a', g2 => g2.ellipse(f === 0 ? 0 : -f * 24, -68, 9, 6, 0, 0, 7)); } },
     topuz: { ad: 'İkiz Topuz', back(g, c) { for (const s of [-1, 1]) { const P = g2 => g2.arc(s * 32, -62, 15, 0, 7); paint(g, c, P); clipDo(g, P, () => { g.strokeStyle = lt(c, .5); g.lineWidth = 3; g.beginPath(); g.arc(s * 32, -62, 9, Math.PI * 1.1, Math.PI * 1.6); g.stroke(); }); }
@@ -118,7 +118,6 @@
   function head(g, C, f, blink) {
     const H = HAIR[C.sac] || HAIR.anime;
     if (HAT[C.sapka] && HAT[C.sapka].back && f === 2) HAT[C.sapka].draw(g, C.sapkaR, f);
-    if (f !== 2) H.back(g, C.sacR, f);
     // kulak
     for (const s of f === 0 ? [-1, 1] : f === 2 ? [-1, 1] : [-f]) paint(g, C.ten, g2 => g2.ellipse(s * 34, -20, 6, 8, 0, 0, 7), { lo: .15 });
     // yüz
@@ -132,7 +131,10 @@
       if (C.aks === 'yara') { g.save(); g.translate(f === 0 ? 20 : f * 6, -6); g.rotate(-.4); paint(g, '#f6d5a8', g2 => rr(g2, -8, -3.5, 16, 7, 3.5), { lw: 1.4 }); g.fillStyle = '#e8b888'; g.fillRect(-2, -2, 4, 4); g.restore(); }
       if (C.aks === 'maske') paint(g, '#2a2a3a', g2 => { g2.moveTo(-26, -6); g2.quadraticCurveTo(0, -10, 26, -6); g2.quadraticCurveTo(24, 10, 0, 12); g2.quadraticCurveTo(-24, 10, -26, -6); }, { lw: 1.6 });
     }
-    if (f === 2) { H.back(g, C.sacR, f); if (C.sac !== 'kel' && !['kivircik'].includes(C.sac)) { const cap = g2 => g2.ellipse(0, -32, 36, 37, 0, Math.PI * .95, Math.PI * 2.05); paint(g, C.sacR, cap); hairShine(g, C.sacR, cap, -50, 28); } else if (C.sac === 'kivircik') paint(g, C.sacR, g2 => g2.ellipse(0, -30, 36, 34, 0, 0, 7)); }
+    if (f === 2 && C.sac !== 'kel') { const SH = { bob: 8, uzun: 30, wolf: 8, kivircik: 4 }, low = SH[C.sac] != null ? SH[C.sac] : 0;
+      const cap = g2 => { g2.moveTo(-36, -30); g2.quadraticCurveTo(-36, -70, 0, -70); g2.quadraticCurveTo(36, -70, 36, -30); g2.quadraticCurveTo(38, low, 26, low + 2); g2.quadraticCurveTo(0, low + 8, -26, low + 2); g2.quadraticCurveTo(-38, low, -36, -30); };
+      paint(g, C.sacR, cap); hairShine(g, C.sacR, cap, -50, 28); strands(g, C.sacR, [[-12, -50, -16, -30, -12, low - 2], [12, -50, 16, -30, 12, low - 2], [0, -60, 1, -30, 0, low + 2]]);
+      H.back(g, C.sacR, f); }
     H.front(g, C.sacR, f);
     const HT = HAT[C.sapka]; if (HT && HT.draw && !(HT.back && f === 2)) HT.draw(g, C.sapkaR, f);
     if (f !== 2 && (C.aks === 'gozluk' || C.aks === 'yuvarlak')) {
@@ -146,20 +148,21 @@
     const c = C.ust, sk = C.ten, T = C.ustT;
     const arm = (s, back) => {
       let a = s * sw * .55; if (anim === 'fish' && s === (f === -1 ? -1 : 1)) a = -1.25 * (f === -1 ? -1 : 1); if (anim === 'wave' && s === 1) a = -2.5 + Math.sin(performance.now() / 110) * .4; if (anim === 'cheer') a = s * -2.6 + Math.sin(performance.now() / 120) * .2 * s;
-      g.save(); g.translate(s * 16, 20); g.rotate(a);
+      g.save(); g.translate(s * 15.5, 18); g.rotate(a);
       paint(g, back ? dk(c, .15) : c, g2 => rr(g2, -6, -2, 12, 17, 6), { y0: -2, y1: 15 });
       if (T === 'kazak') { g.fillStyle = lt(c, .6); g.fillRect(-6, 6, 12, 3); }
       paint(g, sk, g2 => g2.arc(0, 17, 5.2, 0, 7), { y0: 12, y1: 22 }); g.restore();
     };
     if (f === 0 || f === 2) { arm(-1); arm(1); } else arm(-f, true);
     if (T === 'elbise') { paint(g, c, g2 => { g2.moveTo(-12, 14); g2.lineTo(12, 14); g2.lineTo(21, 44); g2.quadraticCurveTo(0, 50, -21, 44); g2.closePath(); }, { y0: 14, y1: 48 }); g.strokeStyle = '#fff'; g.lineWidth = 3; g.beginPath(); for (let x = -20; x <= 20; x += 5) { g.moveTo(x, 44 + Math.abs(x) * .08); g.arc(x + 2.5, 44 + Math.abs(x) * .08, 2.5, Math.PI, 0, true); } g.stroke(); if (f !== 2) paint(g, '#ff4f8a', g2 => { g2.moveTo(0, 18); g2.lineTo(-8, 13); g2.lineTo(-8, 23); g2.closePath(); g2.moveTo(0, 18); g2.lineTo(8, 13); g2.lineTo(8, 23); g2.closePath(); }, { lw: 1.2 }); }
-    else paint(g, c, g2 => rr(g2, -15, 14, 30, 27, 9), { y0: 14, y1: 42 });
+    else paint(g, c, g2 => rr(g2, -15, 12, 30, 29, 9), { y0: 12, y1: 42 });
     const front = f !== 2;
+    if (front && T !== 'ceket') { g.strokeStyle = dk(c, .5); g.lineWidth = 1.6; g.beginPath(); g.arc(0, 11, 7, .25, Math.PI - .25); g.stroke(); }
     if (T === 'kapusonlu') { if (front) { g.fillStyle = dk(c, .12); g.beginPath(); rr(g, -9, 30, 18, 8, 4); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(-4, 16); g.lineTo(-5, 26); g.moveTo(4, 16); g.lineTo(5, 26); g.stroke(); } else paint(g, dk(c, .1), g2 => { g2.ellipse(0, 18, 16, 8, 0, 0, Math.PI); }, { lw: 1.6 }); }
     if (T === 'ceket' && front) { g.fillStyle = '#f4f4f4'; g.beginPath(); g.moveTo(-6, 14); g.lineTo(6, 14); g.lineTo(0, 34); g.fill(); g.strokeStyle = dk(c, .6); g.lineWidth = 1.6; g.beginPath(); g.moveTo(-7, 14); g.lineTo(0, 36); g.lineTo(7, 14); g.moveTo(0, 36); g.lineTo(0, 41); g.stroke(); g.fillStyle = '#c8c8d0'; g.fillRect(-12, 24, 3, 3); }
     if (T === 'yelek') { g.strokeStyle = dk('#7a8a4a', .6); g.lineWidth = 1.4; for (const s of front ? [-1, 1] : [0]) { g.fillStyle = '#7a8a4a'; g.beginPath(); rr(g, s === 0 ? -13 : s < 0 ? -14 : 3, 15, s === 0 ? 26 : 11, 25, 4); g.fill(); g.stroke(); if (s) { g.fillStyle = '#5a6a2a'; g.beginPath(); rr(g, s < 0 ? -12 : 5, 28, 7, 6, 2); g.fill(); g.stroke(); } } }
     if (T === 'tisort' && front) { g.save(); g.translate(0, 28); g.fillStyle = '#ffd84a'; g.strokeStyle = '#7a4a00'; g.lineWidth = 1.2; g.beginPath(); g.ellipse(0, 3, 6, 4, 0, 0, 7); g.fill(); g.stroke(); g.beginPath(); g.arc(4, -2, 3.5, 0, 7); g.fill(); g.stroke(); g.fillStyle = '#ff8a1c'; g.fillRect(7, -2, 3, 1.6); g.fillStyle = '#000'; g.fillRect(4, -3, 1.2, 1.2); g.restore(); }
-    if (T === 'kazak') { g.fillStyle = lt(c, .6); g.fillRect(-15, 22, 30, 4); g.fillRect(-15, 31, 30, 4); g.strokeStyle = dk(c, .62); g.lineWidth = 2.2; g.beginPath(); rr(g, -15, 14, 30, 27, 9); g.stroke(); }
+    if (T === 'kazak') { g.fillStyle = lt(c, .6); g.fillRect(-15, 21, 30, 4); g.fillRect(-15, 30, 30, 4); g.strokeStyle = dk(c, .62); g.lineWidth = 2.2; g.beginPath(); rr(g, -15, 12, 30, 29, 9); g.stroke(); }
     if (C.aks === 'kolye' && front) { g.strokeStyle = '#e8e8f0'; g.lineWidth = 1.6; g.beginPath(); g.arc(0, 12, 9, .3, Math.PI - .3); g.stroke(); paint(g, '#ffd23f', g2 => g2.arc(0, 21, 3, 0, 7), { lw: 1 }); }
     if (f === 1 || f === -1) arm(f);
   }
@@ -194,11 +197,17 @@
     g.fillStyle = 'rgba(20,10,30,.22)'; g.beginPath(); g.ellipse(0, 55, 23 - bob * .8, 6, 0, 0, 7); g.fill();
     g.translate(0, (anim === 'sit' ? 8 : 0) - bob); g.scale(1 / sq, sq);
     aura(g, cfg, t);
+    const H = HAIR[cfg.sac] || HAIR.anime, hrot = walk ? Math.sin(ph) * .035 : anim === 'cheer' ? Math.sin(t * 7) * .06 : 0;
+    if (f !== 2) { g.save(); g.rotate(hrot); H.back(g, cfg.sacR, f); if (HAT[cfg.sapka] && HAT[cfg.sapka].behind) HAT[cfg.sapka].behind(g, cfg.sapkaR, f); g.restore(); }
+    legs(g, cfg, f, ph, anim === 'sit');
+    paint(g, cfg.ten, g2 => rr(g2, -6.5, 0, 13, 16, 5), { y0: 0, y1: 16, lo: .35 });
+    g.fillStyle = dk(cfg.ten, .3); g.globalAlpha = .4; g.fillRect(-6, 2, 12, 5); g.globalAlpha = 1;
+    body(g, cfg, f, sw, anim);
     if (cfg.aks === 'atki' && f === 2) paint(g, cfg.aksR || '#e0405a', g2 => rr(g2, 5, 14, 10, 24, 4));
-    if (f === 2) { head(g, cfg, f, blink); legs(g, cfg, f, ph, anim === 'sit'); body(g, cfg, f, sw, anim); }
-    else { legs(g, cfg, f, ph, anim === 'sit'); body(g, cfg, f, sw, anim); }
-    if (cfg.aks === 'atki') { paint(g, cfg.aksR || '#e0405a', g2 => rr(g2, -17, 9, 34, 10, 5)); if (f !== 2) paint(g, cfg.aksR || '#e0405a', g2 => rr(g2, f === 0 ? 4 : -f * 7, 13, 10, 22, 4)); }
-    if (f !== 2) { g.save(); g.rotate(walk ? Math.sin(ph) * .035 : anim === 'cheer' ? Math.sin(t * 7) * .06 : 0); head(g, cfg, f, blink); g.restore(); }
+    if (f === 2 && cfg.aks === 'atki') paint(g, cfg.aksR || '#e0405a', g2 => rr(g2, -17, 9, 34, 10, 5));
+    if (f === 2) head(g, cfg, f, blink);
+    if (cfg.aks === 'atki' && f !== 2) { paint(g, cfg.aksR || '#e0405a', g2 => rr(g2, -17, 9, 34, 10, 5)); if (f !== 2) paint(g, cfg.aksR || '#e0405a', g2 => rr(g2, f === 0 ? 4 : -f * 7, 13, 10, 22, 4)); }
+    if (f !== 2) { g.save(); g.rotate(hrot); head(g, cfg, f, blink); g.restore(); }
     g.restore();
   }
   const COLORS = {
