@@ -1,0 +1,20 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Karakter Stilleri</title>
+<style>body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(160deg,#ffe3f0,#e6e0ff 50%,#d8f3ff);min-height:100vh;color:#3a2050}
+h1{text-align:center;margin:18px 0 4px;font-size:26px}p.s{text-align:center;margin:0 0 10px;opacity:.7}
+.row{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding:10px}
+.card{background:rgba(255,255,255,.75);border-radius:24px;box-shadow:0 8px 30px rgba(80,40,120,.15);padding:10px 10px 14px;text-align:center}
+.card h2{margin:6px 0 0;font-size:22px}.card small{opacity:.65}canvas{display:block}</style></head><body>
+<h1>Hangi tarz? 🦆</h1><p class="s">Aynı 4 karakter, 3 farklı stil</p>
+<div class="row">
+<div class="card"><canvas id="A" width="540" height="290"></canvas><h2>A · Sticker Kawaii</h2><small>Beyaz çıkartma kenarı, kocaman parlak gözler</small></div>
+<div class="card"><canvas id="B" width="540" height="290"></canvas><h2>B · Ada</h2><small>Konturu yok, yumuşak, Animal Crossing havası</small></div>
+<div class="card"><canvas id="C" width="540" height="290"></canvas><h2>C · Çizgi Film Havalı</h2><small>Kalın kontur, sert gölge, umursamaz bakış</small></div>
+</div>
+<script src="bk/stil.js?v=2"></script><script>
+const CH=[
+{ten:'#ffdcc2',sac:'kirpi',sacR:'#3a2a5a',goz:'#4a8aff',ust:'#ff6f9f',alt:'#2a2f4a',ayak:'#ffffff',aks:'kulaklik'},
+{ten:'#f5c6a0',sac:'uzun',sacR:'#ff8fc0',goz:'#a65cff',ust:'#ffd84a',alt:'#5a7aff',ayak:'#ff6f9f'},
+{ten:'#b97a50',sac:'topuz',sacR:'#2a1e2e',goz:'#2ec27a',ust:'#2ec2a0',alt:'#f4f4f4',ayak:'#3a3a4a'},
+{ten:'#fff0e4',sac:'kisa',sacR:'#f2c14e',goz:'#ff7a3a',ust:'#4a90ff',alt:'#2a2a3a',ayak:'#ff4a5a',sapka:'ordek'}];
+function fr(now){const t=now/1000;for(const s of 'ABC'){const cv=document.getElementById(s),g=cv.getContext('2d');g.clearRect(0,0,cv.width,cv.height);CH.forEach((c,i)=>Stil.draw(g,s,c,80+i*127,278,1.25,t+i*.7));}requestAnimationFrame(fr)}requestAnimationFrame(fr);
+</script></body></html>
