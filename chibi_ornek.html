@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chibi karakter örneği — Ördekez</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;background:linear-gradient(#bfe6ff,#7fc4ec 55%,#e8d8a0 55%,#d8c080);min-height:100vh;color:#3a2233}
+h1{text-align:center;margin:14px 0 4px;font-size:28px;color:#fff;text-shadow:0 3px 0 #3a7ac0}
+p{text-align:center;margin:0 0 6px;font-weight:700;color:#24506e}
+#stage{display:block;margin:0 auto;max-width:100%}
+#ui{max-width:900px;margin:8px auto 30px;background:#fff8e8;border:4px solid #8a5a2b;border-radius:18px;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.r b{display:block;font-size:13px;margin-bottom:4px}.r button{border:2px solid #e2c99a;background:#fff;border-radius:10px;padding:4px 8px;margin:2px;font:800 12px Nunito;cursor:pointer}.r button.on{background:#f7c948;border-color:#b07800}
+.sw{width:22px;height:22px;border-radius:7px;padding:0!important;vertical-align:middle}
+</style></head><body>
+<h1>🎣 Ördekez Balıkçılık — Chibi Karakter Örneği</h1>
+<p>Üstteki karakterler örnek. Alttan kendi karakterini dene (yürüme, olta, el sallama, yönler).</p>
+<canvas id="stage" width="960" height="560"></canvas>
+<div id="ui"></div>
+<script src="bk/chibi.js"></script>
+<script>
+const C = Chibi.COLORS;
+const SAMPLES = [
+  { ten: '#ffd2b4', sac: 'kirpi', sacR: '#2a1a22', goz: '#e0304a', gozT: 'havali', agiz: 'sirit', ust: '#2a2a3a', ustT: 'kapusonlu', alt: '#30304a', ayak: '#f4f4f4', sapka: 'kulaklik', sapkaR: '#ff4a4a', aks: 'yok' },
+  { ten: '#ffe3d0', sac: 'ikiz', sacR: '#ff8ac2', goz: '#a050e0', gozT: 'yildiz', agiz: 'kedi', ust: '#ffd84a', ustT: 'elbise', alt: '#ff6fae', ayak: '#ff6fae', sapka: 'kedi', sapkaR: '#ff8ac2', aks: 'yok' },
+  { ten: '#d9955f', sac: 'dagnik', sacR: '#5a3220', goz: '#3ab06a', gozT: 'yuvarlak', agiz: 'gulus', ust: '#4a90ff', ustT: 'yelek', alt: '#8a5a3a', ayak: '#5a3220', sapka: 'kova', sapkaR: '#7ad86a', aks: 'yok' },
+  { ten: '#ffd2b4', sac: 'kel', sacR: '#2a1a22', goz: '#4a2a1a', gozT: 'havali', agiz: 'dil', ust: '#ffa03a', ustT: 'tisort', alt: '#2a2a3a', ayak: '#ff5a4a', sapka: 'yok', sapkaR: '#000000', aks: 'gozluk' },
+  { ten: '#f2b98e', sac: 'uzun', sacR: '#f6cf5a', goz: '#2a7ad8', gozT: 'yuvarlak', agiz: 'ag', ust: '#7a5aff', ustT: 'ceket', alt: '#2a2a3a', ayak: '#2a2a3a', sapka: 'tac', sapkaR: '#ffd23f', aks: 'atki', aksR: '#ff4a4a' },
+  { ten: '#a8693f', sac: 'kivircik', sacR: '#2a1a22', goz: '#f0a020', gozT: 'mutlu', agiz: 'gulus', ust: '#3ab0a0', ustT: 'tisort', alt: '#f4f4f4', ayak: '#4a90ff', sapka: 'kep', sapkaR: '#4a90ff', aks: 'yuvarlak' },
+];
+const me = JSON.parse(JSON.stringify(SAMPLES[0]));
+let myDir = 's', myAnim = 'walk';
+const st = document.getElementById('stage'), g = st.getContext('2d');
+function frame() {
+  const t = performance.now() / 1000;
+  g.clearRect(0, 0, 960, 560);
+  // su ve iskele
+  g.fillStyle = 'rgba(255,255,255,.25)'; for (let i = 0; i < 18; i++) g.fillRect((i * 97 + t * 20) % 960, 300 + (i * 37) % 60, 30, 3);
+  SAMPLES.forEach((c, i) => { const dirs = ['s', 'e', 's', 'w', 's', 'e'], an = ['idle', 'walk', 'wave', 'idle', 'idle', 'walk'];
+    Chibi.draw(g, c, 90 + i * 156, 150, 1.55, { dir: dirs[i], anim: an[i], t: t + i }); });
+  g.fillStyle = '#a06c38'; g.fillRect(250, 440, 460, 60); g.fillStyle = '#7a4e24'; for (let x = 250; x < 710; x += 40) g.fillRect(x, 440, 2, 60);
+  // büyük önizleme
+  Chibi.draw(g, me, 480, 400, 2.4, { dir: myDir, anim: myAnim, t });
+  ['s','e','n','w'].forEach((d,i)=>Chibi.draw(g, SAMPLES[(i+1)%6], i<2?70+i*120:770+(i-2)*120, 440, 1.1, { dir: d, anim: 'walk', t: t + i }));
+  if (myAnim === 'fish') { g.strokeStyle = '#6a4220'; g.lineWidth = 5; g.beginPath(); const sx = 480 + (myDir === 'w' ? -40 : 40), sy = 400 + 50; g.moveTo(sx, sy); g.lineTo(sx + (myDir === 'w' ? -90 : 90), sy - 110); g.stroke(); g.strokeStyle = '#fff'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(sx + (myDir === 'w' ? -90 : 90), sy - 110); g.quadraticCurveTo(sx + (myDir === 'w' ? -170 : 170), sy - 40, sx + (myDir === 'w' ? -190 : 190), sy + 30); g.stroke(); g.fillStyle = '#ff3a3a'; g.beginPath(); g.arc(sx + (myDir === 'w' ? -190 : 190), sy + 30 + Math.sin(t * 3) * 2, 6, 0, 7); g.fill(); }
+  requestAnimationFrame(frame);
+}
+frame();
+const ui = document.getElementById('ui');
+function row(lbl, opts, key, swatch) {
+  const d = document.createElement('div'); d.className = 'r'; d.innerHTML = `<b>${lbl}</b>`;
+  for (const [v, ad] of opts) { const b = document.createElement('button'); if (swatch) { b.className = 'sw'; b.style.background = v; } else b.textContent = ad; if (me[key] === v) b.classList.add('on');
+    b.onclick = () => { me[key] = v; d.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); }; d.appendChild(b); }
+  ui.appendChild(d);
+}
+const ent = o => Object.entries(o).map(([k, v]) => [k, v.ad || v]);
+row('Yön / hareket', [], ''); { const d = ui.lastChild; [['s', '⬇️ Ön'], ['e', '➡️ Sağ'], ['w', '⬅️ Sol'], ['n', '⬆️ Arka']].forEach(([v, a]) => { const b = document.createElement('button'); b.textContent = a; b.onclick = () => myDir = v; d.appendChild(b); });
+  [['idle', '🧍 Dur'], ['walk', '🚶 Yürü'], ['fish', '🎣 Olta'], ['wave', '👋 Selam'], ['sit', '🪑 Otur']].forEach(([v, a]) => { const b = document.createElement('button'); b.textContent = a; b.onclick = () => myAnim = v; d.appendChild(b); }); }
+row('Saç', ent(Chibi.HAIR), 'sac'); row('Saç rengi', C.sac.map(c => [c]), 'sacR', 1);
+row('Göz', ent(Chibi.EYES), 'gozT'); row('Göz rengi', C.goz.map(c => [c]), 'goz', 1);
+row('Ağız', ent(Chibi.MOUTH), 'agiz'); row('Ten', C.ten.map(c => [c]), 'ten', 1);
+row('Üst', ent(Chibi.TOP), 'ustT'); row('Üst rengi', C.giysi.map(c => [c]), 'ust', 1);
+row('Alt rengi', C.giysi.map(c => [c]), 'alt', 1); row('Ayakkabı', C.giysi.map(c => [c]), 'ayak', 1);
+row('Şapka', ent(Chibi.HAT), 'sapka'); row('Şapka rengi', C.giysi.map(c => [c]), 'sapkaR', 1);
+row('Aksesuar', ent(Chibi.ACC), 'aks');
+</script></body></html>
