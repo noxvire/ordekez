@@ -1,0 +1,30 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><title>Manken Animasyon Örneği — Ördekez</title>
+<style>*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,sans-serif;background:#e9edf8;color:#3b4262;overflow:hidden}
+#cv{position:fixed;inset:0;width:100%;height:100%;touch-action:none}
+#ui{position:fixed;left:0;right:0;bottom:0;padding:10px;display:flex;flex-direction:column;gap:7px;align-items:center;background:linear-gradient(transparent,rgba(30,30,60,.35))}
+.row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.c{border:2px solid #d8c08a;border-radius:999px;padding:6px 11px;font-weight:800;font-size:13px;background:rgba(255,252,242,.95);color:#3b4262;cursor:pointer}
+.c.on{background:#3b4262;color:#f4dfa8;border-color:#f4dfa8}
+.sw{width:26px;height:26px;border-radius:50%;border:2px solid #fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+h1{position:fixed;top:10px;left:0;right:0;text-align:center;margin:0;color:#fff;font-size:20px;text-shadow:0 2px 6px rgba(40,40,90,.5)}</style></head><body>
+<canvas id="cv"></canvas><h1>Manken Animasyon Örneği</h1>
+<div id="ui"><div class="row" id="anims"></div><div class="row" id="eyes"></div><div class="row" id="mouths"></div><div class="row" id="cols"></div></div>
+<script src="bk/manken.js?v=2"></script><script>
+const cv=document.getElementById('cv'),g=cv.getContext('2d');let di=0,anim='idle';const DIRS=['s','e','n','w'];
+const cfg={goz:'#3a7aff',gozT:'parlak',agiz:'gulus'};
+function fit(){const d=Math.min(2,devicePixelRatio||1);cv.width=innerWidth*d;cv.height=innerHeight*d}addEventListener('resize',fit);fit();
+function chips(id,list,get,set){const box=document.getElementById(id);box.innerHTML='';for(const[k,ad]of list){const b=document.createElement('button');b.className='c'+(get()===k?' on':'');b.textContent=ad;b.onclick=()=>{set(k);chips(id,list,get,set)};box.appendChild(b)}}
+chips('anims',[['L','◀'],['R','▶'],['idle','🧍 Dur'],['walk','🚶 Yürü'],['wave','👋 Selam'],['cheer','🙌 Sevin'],['fish','🎣 Balık'],['sit','🪑 Otur']],()=>anim,k=>{if(k==='L')di=(di+3)%4;else if(k==='R')di=(di+1)%4;else anim=k});
+chips('eyes',Object.entries(Manken.EYE),()=>cfg.gozT,k=>cfg.gozT=k);
+chips('mouths',Object.entries(Manken.MOUTH),()=>cfg.agiz,k=>cfg.agiz=k);
+const cb=document.getElementById('cols');for(const c of['#3a7aff','#ff4a6a','#4ad07a','#9a5aff','#ffb02a','#2ac0d0','#ff6ac8','#8a5a3a']){const b=document.createElement('button');b.className='sw';b.style.background=c;b.onclick=()=>cfg.goz=c;cb.appendChild(b)}
+let dragX=null;cv.onpointerdown=e=>dragX=e.clientX;onpointerup=()=>dragX=null;onpointermove=e=>{if(dragX==null)return;if(Math.abs(e.clientX-dragX)>40){di=(di+(e.clientX>dragX?3:1))%4;dragX=e.clientX}};
+Manken.load('bk/manken/').then(()=>requestAnimationFrame(fr));
+function fr(now){const t=now/1000,W=cv.width,H=cv.height;const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#5a7ae8');sky.addColorStop(.6,'#b8c4f8');sky.addColorStop(1,'#ffe0c8');g.fillStyle=sky;g.fillRect(0,0,W,H);
+ g.fillStyle='#8ac87a';g.beginPath();g.ellipse(W/2,H*.86,W*.7,H*.12,0,0,7);g.fill();
+ const sc=Math.min(H*.62/720,W*.22/260),y=H*.8;
+ [['e',W*.3],['k',W*.7]].forEach(([c,x])=>{const h=Manken.draw(g,Object.assign({cins:c},cfg),x,y,sc,{dir:DIRS[di],anim,t});
+  if(anim==='fish'&&h){const s=DIRS[di]==='w'||DIRS[di]==='n'?-1:1,k=sc*2.2;g.lineCap='round';g.strokeStyle='#6a4220';g.lineWidth=7*sc;g.beginPath();g.moveTo(h.hx-s*14*k,h.hy+12*k);g.quadraticCurveTo(h.hx+s*60*k,h.hy-60*k,h.hx+s*120*k,h.hy-120*k);g.stroke();g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=1.5;g.beginPath();g.moveTo(h.hx+s*120*k,h.hy-120*k);g.quadraticCurveTo(h.hx+s*150*k,h.hy,h.hx+s*140*k,h.hy+80*k);g.stroke()}});
+ g.fillStyle='#fff';g.font=`900 ${18*Math.min(2,devicePixelRatio||1)}px system-ui`;g.textAlign='center';g.fillText('Erkek',W*.3,H*.86+30);g.fillText('Kız',W*.7,H*.86+30);
+ requestAnimationFrame(fr)}
+</script></body></html>
