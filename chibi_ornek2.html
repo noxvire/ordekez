@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chibi v2 örneği — Ördekez</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Nunito,system-ui,sans-serif;background:#16233a;color:#3a2233;min-height:100vh}
+h1{text-align:center;margin:14px 0 2px;font:400 32px 'Lilita One';color:#ffe57a;text-shadow:0 3px 0 #b05a00}
+p{text-align:center;margin:0 0 6px;font-weight:700;color:#a8d8ff}
+#stage{display:block;margin:0 auto;max-width:100%;border-radius:18px}
+#ui{max-width:960px;margin:10px auto 30px;background:#fff8e8;border:4px solid #8a5a2b;border-radius:18px;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.r b{display:block;font-size:13px;margin-bottom:4px}.r button{border:2px solid #e2c99a;background:#fff;border-radius:10px;padding:4px 8px;margin:2px;font:800 12px Nunito;cursor:pointer}.r button.on{background:#f7c948;border-color:#b07800}
+.sw{width:22px;height:22px;border-radius:7px;padding:0!important;vertical-align:middle}
+</style></head><body>
+<h1>Ördekez Chibi — v2</h1>
+<p>Kodla çizildi · her parça ve renk değişebilir · alttan kendi karakterini dene</p>
+<canvas id="stage" width="960" height="600"></canvas>
+<div id="ui"></div>
+<script src="bk/chibi2.js"></script>
+<script>
+const K = Chibi2, C = K.COLORS;
+const S = [
+  { n: 'Gece Avcısı', ten: '#ffe0cc', sac: 'anime', sacR: '#241622', goz: '#ff3a5a', gozT: 'havali', agiz: 'sirit', ust: '#2a2a3a', ustT: 'kapusonlu', alt: '#1e2e5a', ayak: '#f4f4f4', sapka: 'kulaklik', sapkaR: '#ff4a5a', aks: 'yara', aura: 'yok' },
+  { n: 'Pembe Kedi', ten: '#fff0e4', sac: 'topuz', sacR: '#ff7ab8', goz: '#a65cff', gozT: 'yildiz', agiz: 'kedi', ust: '#ffb6d8', ustT: 'elbise', alt: '#ff6fae', ayak: '#ff6fae', sapka: 'kedi', sapkaR: '#ff7ab8', aks: 'yok', aura: 'kalp' },
+  { n: 'Balıkçı', ten: '#e8a878', sac: 'wolf', sacR: '#7a4428', goz: '#2ec27a', gozT: 'parlak', agiz: 'gulus', ust: '#4a90ff', ustT: 'yelek', alt: '#8a5a3a', ayak: '#4a2a22', sapka: 'kova', sapkaR: '#8ae06a', aks: 'yok', aura: 'yok' },
+  { n: 'Kel Erdi', ten: '#f8c9a4', sac: 'kel', sacR: '#241622', goz: '#6a3a20', gozT: 'havali', agiz: 'dil', ust: '#ff9a3a', ustT: 'tisort', alt: '#2a2a3a', ayak: '#ff4a5a', sapka: 'yok', sapkaR: '#000000', aks: 'gozluk', aura: 'parilti' },
+  { n: 'Prenses', ten: '#ffe0cc', sac: 'uzun', sacR: '#f2c14e', goz: '#2a8aff', gozT: 'parlak', agiz: 'ag', ust: '#7a5aff', ustT: 'ceket', alt: '#2a2a3a', ayak: '#2a2a3a', sapka: 'tac', sapkaR: '#ffd23f', aks: 'kolye', aura: 'yildiz' },
+  { n: 'Şeytan', ten: '#c98a5a', sac: 'kivircik', sacR: '#241622', goz: '#ffb020', gozT: 'kedi', agiz: 'dis', ust: '#ff4a5a', ustT: 'kazak', alt: '#2a2a3a', ayak: '#2a2a3a', sapka: 'boynuz', sapkaR: '#ff4a5a', aks: 'yok', aura: 'ates' },
+];
+const me = JSON.parse(JSON.stringify(S[0])); let myDir = 's', myAnim = 'walk';
+const st = document.getElementById('stage'), g = st.getContext('2d');
+function bg(t) {
+  const sky = g.createLinearGradient(0, 0, 0, 600); sky.addColorStop(0, '#8fd0ff'); sky.addColorStop(.42, '#c8ecff'); sky.addColorStop(.42, '#4ab8d8'); sky.addColorStop(1, '#1e6aa8');
+  g.fillStyle = sky; g.fillRect(0, 0, 960, 600);
+  g.fillStyle = 'rgba(255,255,255,.3)'; for (let i = 0; i < 24; i++) g.fillRect((i * 97 + t * 18) % 990 - 30, 270 + (i * 53) % 320, 26 + i % 3 * 10, 3);
+  g.fillStyle = '#a8703c'; g.fillRect(260, 450, 440, 150); g.fillStyle = '#8a5a2b'; for (let y = 450; y < 600; y += 16) g.fillRect(260, y, 440, 2);
+  g.fillStyle = '#6a4220'; g.fillRect(256, 444, 448, 8);
+}
+function frame() {
+  const t = performance.now() / 1000; bg(t);
+  const an = ['idle', 'walk', 'wave', 'cheer', 'idle', 'idle'], dr = ['s', 'e', 's', 's', 's', 'w'];
+  S.forEach((c, i) => { const x = 85 + i * 158; K.draw(g, c, x, 160, 1.45, { dir: dr[i], anim: an[i], t: t + i * .7 }); g.font = '900 14px Nunito'; g.textAlign = 'center'; g.fillStyle = 'rgba(0,0,0,.35)'; g.fillText(c.n, x + 1, 258); g.fillStyle = '#fff'; g.fillText(c.n, x, 257); });
+  ['s', 'e', 'n', 'w'].forEach((d, i) => K.draw(g, S[(i + 2) % 6], i < 2 ? 70 + i * 110 : 780 + (i - 2) * 110, 470, 1, { dir: d, anim: 'walk', t: t + i }));
+  K.draw(g, me, 480, 420, 2.5, { dir: myDir, anim: myAnim, t });
+  if (myAnim === 'fish') { const s = myDir === 'w' ? -1 : 1, hx = 480 + s * 62, hy = 420 + 40;
+    g.strokeStyle = '#3a2210'; g.lineWidth = 7; g.lineCap = 'round'; g.beginPath(); g.moveTo(hx - s * 10, hy + 10); g.quadraticCurveTo(hx + s * 60, hy - 80, hx + s * 140, hy - 150); g.stroke(); g.strokeStyle = '#d8a050'; g.lineWidth = 4; g.stroke();
+    g.fillStyle = '#c0c8d8'; g.beginPath(); g.arc(hx, hy, 8, 0, 7); g.fill(); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(hx + s * 140, hy - 150); g.quadraticCurveTo(hx + s * 230, hy - 40, hx + s * 250, hy + 70); g.stroke();
+    const by = hy + 70 + Math.sin(t * 3) * 3; g.fillStyle = '#ff3a3a'; g.beginPath(); g.arc(hx + s * 250, by, 9, Math.PI, 0); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.arc(hx + s * 250, by, 9, 0, Math.PI); g.fill(); }
+  requestAnimationFrame(frame);
+}
+frame();
+const ui = document.getElementById('ui');
+function row(lbl, opts, key, sw) { const d = document.createElement('div'); d.className = 'r'; d.innerHTML = `<b>${lbl}</b>`;
+  for (const [v, ad] of opts) { const b = document.createElement('button'); if (sw) { b.className = 'sw'; b.style.background = v; } else b.textContent = ad; if (key && me[key] === v) b.classList.add('on');
+    b.onclick = () => { if (key) { me[key] = v; d.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); } }; d.appendChild(b); } ui.appendChild(d); return d; }
+const E = o => Object.entries(o).map(([k, v]) => [k, v.ad || v]);
+{ const d = row('Yön / hareket', [], null); [['s', '⬇️ Ön'], ['e', '➡️ Sağ'], ['w', '⬅️ Sol'], ['n', '⬆️ Arka']].forEach(([v, a]) => { const b = document.createElement('button'); b.textContent = a; b.onclick = () => myDir = v; d.appendChild(b); });
+  [['idle', '🧍 Dur'], ['walk', '🚶 Yürü'], ['fish', '🎣 Olta'], ['wave', '👋 Selam'], ['cheer', '🙌 Sevin'], ['sit', '🪑 Otur']].forEach(([v, a]) => { const b = document.createElement('button'); b.textContent = a; b.onclick = () => myAnim = v; d.appendChild(b); }); }
+{ const d = row('Hazır karakterler', [], null); S.forEach(c => { const b = document.createElement('button'); b.textContent = c.n; b.onclick = () => { Object.assign(me, JSON.parse(JSON.stringify(c))); ui.innerHTML = ''; build(); }; d.appendChild(b); }); }
+function build() {
+  if (!ui.children.length) { const d = row('Yön / hareket', [], null); [['s', '⬇️ Ön'], ['e', '➡️ Sağ'], ['w', '⬅️ Sol'], ['n', '⬆️ Arka']].forEach(([v, a]) => { const b = document.createElement('button'); b.textContent = a; b.onclick = () => myDir = v; d.appendChild(b); });
+    [['idle', '🧍 Dur'], ['walk', '🚶 Yürü'], ['fish', '🎣 Olta'], ['wave', '👋 Selam'], ['cheer', '🙌 Sevin'], ['sit', '🪑 Otur']].forEach(([v, a]) => { const b = document.createElement('button'); b.textContent = a; b.onclick = () => myAnim = v; d.appendChild(b); });
+    const h = row('Hazır karakterler', [], null); S.forEach(c => { const b = document.createElement('button'); b.textContent = c.n; b.onclick = () => { Object.assign(me, JSON.parse(JSON.stringify(c))); ui.innerHTML = ''; build(); }; h.appendChild(b); }); }
+  row('Saç', E(K.HAIR), 'sac'); row('Saç rengi', C.sac.map(c => [c]), 'sacR', 1);
+  row('Göz', E(K.EYE), 'gozT'); row('Göz rengi', C.goz.map(c => [c]), 'goz', 1);
+  row('Ağız', E(K.MOUTH), 'agiz'); row('Ten', C.ten.map(c => [c]), 'ten', 1);
+  row('Üst', E(K.TOP), 'ustT'); row('Üst rengi', C.giysi.map(c => [c]), 'ust', 1);
+  row('Alt rengi', C.giysi.map(c => [c]), 'alt', 1); row('Ayakkabı', C.giysi.map(c => [c]), 'ayak', 1);
+  row('Şapka / kafa', E(K.HAT), 'sapka'); row('Şapka rengi', C.giysi.concat(C.sac).map(c => [c]), 'sapkaR', 1);
+  row('Aksesuar', E(K.ACC), 'aks'); row('Aura efekti', E(K.AURA), 'aura');
+}
+build();
+</script></body></html>
