@@ -29,6 +29,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 #copts{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;align-content:start;flex:1;overflow:auto;max-height:52vh;padding:2px}
 .oc{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);border-radius:12px;padding:5px 4px 6px;cursor:pointer;color:#cfd4f0;font:800 11.5px Nunito;display:flex;flex-direction:column;align-items:center;gap:3px}
 .oc canvas{width:78px;height:78px;border-radius:9px;background:radial-gradient(circle at 50% 60%,rgba(255,255,255,.12),transparent 70%)}
+.oc.ozel{border-color:#c81a2a;background:linear-gradient(160deg,rgba(120,10,24,.55),rgba(0,0,0,.35));color:#ff9a9a}.oc.ozel span::after{content:' · sana özel';display:block;font-size:10px;color:#ff6a6a}
 .oc.on{border-color:#e8c06a;box-shadow:0 0 0 1px #e8c06a,0 0 12px rgba(232,192,106,.4);color:#f4dfa8}
 #ccols{margin-top:10px;border-top:1px solid rgba(232,192,106,.25);padding-top:8px}
 .cr{margin-bottom:6px}.cr b{display:block;font-size:12px;color:#b8c0e8;margin-bottom:4px}
@@ -99,7 +100,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 <script src="guncel.js"></script>
 <script type="module">
 import * as THREE from './three-uzay.js';
-import { makeDuck, norm, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=8';
+import { makeDuck, norm, ozelMi, izinli, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=9';
 import { Reflector } from './gltf.js?v=9006';
 const $ = id => document.getElementById(id);
 const SB_URL = 'https://servvglgsudtjouqknvx.supabase.co', SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
@@ -485,6 +486,7 @@ function start(code) {
   updInfo(); showBig('ÖRDEKEZ LOBİSİ<br><small style="font:800 16px Nunito">Asansörler sağdaki koridorda →</small>');
   if (!TOUCH) renderer.domElement.requestPointerLock?.();
 }
+let HESAP = ''; const TOKEN = (() => { try { return localStorage.getItem('ordekez_token'); } catch (e) { return null; } })();
 let DUCK = norm((() => { try { return JSON.parse(localStorage.getItem('as_duck') || '{}'); } catch (e) { return {}; } })());
 const pv = (() => { const c = $('duckCv'); let r; try { r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true }); } catch (e) { return null; } r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.setPixelRatio(1); r.setSize(420, 380, false);
   const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#fff', '#b0a490', 1.4)); const dl = new THREE.DirectionalLight('#fff4e0', 2.2); dl.position.set(2, 4, -4); sc.add(dl);
@@ -501,7 +503,7 @@ function thumb(cv, cfg, view) { if (!pv) return; const d = makeDuck(THREE, cfg);
   d.root.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
 function tabs() { $('ctabs').innerHTML = ''; for (const T of TABS) { const b = document.createElement('button'); b.innerHTML = `<i>${T.ic}</i>${T.ad}`; b.classList.toggle('on', T === TAB); b.onclick = () => { TAB = T; tabs(); opts(); cols(); }; $('ctabs').appendChild(b); } }
 function opts() { const box = $('copts'); box.innerHTML = ''; if (!TAB.o) { box.style.display = 'none'; return; } box.style.display = '';
-  for (const [k, ad] of Object.entries(TAB.o)) { const b = document.createElement('button'); b.className = 'oc' + (DUCK[TAB.k] === k ? ' on' : ''); const c = document.createElement('canvas'); c.width = c.height = 156; b.appendChild(c); b.insertAdjacentHTML('beforeend', `<span>${ad}</span>`); b.onclick = () => { DUCK[TAB.k] = k; pvBuild(); box.querySelectorAll('.oc').forEach(x => x.classList.toggle('on', x === b)); }; box.appendChild(b);
+  for (const [k, ad] of Object.entries(TAB.o)) { const oz = ozelMi(TAB.k, k), kilit = oz && oz !== HESAP; if (kilit) continue; const b = document.createElement('button'); b.className = 'oc' + (DUCK[TAB.k] === k ? ' on' : '') + (oz ? ' ozel' : ''); const c = document.createElement('canvas'); c.width = c.height = 156; b.appendChild(c); b.insertAdjacentHTML('beforeend', `<span>${ad}</span>`); b.onclick = () => { DUCK[TAB.k] = k; pvBuild(); box.querySelectorAll('.oc').forEach(x => x.classList.toggle('on', x === b)); }; box.appendChild(b);
     const cfg = Object.assign({}, DUCK, { [TAB.k]: k }); setTimeout(() => thumb(c, cfg, TAB.v), 0); } }
 function cols() { const box = $('ccols'); box.innerHTML = ''; const list = TAB.cols || []; box.style.display = list.length ? '' : 'none';
   for (const key of list) { const [lbl, arr] = PCOL[key] || ['Renk', SUSLER]; const r = document.createElement('div'); r.className = 'cr'; r.innerHTML = `<b>${lbl}</b>`; const sw = document.createElement('div'); sw.className = 'sws';
@@ -510,9 +512,10 @@ function cols() { const box = $('ccols'); box.innerHTML = ''; const list = TAB.c
 const spinUI = () => { if (pv) $('bSpin').textContent = pv.spin ? '⏸ Dönme' : '▶ Döndür'; }; $('bSpin').onclick = () => { if (!pv) return; pv.spin = !pv.spin; try { localStorage.setItem('as_spin', pv.spin ? '1' : '0'); } catch (e) {} spinUI(); }; spinUI();
 document.querySelectorAll('[data-pa]').forEach(b => b.onclick = () => { if (pv) pv.anim = b.dataset.pa; });
 const pick = a => a[Math.floor(Math.random() * a.length)];
-$('bRnd').onclick = () => { DUCK.renk = pick(RENKLER); DUCK.gaga = pick(GAGA.slice(0, 4)); DUCK.gobek = null; DUCK.goz = pick(Object.keys(GOZ)); for (const k in KATEGORI) { const ks = Object.keys(KATEGORI[k].o); DUCK[k] = Math.random() < (k === 'sapka' ? .85 : .45) ? pick(ks.slice(1)) : 'yok'; DUCK[k + 'R'] = pick(SUSLER); } pvBuild(); opts(); cols(); if (pv) { pv.anim = 'sevin'; setTimeout(() => pv.anim = 'idle', 1300); } };
+$('bRnd').onclick = () => { const keep = DUCK; DUCK.renk = pick(RENKLER); DUCK.gaga = pick(GAGA.slice(0, 4)); DUCK.gobek = null; DUCK.goz = pick(Object.keys(GOZ)); for (const k in KATEGORI) { const ks = Object.keys(KATEGORI[k].o); DUCK[k] = Math.random() < (k === 'sapka' ? .85 : .45) ? pick(ks.slice(1)) : 'yok'; DUCK[k + 'R'] = pick(SUSLER); } DUCK = Object.assign(DUCK, izinli(DUCK, HESAP)); for (const kat of ['goz','sapka','sirt','el']) if (ozelMi(kat, DUCK[kat]) && Math.random() < .6) DUCK[kat] = kat === 'goz' ? 'normal' : 'yok'; pvBuild(); opts(); cols(); if (pv) { pv.anim = 'sevin'; setTimeout(() => pv.anim = 'idle', 1300); } };
 if (pv) { const c = $('duckCv'); c.addEventListener('pointerdown', e => pv.drag = e.clientX); addEventListener('pointerup', () => pv.drag = null); addEventListener('pointermove', e => { if (pv.drag == null) return; pv.yaw += (e.clientX - pv.drag) * .012; pv.drag = e.clientX; }); }
-pvBuild(); tabs(); opts(); cols(); pvLoop();
+DUCK = izinli(DUCK, HESAP); pvBuild(); tabs(); opts(); cols(); pvLoop();
+if (TOKEN) fetch(SB_URL + '/rest/v1/rpc/ben', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: TOKEN }) }).then(r => r.ok ? r.json() : null).then(res => { if (!res || !res.kullanici_adi) return; HESAP = String(res.kullanici_adi).toLowerCase(); if (!$('nameIn').value) $('nameIn').value = res.kullanici_adi; opts(); if (HESAP === 'noxvire') $('msgM').innerHTML = '<span style="color:#ff6a6a">😈 Hoş geldin Noxvire — sana özel parçalar açıldı!</span>'; }).catch(() => {});
 // ayarlar
 function setUI() { $('sSens').value = SET.sens; $('sFov').value = SET.fov; $('sVol').value = SET.vol; document.querySelectorAll('#sGfx button').forEach(b => b.classList.toggle('on', +b.dataset.q === SET.gfx)); document.querySelectorAll('#sMir button').forEach(b => b.classList.toggle('on', +b.dataset.m === SET.mir)); }
 $('sSens').oninput = e => { SET.sens = +e.target.value; saveSet(); }; $('sFov').oninput = e => { SET.fov = +e.target.value; camera.fov = SET.fov; camera.updateProjectionMatrix(); saveSet(); }; $('sVol').oninput = e => { SET.vol = +e.target.value; saveSet(); };

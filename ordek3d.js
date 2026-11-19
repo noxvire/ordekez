@@ -4,14 +4,18 @@ export const RENKLER = ['#ffd23f', '#f6f4ee', '#ffa8c8', '#8ac8ff', '#9ad87a', '
 export const SUSLER = ['#2c3c8c', '#d83a4a', '#ff6aa8', '#ff7a3a', '#ffd23f', '#3ab07a', '#4ab0ff', '#7a5aff', '#2a2a3a', '#f4f4f4', '#e8c06a', '#8a5a3a'];
 export const GAGA = ['#ff9a2a', '#ffc83a', '#ff7a6a', '#ffa8c8', '#3a3a44', '#e8e4dc'];
 export const KATEGORI = {
-  sapka: { ad: 'Şapka', ic: '🎩', o: { yok: 'Yok', ordek: 'Ördek Şapka', kedi: 'Kedi Şapka', kurbaga: 'Kurbağa Şapka', kep: 'Kep', bere: 'Bere', tac: 'Taç', silindir: 'Silindir', kovboy: 'Kovboy', parti: 'Parti', sihirbaz: 'Büyücü', sef: 'Şef', korsan: 'Korsan', viking: 'Viking', tavsan: 'Tavşan Kulağı', bandana: 'Bandana', yaprak: 'Yaprak', cicek: 'Çiçek' } },
+  sapka: { ad: 'Şapka', ic: '🎩', o: { yok: 'Yok', ordek: 'Ördek Şapka', kedi: 'Kedi Şapka', kurbaga: 'Kurbağa Şapka', kep: 'Kep', bere: 'Bere', tac: 'Taç', silindir: 'Silindir', kovboy: 'Kovboy', parti: 'Parti', sihirbaz: 'Büyücü', sef: 'Şef', korsan: 'Korsan', viking: 'Viking', tavsan: 'Tavşan Kulağı', bandana: 'Bandana', yaprak: 'Yaprak', cicek: 'Çiçek', seytan: '😈 Şeytan Boynuzu' } },
   yuz: { ad: 'Gözlük', ic: '🕶️', o: { yok: 'Yok', gozluk: 'Yuvarlak', gunes: 'Güneş', kalp: 'Kalp', yildiz: 'Yıldız', monokl: 'Monokl', maske: 'Kahraman Maskesi', kayak: 'Kayak Gözlüğü' } },
   kulak: { ad: 'Kulak', ic: '🎧', o: { yok: 'Yok', kulaklik: 'Kulaklık', kulakmuf: 'Peluş Kulaklık', kupe: 'Halka Küpe', tasli: 'Taşlı Küpe' } },
   boyun: { ad: 'Boyun', ic: '🎀', o: { yok: 'Yok', papyon: 'Papyon', kravat: 'Kravat', atki: 'Atkı', kolye: 'Kolye', madalya: 'Madalya', fular: 'Fular', yaka: 'Gömlek Yakası' } },
-  sirt: { ad: 'Sırt', ic: '🪽', o: { yok: 'Yok', melek: 'Melek Kanadı', seytan: 'Şeytan Kanadı', canta: 'Sırt Çantası', jetpack: 'Jetpack', pelerin: 'Pelerin', kabuk: 'Kaplumbağa Kabuğu' } },
-  el: { ad: 'Elinde', ic: '🎈', o: { yok: 'Yok', balon: 'Balon', cicek: 'Çiçek', kilic: 'Kılıç', dondurma: 'Dondurma', kahve: 'Kahve', bayrak: 'Bayrak' } },
+  sirt: { ad: 'Sırt', ic: '🪽', o: { yok: 'Yok', melek: 'Melek Kanadı', seytan: 'Şeytan Kanadı', canta: 'Sırt Çantası', jetpack: 'Jetpack', pelerin: 'Pelerin', kabuk: 'Kaplumbağa Kabuğu', seytanx: '😈 İblis Kanatları' } },
+  el: { ad: 'Elinde', ic: '🎈', o: { yok: 'Yok', balon: 'Balon', cicek: 'Çiçek', kilic: 'Kılıç', dondurma: 'Dondurma', kahve: 'Kahve', bayrak: 'Bayrak', tirpan: '😈 Şeytan Tırpanı' } },
 };
-export const GOZ = { normal: 'Normal', buyuk: 'Kocaman', mutlu: 'Mutlu ^^', uykulu: 'Uykulu', kizgin: 'Kızgın', yildiz: 'Yıldız', kalp: 'Kalp' };
+// hesaba özel parçalar: { kategori: { anahtar: hesap } }
+export const OZEL = { goz: { seytan: 'noxvire' }, sapka: { seytan: 'noxvire' }, sirt: { seytanx: 'noxvire' }, el: { tirpan: 'noxvire' } };
+export const ozelMi = (kat, k) => (OZEL[kat] && OZEL[kat][k]) || null;
+export function izinli(cfg, hesap) { const h = (hesap || '').toLowerCase(), o = Object.assign({}, cfg); for (const kat in OZEL) if (OZEL[kat][o[kat]] && OZEL[kat][o[kat]] !== h) o[kat] = kat === 'goz' ? 'normal' : 'yok'; return o; }
+export const GOZ = { normal: 'Normal', buyuk: 'Kocaman', mutlu: 'Mutlu ^^', uykulu: 'Uykulu', kizgin: 'Kızgın', yildiz: 'Yıldız', kalp: 'Kalp', seytan: '😈 Şeytan Gözü' };
 export const DEF = { renk: '#ffd23f', gobek: null, gaga: '#ff9a2a', goz: 'normal', yanak: true, sapka: 'yok', sapkaR: '#2c3c8c', yuz: 'yok', yuzR: '#2a2a3a', kulak: 'yok', kulakR: '#d83a4a', boyun: 'yok', boyunR: '#d83a4a', sirt: 'yok', sirtR: '#f4f4f4', el: 'yok', elR: '#ff6aa8' };
 export function norm(c = {}) { const o = Object.assign({}, DEF, c); if (c.aks && !c.boyun && !c.yuz && !c.kulak) { if (['papyon', 'kravat', 'atki'].includes(c.aks)) o.boyun = c.aks; if (c.aks === 'gozluk') o.yuz = 'gozluk'; if (c.aks === 'kulaklik') o.kulak = 'kulaklik'; if (c.aksR) o.sapkaR = o.boyunR = o.kulakR = c.aksR; } for (const k in KATEGORI) if (!KATEGORI[k].o[o[k]]) o[k] = 'yok'; if (!GOZ[o.goz]) o.goz = 'normal'; return o; }
 
@@ -36,6 +40,11 @@ export function makeDuck(THREE, cfg = {}) {
   const eyes = [];
   for (const s of [-1, 1]) { const e = new THREE.Group(); e.position.set(s * .17, .05, -.33); e.rotation.y = s * -.3; head.add(e); eyes.push(e); const g = C.goz;
     if (g === 'mutlu') mesh(new THREE.TorusGeometry(.06, .018, 8, 16, Math.PI), M.eye, [0, -.02, -.02], [0, 0, 0], [1, 1, 1], e);
+    else if (g === 'seytan') { const sh = new THREE.Shape(); sh.moveTo(-.1, .03); sh.quadraticCurveTo(-.02, .1, .1, .06); sh.quadraticCurveTo(.06, -.07, -.02, -.07); sh.quadraticCurveTo(-.09, -.05, -.1, .03);
+      const eg = new THREE.Group(); eg.scale.x = s; e.add(eg); mesh(new THREE.ExtrudeGeometry(sh, { depth: .02, bevelEnabled: false }), toon('#120a0e', { roughness: .2 }), [0, 0, -.02], [0, Math.PI, 0], [1, 1, 1], eg);
+      const ir = mesh(S(.042, 14, 10), toon('#ff2a1a', { emissive: '#ff1a0a', emissiveIntensity: 1.6 }), [0, -.005, -.04], [0, 0, 0], [1, 1.1, .4], eg); ir.userData.glow = 1;
+      mesh(new THREE.BoxGeometry(.012, .055, .01), toon('#000'), [0, -.005, -.055], [0, 0, 0], [1, 1, 1], eg); mesh(S(.012, 8, 6), M.white, [-.012, .018, -.058], [0, 0, 0], [1, 1, 1], eg);
+      mesh(new THREE.BoxGeometry(.17, .03, .03), toon('#120a0e'), [.01, .1, -.03], [0, 0, -.42], [1, 1, 1], eg); }
     else if (g === 'kalp' || g === 'yildiz') { const sh = new THREE.Shape(); if (g === 'kalp') { sh.moveTo(0, -.07); sh.bezierCurveTo(-.11, 0, -.06, .08, 0, .03); sh.bezierCurveTo(.06, .08, .11, 0, 0, -.07); } else { for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .035 : .085; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } }
       mesh(new THREE.ExtrudeGeometry(sh, { depth: .02, bevelEnabled: false }), toon(g === 'kalp' ? '#ff3a6a' : '#ffc83a', { emissive: g === 'kalp' ? '#ff3a6a' : '#ffc83a', emissiveIntensity: .25 }), [0, 0, -.03], [0, Math.PI, 0], [1, 1, 1], e); }
     else { const big = g === 'buyuk' ? 1.3 : 1; mesh(S(.085, 16, 12), M.eye, [0, 0, 0], [0, 0, 0], [.9 * big, 1.15 * big, .5], e); mesh(S(.03 * big, 10, 8), M.white, [-.025 * big, .04 * big, -.035], [0, 0, 0], [1, 1, 1], e); mesh(S(.014 * big, 8, 6), M.white, [.03 * big, -.03 * big, -.035], [0, 0, 0], [1, 1, 1], e);
@@ -74,6 +83,10 @@ export function makeDuck(THREE, cfg = {}) {
   if (k === 'tavsan') { mesh(new THREE.TorusGeometry(.41, .03, 8, 32, Math.PI), H, [0, .03, 0], [0, 0, 0], [1, 1, 1], hat); for (const s of [-1, 1]) { const e = new THREE.Group(); e.position.set(s * .15, .34, .02); e.rotation.set(.18, 0, s * -.22); hat.add(e); mesh(S(.09, 14, 10), H, [0, .24, 0], [0, 0, 0], [.75, 2.7, .42], e); mesh(S(.06, 12, 8), toon('#ffb0c8'), [0, .24, -.03], [0, 0, 0], [.6, 2.35, .25], e); } }
   if (k === 'bandana') { mesh(new THREE.SphereGeometry(.415, 28, 10, 0, Math.PI * 2, 0, Math.PI * .34), H, [0, .02, 0], [0, 0, 0], [1, 1, 1], hat); mesh(new THREE.TorusGeometry(.37, .04, 8, 32), H, [0, .2, 0], [Math.PI / 2, 0, 0], [1, 1, 1], hat); for (const s of [-1, 1]) mesh(new THREE.ConeGeometry(.06, .2, 4), H, [s * .06, .1, .42], [Math.PI / 2 + .6, 0, s * .5], [1, 1, .4], hat); for (let i = 0; i < 8; i++) mesh(S(.016), M.white, [Math.cos(i * .8) * .25, .33, Math.sin(i * .8) * .25], [0, 0, 0], [1, 1, 1], hat); }
   if (k === 'yaprak') { mesh(S(.1, 12, 8), toon('#5ac85a'), [.08, .48, 0], [.3, .5, .5], [.5, .15, 1.2], hat); }
+  if (k === 'seytan') { const hm = toon('#2a0a10', { roughness: .25, metalness: .3 }), tip = toon('#c81a2a', { roughness: .3, emissive: '#7a0a10', emissiveIntensity: .6 });
+    for (const s of [-1, 1]) { const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(s * .2, .3, -.05), new THREE.Vector3(s * .42, .5, -.02), new THREE.Vector3(s * .3, .78, .12)); const N = 14;
+      for (let i = 0; i < N; i++) { const a = curve.getPoint(i / N), b = curve.getPoint((i + 1) / N), r0 = .085 * (1 - i / N) + .006, r1 = .085 * (1 - (i + 1) / N) + .006; const seg = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, a.distanceTo(b) * 1.05, 12), i > N - 4 ? tip : hm); seg.position.copy(a).add(b).multiplyScalar(.5); seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); hat.add(seg);
+        if (i % 3 === 1 && i < N - 4) { const rg = new THREE.Mesh(new THREE.TorusGeometry(r0 * .95, .008, 6, 16), toon('#4a1018')); rg.position.copy(seg.position); rg.quaternion.copy(seg.quaternion); rg.rotateX(Math.PI / 2); hat.add(rg); } } } }
   if (k === 'cicek') { const c = new THREE.Group(); c.position.set(.2, .33, -.12); c.rotation.set(-.4, 0, -.5); hat.add(c); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(S(.06, 10, 8), H, [Math.cos(a) * .07, 0, Math.sin(a) * .07], [0, 0, 0], [1, .45, 1], c); } mesh(S(.045), toon('#ffd23f'), [0, .02, 0], [0, 0, 0], [1, .6, 1], c); }
 
   // ===== GÖZLÜK =====
@@ -113,18 +126,35 @@ export function makeDuck(THREE, cfg = {}) {
   if (k5 === 'canta') { mesh(new THREE.BoxGeometry(.42, .44, .22), R, [0, .55, .42], [0, 0, 0], [1, 1, 1], back); mesh(new THREE.BoxGeometry(.3, .16, .06), toon(darken(C.sirtR, .15)), [0, .45, .55], [0, 0, 0], [1, 1, 1], back); }
   if (k5 === 'jetpack') { for (const s of [-1, 1]) { mesh(new THREE.CylinderGeometry(.1, .1, .42, 16), toon('#c8ccd6', { metalness: .7, roughness: .3 }), [s * .12, .58, .46], [0, 0, 0], [1, 1, 1], back); mesh(new THREE.ConeGeometry(.1, .12, 16), R, [s * .12, .85, .46], [0, 0, 0], [1, 1, 1], back); const fl = mesh(new THREE.ConeGeometry(.07, .22, 12), toon('#ffb02a', { emissive: '#ff6a1a', emissiveIntensity: 1.2, transparent: true, opacity: .85 }), [s * .12, .25, .46], [Math.PI, 0, 0], [1, 1, 1], back); fl.userData.flame = 1; } mesh(new THREE.BoxGeometry(.18, .3, .1), R, [0, .6, .42], [0, 0, 0], [1, 1, 1], back); }
   if (k5 === 'pelerin') { const m = mesh(new THREE.CylinderGeometry(.3, .55, .9, 24, 4, true, -Math.PI * .45, Math.PI * .9), R, [0, .42, .06], [0, 0, 0], [1, 1, 1], back); m.userData.cape = 1; mesh(new THREE.TorusGeometry(.3, .025, 6, 24, Math.PI), M.gold, [0, .84, 0], [Math.PI / 2, 0, Math.PI], [1, 1, 1], back); }
+  if (k5 === 'seytanx') { const wm = toon('#1a0a12', { roughness: .4, side: THREE.DoubleSide }), mem = toon('#5a0a18', { roughness: .5, side: THREE.DoubleSide, emissive: '#3a0008', emissiveIntensity: .5 }), bone = toon('#2a0a10', { roughness: .3 });
+    for (const s of [-1, 1]) { const w = new THREE.Group(); w.position.set(s * .14, .72, .34); back.add(w); bw.push(w); const g = new THREE.Group(); g.scale.set(s * 1.5, 1.5, 1.5); w.add(g);
+      const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(.18, .32); sh.lineTo(.42, .44); sh.lineTo(.62, .34); sh.quadraticCurveTo(.52, .22, .58, .06); sh.quadraticCurveTo(.45, .12, .4, -.04); sh.quadraticCurveTo(.3, .04, .24, -.12); sh.quadraticCurveTo(.15, -.02, .06, -.1); sh.closePath();
+      mesh(new THREE.ExtrudeGeometry(sh, { depth: .012, bevelEnabled: false }), mem, [0, 0, 0], [0, 0, 0], [1, 1, 1], g);
+      for (const [x, y] of [[.18, .32], [.42, .44], [.62, .34], [.58, .06], [.4, -.04], [.24, -.12]]) { const L = Math.hypot(x, y); const b = mesh(new THREE.CylinderGeometry(.008, .016, L, 6), bone, [x / 2, y / 2, .006], [0, 0, -Math.atan2(x, y)], [1, 1, 1], g); }
+      mesh(new THREE.ConeGeometry(.025, .09, 6), toon('#c81a2a', { emissive: '#7a0a10', emissiveIntensity: .8 }), [.44, .5, .006], [0, 0, -.3], [1, 1, 1], g); } }
   if (k5 === 'kabuk') { mesh(new THREE.SphereGeometry(.4, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), R, [0, .5, .3], [Math.PI / 2, 0, 0], [1, 1, .6], back); for (let i = 0; i < 7; i++) { const a = i / 6 * Math.PI * 2, rr = i === 6 ? 0 : .2; mesh(new THREE.CylinderGeometry(.08, .08, .02, 6), toon(darken(C.sirtR, .25)), [Math.cos(a) * rr, .5 + Math.sin(a) * rr, .53 + (i === 6 ? .02 : 0)], [Math.PI / 2, 0, 0], [1, 1, 1], back); } }
 
   // ===== EL =====
-  const E = toon(C.elR), k6 = C.el, hand = new THREE.Group(); hand.position.set(.04, -.32, -.08); hand.rotation.z = -.55; wings[1].add(hand); if (C.el !== 'balon' && C.el !== 'bayrak') hand.scale.setScalar(1.6);
+  const E = toon(C.elR), k6 = C.el, hand = new THREE.Group(); hand.position.set(.04, -.32, -.08); hand.rotation.z = -.55; wings[1].add(hand); if (!['balon', 'bayrak', 'tirpan'].includes(C.el)) hand.scale.setScalar(1.6);
   if (k6 === 'balon') { mesh(new THREE.CylinderGeometry(.006, .006, 1.05), toon('#ffffff'), [.12, .5, 0], [0, 0, -.23], [1, 1, 1], hand); mesh(S(.22, 20, 16), toon(C.elR, { roughness: .15 }), [.25, 1.25, 0], [0, 0, 0], [1, 1.15, 1], hand); }
   if (k6 === 'cicek') { mesh(new THREE.CylinderGeometry(.01, .01, .3), toon('#4a9a3a'), [0, .1, -.05], [-.3, 0, 0], [1, 1, 1], hand); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(S(.05, 10, 8), E, [Math.cos(a) * .06, .27, -.1 + Math.sin(a) * .06], [0, 0, 0], [1, 1, 1], hand); } mesh(S(.04), toon('#ffd23f'), [0, .27, -.1], [0, 0, 0], [1, 1, 1], hand); }
   if (k6 === 'kilic') { const g = new THREE.Group(); g.rotation.x = -.6; hand.add(g); mesh(new THREE.BoxGeometry(.04, .55, .015), toon('#e8ecf4', { metalness: .8, roughness: .2 }), [0, .35, 0], [0, 0, 0], [1, 1, 1], g); mesh(new THREE.BoxGeometry(.16, .03, .04), M.gold, [0, .07, 0], [0, 0, 0], [1, 1, 1], g); mesh(new THREE.CylinderGeometry(.02, .02, .12), E, [0, 0, 0], [0, 0, 0], [1, 1, 1], g); }
   if (k6 === 'dondurma') { mesh(new THREE.ConeGeometry(.06, .18, 12), toon('#d8a060'), [0, .02, -.05], [Math.PI, 0, 0], [1, 1, 1], hand); mesh(S(.07), E, [0, .14, -.05], [0, 0, 0], [1, 1, 1], hand); mesh(S(.02), toon('#ff3a4a'), [0, .22, -.05], [0, 0, 0], [1, 1, 1], hand); }
   if (k6 === 'kahve') { mesh(new THREE.CylinderGeometry(.07, .055, .17, 16), toon('#fafafa'), [0, .04, -.06], [0, 0, 0], [1, 1, 1], hand); mesh(new THREE.CylinderGeometry(.072, .072, .07, 16), E, [0, .03, -.06], [0, 0, 0], [1, 1, 1], hand); mesh(new THREE.CylinderGeometry(.074, .074, .02, 16), toon('#4a3020'), [0, .13, -.06], [0, 0, 0], [1, 1, 1], hand); }
+  if (k6 === 'tirpan') { const sc = new THREE.Group(); sc.position.set(0, .1, 0); sc.rotation.set(-.15, 0, .12); hand.add(sc); hand.scale.setScalar(1);
+    mesh(new THREE.CylinderGeometry(.022, .026, 1.7, 10), toon('#1a0e12', { roughness: .35 }), [0, .35, 0], [0, 0, 0], [1, 1, 1], sc);
+    for (const y of [-.4, .1, .6]) mesh(new THREE.TorusGeometry(.027, .008, 6, 14), toon('#c81a2a', { emissive: '#8a0a10', emissiveIntensity: .7 }), [0, y, 0], [Math.PI / 2, 0, 0], [1, 1, 1], sc);
+    mesh(new THREE.ConeGeometry(.03, .1, 8), toon('#2a0a10'), [0, -.55, 0], [Math.PI, 0, 0], [1, 1, 1], sc);
+    const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.quadraticCurveTo(-.3, .22, -.78, .05); sh.quadraticCurveTo(-.36, .08, -.02, -.1); sh.closePath();
+    const bl = new THREE.Group(); bl.position.set(0, 1.15, 0); bl.rotation.y = Math.PI / 2; bl.scale.setScalar(1.5); sc.add(bl);
+    mesh(new THREE.ExtrudeGeometry(sh, { depth: .012, bevelEnabled: true, bevelThickness: .006, bevelSize: .006, bevelSegments: 1 }), toon('#c8ccd6', { metalness: .85, roughness: .2 }), [0, 0, -.006], [0, 0, 0], [1, 1, 1], bl);
+    const ed = new THREE.Shape(); ed.moveTo(-.02, -.1); ed.quadraticCurveTo(-.36, .08, -.78, .05); ed.quadraticCurveTo(-.38, .02, -.04, -.13); ed.closePath();
+    const edm = mesh(new THREE.ExtrudeGeometry(ed, { depth: .016, bevelEnabled: false }), toon('#ff2a1a', { emissive: '#ff1a0a', emissiveIntensity: 1.4 }), [0, 0, -.008], [0, 0, 0], [1, 1, 1], bl); edm.userData.glow = 1;
+    mesh(new THREE.BoxGeometry(.07, .09, .07), toon('#2a0a10', { metalness: .4, roughness: .3 }), [0, 1.13, 0], [0, 0, 0], [1, 1, 1], sc);
+    mesh(new THREE.OctahedronGeometry(.035), toon('#ff2a1a', { emissive: '#ff1a0a', emissiveIntensity: 1.5 }), [0, 1.13, -.045], [0, 0, 0], [1, 1, 1], sc); }
   if (k6 === 'bayrak') { mesh(new THREE.CylinderGeometry(.015, .015, 1), toon('#8a6a4a'), [0, .4, 0], [0, 0, 0], [1, 1, 1], hand); mesh(S(.03), M.gold, [0, .91, 0], [0, 0, 0], [1, 1, 1], hand); const f = mesh(new THREE.PlaneGeometry(.42, .27, 8, 1), toon(C.elR, { side: THREE.DoubleSide }), [.21, .75, 0], [0, 0, 0], [1, 1, 1], hand); f.userData.flag = 1; }
 
-  const flames = [], capes = [], flags = []; root.traverse(o => { if (o.userData.flame) flames.push(o); if (o.userData.cape) capes.push(o); if (o.userData.flag) flags.push(o); });
+  const flames = [], capes = [], flags = [], glows = []; root.traverse(o => { if (o.userData.glow) glows.push(o); if (o.userData.flame) flames.push(o); if (o.userData.cape) capes.push(o); if (o.userData.flag) flags.push(o); });
   let t = Math.random() * 10, blink = 2, wave = 0;
   function update(dt, st = {}) {
     t += dt; const sp = st.hiz || 0, run = st.kosu ? 1 : 0, ph = t * (9 + run * 4);
@@ -138,6 +168,7 @@ export function makeDuck(THREE, cfg = {}) {
     tail.rotation.z = Math.sin(t * (sp > .05 ? 14 : 4)) * .3;
     lo.position.y = st.konus ? -.06 - Math.abs(Math.sin(t * 20)) * .04 : -.06;
     bw.forEach((w, i) => w.rotation.y = (i ? -1 : 1) * (.3 + Math.sin(t * (sp > .05 ? 10 : 3)) * .25));
+    glows.forEach(g => g.material.emissiveIntensity = 1.2 + Math.sin(t * 4) * .5);
     flames.forEach(f => f.scale.set(1, .7 + Math.random() * .6 + sp * .4, 1));
     capes.forEach(c => c.rotation.x = .1 + sp * .35 + Math.sin(t * 5) * .04);
     flags.forEach(f => { const p = f.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i); p.setZ(i, Math.sin(t * 8 + x * 15) * .04 * (x + .21)); } p.needsUpdate = true; });
