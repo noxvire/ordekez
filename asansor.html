@@ -68,7 +68,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
  <div class="box mleft">
   <div class="star">✦</div><div class="logo">ÖRDEKEZ<small>ASANSÖR · 100 KAT</small></div>
   <canvas id="duckCv" width="420" height="380"></canvas>
-  <div class="anrow"><button class="ch" data-pa="idle">🧍</button><button class="ch" data-pa="selam">👋</button><button class="ch" data-pa="walk">🚶</button><button class="ch" data-pa="sevin">🙌</button><button class="ch" id="bRnd">🎲 Rastgele</button></div>
+  <div class="anrow"><button class="ch" data-pa="idle">🧍</button><button class="ch" data-pa="selam">👋</button><button class="ch" data-pa="walk">🚶</button><button class="ch" data-pa="sevin">🙌</button><button class="ch" id="bSpin">⏸ Dönme</button><button class="ch" id="bRnd">🎲 Rastgele</button></div>
   <input id="nameIn" maxlength="16" placeholder="Adın">
   <button class="btn" id="bKur">🏢 Oda Kur</button>
   <div class="row"><input id="codeIn" maxlength="4" placeholder="KOD"><button class="btn alt" id="bKatil">Katıl</button></div>
@@ -98,7 +98,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 <script src="guncel.js"></script>
 <script type="module">
 import * as THREE from './three-uzay.js';
-import { makeDuck, norm, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=9006';
+import { makeDuck, norm, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=2';
 import { Reflector } from './gltf.js?v=9006';
 const $ = id => document.getElementById(id);
 const SB_URL = 'https://servvglgsudtjouqknvx.supabase.co', SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
@@ -486,13 +486,13 @@ function start(code) {
 let DUCK = norm((() => { try { return JSON.parse(localStorage.getItem('as_duck') || '{}'); } catch (e) { return {}; } })());
 const pv = (() => { const c = $('duckCv'); let r; try { r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true }); } catch (e) { return null; } r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.setPixelRatio(1); r.setSize(420, 380, false);
   const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#fff', '#b0a490', 1.4)); const dl = new THREE.DirectionalLight('#fff4e0', 2.2); dl.position.set(2, 4, -4); sc.add(dl);
-  const cm = new THREE.PerspectiveCamera(30, 420 / 380, .1, 20); cm.position.set(0, 1.0, -3.9); cm.lookAt(0, .78, 0); return { d: null, sc, r, cm, yaw: .35, t: 0, anim: 'idle', drag: null }; })();
+  const cm = new THREE.PerspectiveCamera(30, 420 / 380, .1, 20); cm.position.set(0, 1.0, -3.9); cm.lookAt(0, .78, 0); return { spin: localStorage.getItem('as_spin') !== '0', d: null, sc, r, cm, yaw: .35, t: 0, anim: 'idle', drag: null }; })();
 const PCOL = { renk: ['Vücut rengi', RENKLER], gaga: ['Gaga ve ayak', GAGA], gobek: ['Göbek rengi', [null].concat(RENKLER)] };
 const TABS = [{ k: 'renk', ad: 'Vücut', ic: '🐥', cols: ['renk', 'gaga', 'gobek'] }, { k: 'goz', ad: 'Gözler', ic: '👀', o: GOZ, v: 'yuz' }]
   .concat(Object.entries(KATEGORI).map(([k, v]) => ({ k, ad: v.ad, ic: v.ic, o: v.o, cols: [k + 'R'], v: { sapka: 'kafa', yuz: 'yuz', kulak: 'kafa', boyun: 'govde', sirt: 'arka', el: 'tam' }[k] })));
 let TAB = TABS[0];
 function pvBuild() { if (!pv) return; if (pv.d) pv.sc.remove(pv.d.root); pv.d = makeDuck(THREE, DUCK); pv.d.root.rotation.y = pv.yaw; pv.sc.add(pv.d.root); try { localStorage.setItem('as_duck', JSON.stringify(DUCK)); } catch (e) {} }
-function pvLoop() { if (!pv || playing) return; pv.t += .016; if (!pv.drag) pv.yaw += .004; pv.d.root.rotation.y = pv.yaw; pv.d.update(.016, { hiz: pv.anim === 'walk' ? 1 : 0, selam: pv.anim === 'selam', sevin: pv.anim === 'sevin' }); pv.cm.position.set(0, 1.0, -3.9); pv.cm.lookAt(0, .78, 0); pv.r.render(pv.sc, pv.cm); requestAnimationFrame(pvLoop); }
+function pvLoop() { if (!pv || playing) return; pv.t += .016; if (!pv.drag && pv.spin) pv.yaw += .004; pv.d.root.rotation.y = pv.yaw; pv.d.update(.016, { hiz: pv.anim === 'walk' ? 1 : 0, selam: pv.anim === 'selam', sevin: pv.anim === 'sevin' }); pv.cm.position.set(0, 1.0, -3.9); pv.cm.lookAt(0, .78, 0); pv.r.render(pv.sc, pv.cm); requestAnimationFrame(pvLoop); }
 // küçük resim
 const TV = { kafa: [0, 1.25, -1.9, 1.2, 0], yuz: [0, 1.1, -1.4, 1.1, 0], govde: [0, .75, -2, .7, 0], arka: [0, .9, -2.7, .7, 0], tam: [.3, .9, -3.2, .75, 0] };
 function thumb(cv, cfg, view) { if (!pv) return; const d = makeDuck(THREE, cfg); if (view === 'arka') d.root.rotation.y = Math.PI * .85; else d.root.rotation.y = .3; d.update(.01, {}); pv.sc.remove(pv.d.root); pv.sc.add(d.root); const [x, y, z, ly] = TV[view] || TV.tam; const c = new THREE.PerspectiveCamera(30, 1, .1, 20); c.position.set(x, y, z); c.lookAt(0, ly, 0); pv.r.setSize(160, 160, false); pv.r.render(pv.sc, c); cv.getContext('2d').drawImage(pv.r.domElement, 0, 0, 160, 160, 0, 0, cv.width, cv.height); pv.sc.remove(d.root); pv.sc.add(pv.d.root); pv.r.setSize(420, 380, false);
@@ -505,6 +505,7 @@ function cols() { const box = $('ccols'); box.innerHTML = ''; const list = TAB.c
   for (const key of list) { const [lbl, arr] = PCOL[key] || ['Renk', SUSLER]; const r = document.createElement('div'); r.className = 'cr'; r.innerHTML = `<b>${lbl}</b>`; const sw = document.createElement('div'); sw.className = 'sws';
     for (const c of arr) { const b = document.createElement('button'); b.className = 'sw' + (DUCK[key] === c ? ' on' : ''); b.style.background = c || 'linear-gradient(135deg,#fff 50%,#ffd23f 50%)'; b.title = c ? c : 'Otomatik'; b.onclick = () => { DUCK[key] = c; pvBuild(); cols(); if (TAB.o) opts(); }; sw.appendChild(b); }
     const p = document.createElement('label'); p.className = 'pick'; const i = document.createElement('input'); i.type = 'color'; i.value = DUCK[key] || '#ffffff'; i.oninput = () => { DUCK[key] = i.value; pvBuild(); }; i.onchange = () => { cols(); if (TAB.o) opts(); }; p.appendChild(i); sw.appendChild(p); r.appendChild(sw); box.appendChild(r); } }
+const spinUI = () => { if (pv) $('bSpin').textContent = pv.spin ? '⏸ Dönme' : '▶ Döndür'; }; $('bSpin').onclick = () => { if (!pv) return; pv.spin = !pv.spin; try { localStorage.setItem('as_spin', pv.spin ? '1' : '0'); } catch (e) {} spinUI(); }; spinUI();
 document.querySelectorAll('[data-pa]').forEach(b => b.onclick = () => { if (pv) pv.anim = b.dataset.pa; });
 const pick = a => a[Math.floor(Math.random() * a.length)];
 $('bRnd').onclick = () => { DUCK.renk = pick(RENKLER); DUCK.gaga = pick(GAGA.slice(0, 4)); DUCK.gobek = null; DUCK.goz = pick(Object.keys(GOZ)); for (const k in KATEGORI) { const ks = Object.keys(KATEGORI[k].o); DUCK[k] = Math.random() < (k === 'sapka' ? .85 : .45) ? pick(ks.slice(1)) : 'yok'; DUCK[k + 'R'] = pick(SUSLER); } pvBuild(); opts(); cols(); if (pv) { pv.anim = 'sevin'; setTimeout(() => pv.anim = 'idle', 1300); } };
