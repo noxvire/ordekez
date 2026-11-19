@@ -289,7 +289,6 @@ function buildLobby() {
     const rim = new THREE.Mesh(new THREE.BoxGeometry(.76, .03, .76), M.gold); rim.position.set(23.45, 1.33, z); cg.add(rim);
     solidBox(cg, 23.08, 23.82, 0, 1.35, z - .38, z + .38);
     bust3d(cg, src.replace('.webp', ''), w, 1.5, 23.45, 1.34, z);
-    const sp = new THREE.SpotLight('#fff2d8', 9, 4, .5, .6, 1.2); sp.position.set(22.6, 3.4, z); sp.target.position.set(23.45, 2, z); cg.add(sp, sp.target);
   }
   // fotoğraflar (sol: kız, sağ: erkek), kırmızı halı, aplikler, sehpalar
   { const tl = new THREE.TextureLoader();
@@ -298,14 +297,14 @@ function buildLobby() {
       const outer = new THREE.Mesh(new THREE.BoxGeometry(W + .3, H + .3, .08), M.gold); fr.add(outer); const mat = new THREE.Mesh(new THREE.BoxGeometry(W + .12, H + .12, .09), new THREE.MeshStandardMaterial({ color: '#1a1410', roughness: .6 })); fr.add(mat);
       const t = tl.load(src); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; const ph = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: t, roughness: .35 })); ph.position.z = .05; fr.add(ph);
       const lamp = new THREE.Mesh(new THREE.BoxGeometry(.9, .06, .14), M.gold); lamp.position.set(0, H / 2 + .26, .12); fr.add(lamp); const lg = new THREE.Mesh(new THREE.BoxGeometry(.8, .02, .08), M.goldGlow); lg.position.set(0, H / 2 + .22, .14); fr.add(lg);
-      const pl = new THREE.SpotLight('#ffd8a0', 14, 4, .9, .7, 1.4); pl.position.set(19.3, 3.2, z + (ry ? -.5 : .5)); pl.target.position.set(19.3, 1.6, z); cg.add(pl, pl.target);
+
       // sehpa + güller
       const cz = z + (ry ? -.35 : .35); addBox(cg, 1.2, .08, .45, 21.6, .86, cz, new THREE.MeshStandardMaterial({ color: '#2a1a14', roughness: .3 })); for (const dx of [-.5, .5]) addBox(cg, .05, .82, .05, 21.6 + dx, .41, cz, M.gold, false);
       roses(cg, 21.6, .9, cz); }
     const red = new THREE.MeshStandardMaterial({ color: '#8a1420', roughness: .95 }), redB = new THREE.MeshStandardMaterial({ color: '#c8a050', roughness: .5, metalness: .5 });
     const run = (x0, x1, z, w) => { const r = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .012, w), red); r.position.set((x0 + x1) / 2, .007, z); lobby.add(r); for (const s of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0, .014, .07), redB); b.position.set((x0 + x1) / 2, .008, z + s * (w / 2 - .06)); lobby.add(b); } };
     run(6.5, 23.9, -4, 2.2);
-    for (const x of [15.5, 18.2, 21]) for (const zz of [-6.95, -1.05]) sconce(cg, x, 2.3, zz, zz > -4 ? Math.PI : 0); }
+    for (const x of [15.6, 17.8, 20.8]) for (const zz of [-6.95, -1.05]) sconce(cg, x, 2.3, zz, zz > -4 ? Math.PI : 0); }
 
 }
 let HOLO = null, LOBBYFOG = null;
@@ -357,9 +356,9 @@ function roses(g, x, y, z) { const v = new THREE.Mesh(new THREE.CylinderGeometry
   const rm = new THREE.MeshStandardMaterial({ color: '#b0101c', roughness: .6 }), lm = new THREE.MeshStandardMaterial({ color: '#2f6a2a', roughness: .8, flatShading: true });
   for (let i = 0; i < 11; i++) { const a = i * 2.39, r = i ? .05 + (i % 3) * .035 : 0; const fl = new THREE.Mesh(new THREE.IcosahedronGeometry(.055, 0), rm); fl.position.set(x + Math.cos(a) * r, y + .44 + Math.random() * .06 - r * .4, z + Math.sin(a) * r); g.add(fl); if (i % 2) { const l = new THREE.Mesh(new THREE.ConeGeometry(.03, .12, 4), lm); l.position.set(x + Math.cos(a) * (r + .05), y + .36, z + Math.sin(a) * (r + .05)); l.rotation.z = Math.cos(a); g.add(l); } } }
 function sconce(g, x, y, z, ry) { const s = new THREE.Group(); s.position.set(x, y, z); s.rotation.y = ry; g.add(s); const b = new THREE.Mesh(new THREE.BoxGeometry(.12, .3, .04), M.gold); s.add(b); const arm = new THREE.Mesh(new THREE.CylinderGeometry(.015, .015, .2), M.gold); arm.rotation.x = Math.PI / 2; arm.position.set(0, 0, .1); s.add(arm);
-  const sh = new THREE.Mesh(new THREE.CylinderGeometry(.07, .1, .16, 14, 1, true), new THREE.MeshStandardMaterial({ color: '#fff0d0', emissive: '#ffb860', emissiveIntensity: 1.3, side: THREE.DoubleSide })); sh.position.set(0, .06, .2); s.add(sh); const pl = new THREE.PointLight('#ffc070', 2.2, 3.5, 1.6); pl.position.set(0, .05, .3); s.add(pl); }
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(.07, .1, .16, 14, 1, true), new THREE.MeshStandardMaterial({ color: '#fff0d0', emissive: '#ffb860', emissiveIntensity: 1.3, side: THREE.DoubleSide })); sh.position.set(0, .06, .2); s.add(sh); }
 function floorLamp(g, x, z) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1.6), M.gold); p.position.set(x, .8, z); g.add(p); const b = new THREE.Mesh(new THREE.CylinderGeometry(.18, .2, .04, 16), M.gold); b.position.set(x, .02, z); g.add(b);
-  const sh = new THREE.Mesh(new THREE.CylinderGeometry(.2, .3, .35, 18, 1, true), new THREE.MeshStandardMaterial({ color: '#fff0d8', emissive: '#ffb860', emissiveIntensity: 1.1, side: THREE.DoubleSide })); sh.position.set(x, 1.65, z); g.add(sh); const pl = new THREE.PointLight('#ffc27a', 6, 6, 1.5); pl.position.set(x, 1.55, z); g.add(pl); solidBox(g, x - .2, x + .2, 0, 1.8, z - .2, z + .2); }
+  const sh = new THREE.Mesh(new THREE.CylinderGeometry(.2, .3, .35, 18, 1, true), new THREE.MeshStandardMaterial({ color: '#fff0d8', emissive: '#ffb860', emissiveIntensity: 1.1, side: THREE.DoubleSide })); sh.position.set(x, 1.65, z); g.add(sh); solidBox(g, x - .2, x + .2, 0, 1.8, z - .2, z + .2); }
 function rug(g, x, z, w, d, ry, c1, c2) { const t = canvasTex(256, 256 * d / w, (c, W, H) => { c.fillStyle = c1; c.fillRect(0, 0, W, H); c.strokeStyle = c2; c.lineWidth = 8; c.strokeRect(12, 12, W - 24, H - 24); c.lineWidth = 3; c.strokeRect(26, 26, W - 52, H - 52); c.fillStyle = c2; for (let i = 0; i < 6; i++) { c.save(); c.translate(W / 2, H / 2); c.rotate(i * Math.PI / 3); c.fillRect(-4, 0, 8, Math.min(W, H) * .32); c.restore(); } });
   const r = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: t, roughness: 1 })); r.rotation.x = -Math.PI / 2; r.rotation.z = ry || 0; r.position.set(x, .009, z); g.add(r); }
 /* ================= ASANSÖR KABİNİ ================= */
@@ -646,7 +645,7 @@ buildLobby(); buildCab();
 // sıcak dekor
 floorLamp(lobby, -12.6, 2.4); floorLamp(lobby, -12.6, 10.6); floorLamp(lobby, 12.8, 3.2); floorLamp(lobby, 12.8, 10.8); floorLamp(lobby, -4.2, -10.8); floorLamp(lobby, 8.8, -10.8);
 rug(lobby, 11, 7, 3.4, 6, 0, '#7a1a22', '#e0b860'); rug(lobby, -8, -6, 4, 2.8, 0, '#5a2a1a', '#e0b860');
-roses(lobby, -7.4, .49, 6); roses(lobby, 4.6, 1.23, -7); roses(lobby, -3.2, 1.23, -7.1);
+roses(lobby, -7.4, .49, 6); roses(lobby, 4.6, 1.23, -7); roses(lobby, 1.6, 1.23, -7.1);
 for (const x of [-10, -4.5, 3, 8]) sconce(lobby, x, 3.2, -11.98, 0); for (const x of [-10, -4, 2, 8]) sconce(lobby, x, 3.2, 11.98, Math.PI);
 
 try { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(scene, .04).texture; scene.environmentIntensity = .45; } catch (e) {}
