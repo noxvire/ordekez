@@ -16,6 +16,11 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 .btn{display:block;width:100%;margin:8px 0;padding:12px;border-radius:12px;border:0;font:900 16px Nunito;cursor:pointer;color:#1a1530;background:linear-gradient(#fff2cf,#e8c06a);box-shadow:0 4px 0 #a8803a}
 .btn.alt{background:rgba(255,255,255,.1);color:#f4dfa8;box-shadow:none;border:1px solid rgba(232,192,106,.5)}
 .row{display:flex;gap:8px}.row input{flex:1;text-transform:uppercase;letter-spacing:4px}.row .btn{width:auto;flex:0 0 120px}
+#duckBox{margin:6px 0 4px}#duckCv{width:100%;max-width:260px;height:auto;display:block;margin:0 auto;border-radius:14px;background:radial-gradient(circle at 50% 70%,rgba(244,223,168,.25),transparent 70%)}
+.opt{display:flex;align-items:center;gap:6px;margin:4px 0;font-size:12px;font-weight:800;color:#b8c0e8}.opt>span{width:62px;text-align:left;flex-shrink:0}.opt>div{display:flex;flex-wrap:wrap;gap:4px}
+.sw{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.3);cursor:pointer;padding:0}.sw.on{border-color:#f4dfa8;box-shadow:0 0 6px #f4dfa8}
+.ch{border:1px solid rgba(232,192,106,.4);background:rgba(0,0,0,.25);color:#e8e4ff;border-radius:8px;padding:2px 7px;font:800 11px Nunito;cursor:pointer}.ch.on{background:#e8c06a;color:#1a1530}
+.box{max-height:96vh;overflow:auto}
 #msgM{min-height:20px;color:#ffb0a0;font-weight:800;font-size:13px}
 .back{position:fixed;left:14px;top:12px;z-index:21;color:#f4dfa8;text-decoration:none;font-weight:900;font-size:14px;opacity:.85}
 #hud{position:fixed;inset:0;pointer-events:none;z-index:5;display:none}
@@ -43,6 +48,11 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
   <div class="star">✦</div><div class="logo">ÖRDEKEZ<small>ASANSÖR · 100 KAT</small></div>
   <p style="opacity:.75;font-size:13px;margin:10px 0 14px">Arkadaşlarınla asansöre bin, her katta başka bir dünya.</p>
   <input id="nameIn" maxlength="16" placeholder="Adın">
+  <div id="duckBox"><canvas id="duckCv" width="300" height="230"></canvas>
+    <div class="opt"><span>Renk</span><div id="oRenk"></div></div>
+    <div class="opt"><span>Şapka</span><div id="oSapka"></div></div>
+    <div class="opt"><span>Aksesuar</span><div id="oAks"></div></div>
+    <div class="opt"><span>Süs rengi</span><div id="oAksR"></div></div></div>
   <button class="btn" id="bKur">🏢 Oda Kur</button>
   <div class="row"><input id="codeIn" maxlength="4" placeholder="KOD"><button class="btn alt" id="bKatil">Katıl</button></div>
   <button class="btn alt" id="bTek">👤 Tek Başına</button>
@@ -61,6 +71,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 <script src="guncel.js"></script>
 <script type="module">
 import * as THREE from './three-uzay.js';
+import { makeDuck, RENKLER, SAPKALAR, AKSESUAR } from './ordek3d.js';
 const $ = id => document.getElementById(id);
 const SB_URL = 'https://servvglgsudtjouqknvx.supabase.co', SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
 const Q = new URLSearchParams(location.search), TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
@@ -371,7 +382,7 @@ function netStart(code) {
   if (!window.supabase || !code) return;
   const sb = window.supabase.createClient(SB_URL, SB_KEY, { realtime: { params: { eventsPerSecond: 20 } } });
   chan = sb.channel('asansor-' + code, { config: { broadcast: { self: false }, presence: { key: MYID } } });
-  chan.on('presence', { event: 'sync' }, () => { const st = chan.presenceState(), seen = {}; for (const id in st) { if (id === MYID) continue; seen[id] = 1; const info = st[id][0]; const o = ROSTER[id] || (ROSTER[id] = { x: 2, y: 0, z: 9, yaw: 0, tx: 2, ty: 0, tz: 9, tyaw: 0 }); o.n = info.n; o.j = info.j; o.col = info.col; if (!o.mesh) makeAvatar(id); } for (const id in ROSTER) if (!seen[id]) { if (ROSTER[id].mesh) scene.remove(ROSTER[id].mesh); delete ROSTER[id]; } updInfo(); });
+  chan.on('presence', { event: 'sync' }, () => { const st = chan.presenceState(), seen = {}; for (const id in st) { if (id === MYID) continue; seen[id] = 1; const info = st[id][0]; const o = ROSTER[id] || (ROSTER[id] = { x: 2, y: 0, z: 9, yaw: 0, tx: 2, ty: 0, tz: 9, tyaw: 0 }); o.n = info.n; o.j = info.j; o.cfg = info.cfg; if (!o.mesh || JSON.stringify(info.cfg || {}) !== o.cfgS) makeAvatar(id); } for (const id in ROSTER) if (!seen[id]) { if (ROSTER[id].mesh) scene.remove(ROSTER[id].mesh); delete ROSTER[id]; } updInfo(); });
   chan.on('presence', { event: 'join' }, ({ key, newPresences }) => { if (key !== MYID && newPresences[0]) { chatLine('sys', `👋 ${esc(newPresences[0].n)} odaya girdi`); if (isHost()) setTimeout(() => netSend('state', { floor: ES.floor, ph: ES.phase, target: ES.target, t: ES.t }), 600); } });
   chan.on('presence', { event: 'leave' }, ({ key, leftPresences }) => { if (key !== MYID && leftPresences[0]) chatLine('sys', `${esc(leftPresences[0].n)} ayrıldı`); });
   chan.on('broadcast', { event: 'p' }, ({ payload: p }) => { const o = ROSTER[p.i]; if (!o) return; o.tx = p.x; o.ty = p.y; o.tz = p.z; o.tyaw = p.r; o.mv = p.m; });
@@ -379,22 +390,19 @@ function netStart(code) {
   chan.on('broadcast', { event: 'req' }, () => { if (isHost()) hostStart(); });
   chan.on('broadcast', { event: 'el' }, ({ payload: p }) => applyRemote(p));
   chan.on('broadcast', { event: 'state' }, ({ payload: p }) => { if (p.floor !== ES.floor || (ES.floor === 0 && FLOOR)) { ES.floor = p.floor; ES.target = p.target; loadFloor(p.floor); if (p.floor) { P.x = EL.x0 + 1.2; P.z = -3.5; P.y = 0; } } });
-  chan.subscribe(s => { if (s === 'SUBSCRIBED') { online = true; chan.track({ n: NAME, j: JOINED, col: MYCOL }); chatLine('sys', `🟢 Oda <b>${code}</b> — arkadaşlarına kodu ver!`); updInfo(); } });
+  chan.subscribe(s => { if (s === 'SUBSCRIBED') { online = true; chan.track({ n: NAME, j: JOINED, cfg: DUCK }); chatLine('sys', `🟢 Oda <b>${code}</b> — arkadaşlarına kodu ver!`); updInfo(); } });
 }
-function netTick(now) { if (!online) return; const p = { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), r: +P.yaw.toFixed(2), m: P.moving ? 1 : 0 }, s = JSON.stringify(p); if ((s !== lastP && now - lastSend > 90) || now - lastSend > 2000) { lastP = s; lastSend = now; netSend('p', p); } }
+function netTick(now) { if (!online) return; const p = { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), r: +P.yaw.toFixed(2), m: P.moving ? (keys.ShiftLeft || keys.ShiftRight || JOY.run ? 2 : 1) : 0 }, s = JSON.stringify(p); if ((s !== lastP && now - lastSend > 90) || now - lastSend > 2000) { lastP = s; lastSend = now; netSend('p', p); } }
 const MYCOL = ['#ff6a8a', '#4ac0ff', '#ffcf4a', '#7ad07a', '#b07aff', '#ff9a4a'][Math.floor(Math.random() * 6)];
 function nameSprite(txt) { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d'); g.font = '900 52px Nunito'; const w = Math.min(500, g.measureText(txt).width + 50); g.fillStyle = 'rgba(10,14,40,.6)'; g.beginPath(); g.roundRect((512 - w) / 2, 24, w, 76, 38); g.fill(); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(txt, 256, 80); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); s.scale.set(1.2, .3, 1); return s; }
 function makeAvatar(id) {
-  const o = ROSTER[id], g = new THREE.Group(), col = o.col || '#4ac0ff';
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.3, .7, 4, 10), new THREE.MeshStandardMaterial({ color: col, roughness: .5, flatShading: true })); body.position.y = .75; g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(.27, 12, 10), new THREE.MeshStandardMaterial({ color: '#ffe0cc', roughness: .6, flatShading: true })); head.position.y = 1.45; g.add(head);
-  const visor = new THREE.Mesh(new THREE.BoxGeometry(.36, .1, .1), new THREE.MeshStandardMaterial({ color: '#1a1a24' })); visor.position.set(0, 1.48, -.22); g.add(visor);
-  for (const s of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 6), M.blueGlow); e.position.set(s * .08, 1.49, -.27); g.add(e); }
-  const tag = nameSprite(o.n || 'Oyuncu'); tag.position.y = 2.05; g.add(tag); o.tag = tag;
-  scene.add(g); o.mesh = g; o.body = body;
+  const o = ROSTER[id]; if (o.mesh) scene.remove(o.mesh);
+  const g = new THREE.Group(), d = makeDuck(THREE, o.cfg || {}); d.root.scale.setScalar(1.15); g.add(d.root); o.duck = d; o.cfgS = JSON.stringify(o.cfg || {});
+  const tag = nameSprite(o.n || 'Oyuncu'); tag.position.y = 1.9; g.add(tag); o.tag = tag;
+  scene.add(g); o.mesh = g;
 }
-function setBubble(o) { if (o.bubS) o.mesh.remove(o.bubS); o.bubS = nameSprite('💬 ' + o.bub.slice(0, 26)); o.bubS.position.y = 2.4; o.bubS.scale.set(1.8, .45, 1); o.mesh.add(o.bubS); }
-function updOthers(dt) { for (const id in ROSTER) { const o = ROSTER[id]; if (!o.mesh) continue; const k = Math.min(1, dt * 12); o.x = lerp(o.x, o.tx, k); o.y = lerp(o.y, o.ty, k); o.z = lerp(o.z, o.tz, k); let d = o.tyaw - o.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); o.yaw += d * k; o.mesh.position.set(o.x, o.y + (o.mv ? Math.abs(Math.sin(performance.now() / 110)) * .06 : 0), o.z); o.mesh.rotation.y = o.yaw; if (o.bubT > 0) { o.bubT -= dt; if (o.bubT <= 0 && o.bubS) { o.mesh.remove(o.bubS); o.bubS = null; } } } }
+function setBubble(o) { if (o.bubS) o.mesh.remove(o.bubS); o.bubS = nameSprite('💬 ' + o.bub.slice(0, 26)); o.bubS.position.y = 2.25; o.bubS.scale.set(1.8, .45, 1); o.mesh.add(o.bubS); }
+function updOthers(dt) { for (const id in ROSTER) { const o = ROSTER[id]; if (!o.mesh) continue; const k = Math.min(1, dt * 12); o.x = lerp(o.x, o.tx, k); o.y = lerp(o.y, o.ty, k); o.z = lerp(o.z, o.tz, k); let d = o.tyaw - o.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); o.yaw += d * k; o.mesh.position.set(o.x, o.y, o.z); o.mesh.rotation.y = o.yaw; if (o.duck) o.duck.update(dt, { hiz: o.mv ? 1 : 0, kosu: o.mv === 2, zipla: o.ty > .3 && !inCab(o.x, o.z), konus: o.bubT > 4 }); if (o.bubT > 0) { o.bubT -= dt; if (o.bubT <= 0 && o.bubS) { o.mesh.remove(o.bubS); o.bubS = null; } } } }
 
 /* ================= HUD / SOHBET ================= */
 let bigT = 0; function showBig(html) { $('big').innerHTML = html; $('big').style.opacity = 1; bigT = 2.6; }
@@ -435,6 +443,16 @@ function start(code) {
   updInfo(); showBig('ÖRDEKEZ LOBİSİ<br><small style="font:800 16px Nunito">Asansörler sağdaki koridorda →</small>');
   if (!TOUCH) renderer.domElement.requestPointerLock?.();
 }
+let DUCK = { renk: '#ffd23f', sapka: 'yok', aks: 'yok', aksR: '#2c3c8c' }; try { Object.assign(DUCK, JSON.parse(localStorage.getItem('as_duck') || '{}')); } catch (e) {}
+const pv = (() => { const c = $('duckCv'); let r; try { r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true }); } catch (e) { return null; } r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setSize(300, 230, false);
+  const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#fff', '#b0a490', 1.4)); const dl = new THREE.DirectionalLight('#fff4e0', 2.2); dl.position.set(2, 4, -4); sc.add(dl);
+  const cm = new THREE.PerspectiveCamera(30, 300 / 230, .1, 20); cm.position.set(0, 1.05, -3.3); cm.lookAt(0, .7, 0); const st = { d: null, sc, r, cm, yaw: 0, t: 0 }; return st; })();
+function pvBuild() { if (!pv) return; if (pv.d) pv.sc.remove(pv.d.root); pv.d = makeDuck(THREE, DUCK); pv.sc.add(pv.d.root); try { localStorage.setItem('as_duck', JSON.stringify(DUCK)); } catch (e) {} }
+function pvLoop() { if (!pv || playing) return; pv.t += .016; pv.d.root.rotation.y = Math.sin(pv.t * .6) * .6; pv.d.update(.016, { selam: (pv.t % 6) < 1.5 }); pv.r.render(pv.sc, pv.cm); requestAnimationFrame(pvLoop); }
+function optRow(id, list, key, sw) { const box = $(id); box.innerHTML = ''; for (const [k, v] of Object.entries(list)) { const b = document.createElement('button'); if (sw) { b.className = 'sw' + (DUCK[key] === v ? ' on' : ''); b.style.background = v; b.title = k; b.onclick = () => { DUCK[key] = v; optAll(); pvBuild(); }; } else { b.className = 'ch' + (DUCK[key] === k ? ' on' : ''); b.textContent = v; b.onclick = () => { DUCK[key] = k; optAll(); pvBuild(); }; } box.appendChild(b); } }
+const SUS = { lacivert: '#2c3c8c', kirmizi: '#d83a4a', pembe: '#ff6aa8', turuncu: '#ff7a3a', yesil: '#3ab07a', mor: '#7a5aff', siyah: '#2a2a3a', beyaz: '#f4f4f4', altin: '#e8c06a' };
+function optAll() { optRow('oRenk', RENKLER, 'renk', 1); optRow('oSapka', SAPKALAR, 'sapka'); optRow('oAks', AKSESUAR, 'aks'); optRow('oAksR', SUS, 'aksR', 1); }
+optAll(); pvBuild(); pvLoop();
 const newCode = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKMNPRSTUVYZ23456789'[Math.floor(Math.random() * 28)]).join('');
 $('bKur').onclick = () => start(newCode());
 $('bKatil').onclick = () => { const c = $('codeIn').value.trim().toUpperCase(); if (c.length !== 4) { $('msgM').textContent = '4 haneli oda kodunu yaz'; return; } start(c); };
