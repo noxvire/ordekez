@@ -56,6 +56,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
   <button class="btn" id="bDevam">Devam</button><button class="btn alt" id="bLink">🔗 Davet linkini kopyala</button><button class="btn alt" id="bCik">Çıkış</button></div></div>
 <div id="mob"><div id="joy"><div id="joyK"></div></div><button class="mb" id="mJ">⤒</button><button class="mb" id="mE">E</button><button class="mb" id="mT">💬</button></div>
 
+<script>addEventListener("error",e=>{const m=document.getElementById("msgM");if(m)m.textContent="Hata: "+(e.message||e.error)});</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="guncel.js"></script>
 <script type="module">
@@ -81,7 +82,7 @@ const MUZ = [[262, 330, 392, 494], [220, 277, 330, 415], [247, 311, 370, 466], [
 function muzak(dt, want) { muzVol = lerp(muzVol, want ? .035 : 0, Math.min(1, dt * 2)); muzT -= dt; if (muzT > 0 || muzVol < .003) return; muzT = .42; const ch = MUZ[Math.floor(muzI / 8) % 4], n = ch[[0, 2, 1, 3, 2, 1, 3, 2][muzI % 8]]; tone(n * 2, .5, 'triangle', muzVol); if (muzI % 4 === 0) tone(ch[0] / 2, 1.4, 'sine', muzVol * 1.3); muzI++; }
 
 /* ================= RENDER ================= */
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+let renderer; try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); } catch (e) { $('msgM').textContent = 'Bu tarayıcıda 3D (WebGL) açılamadı. Donanım hızlandırmayı açıp tekrar dene.'; throw e; }
 renderer.setPixelRatio(Math.min(TOUCH ? 1.5 : 2, devicePixelRatio || 1)); renderer.setSize(innerWidth, innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .82;
 document.body.appendChild(renderer.domElement);
