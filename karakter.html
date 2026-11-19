@@ -54,34 +54,40 @@ body{font-family:Nunito,system-ui,sans-serif;color:#3b4262;background:radial-gra
   <div id="panel"><div id="tabs"></div><div id="opts"></div><div id="colors"></div></div>
 </div>
 <div id="toast">Karakterin kaydedildi! 🎉</div>
-<script src="bk/anime.js?v=1"></script>
+<script src="bk/kukla.js?v=2"></script>
 <script>
-const K = Anime, C = K.COLORS, $ = id => document.getElementById(id);
-let me = Object.assign({}, K.DEF); try { Object.assign(me, JSON.parse(localStorage.getItem('bk_anime') || '{}')); } catch (e) {}
+const K = Kukla, C = K.COLORS, $ = id => document.getElementById(id);
+let me = Object.assign({}, K.DEF); try { Object.assign(me, JSON.parse(localStorage.getItem('bk_kukla') || '{}')); } catch (e) {}
 $('nameIn').value = me.ad || (localStorage.getItem('ordekez_user') || '');
-const DIRS = ['s', 'e', 'n', 'w']; let di = 0, anim = 'idle';
-const TABS = [
-  { k: 'sac', ic: '💇', ad: 'Saç', o: K.HAIR, col: [['sacR', 'Saç rengi', C.sac], ['sacU', 'Uç rengi (ombre)', C.sac]], v: 'head' },
-  { k: 'gozT', ic: '👁️', ad: 'Göz', o: K.EYE, col: [['goz', 'Göz rengi', C.goz]], v: 'face' },
-  { k: 'agiz', ic: '👄', ad: 'Ağız', o: K.MOUTH, col: [['ten', 'Ten rengi', C.ten]], v: 'face' },
-  { k: 'ust', ic: '🧥', ad: 'Kıyafet', o: K.UST, col: [['ustR', 'Kıyafet rengi', C.giysi], ['trim', 'Süs / şerit rengi', C.trim]], v: 'body' },
-  { k: 'alt', ic: '👖', ad: 'Alt', o: K.ALT, col: [['altR', 'Alt rengi', C.giysi]], v: 'legs' },
-  { k: 'ayak', ic: '👢', ad: 'Ayakkabı', o: K.AYAK, col: [['trim', 'Süs rengi', C.trim]], v: 'legs' },
-  { k: 'aks', ic: '🎀', ad: 'Aksesuar', o: K.AKS, col: [['trim', 'Atkı / kulaklık rengi', C.trim]], v: 'head' },
-  { k: 'element', ic: '💎', ad: 'Element', o: K.ELEMENT, col: [], v: 'full' },
-  { k: null, ic: '🎨', ad: 'Ten', col: [['ten', 'Ten rengi', C.ten]] },
-];
-let tab = TABS[0];
+const DIRS = ['s', 'e', 'n', 'w']; let di = 0, anim = 'idle', TABS, tab;
+function buildTabs() {
+  const kom = Object.fromEntries(K.kombinler()), kel = Object.assign({ yok: 'Kel' }, kom), yok = Object.assign({ yok: 'Yok' }, kom);
+  TABS = [
+    { k: 'cins', ic: '🧍', ad: 'Vücut', o: K.CINS, col: [], v: 'full' },
+    { k: 'sac', ic: '💇', ad: 'Saç', o: kel, col: [['sacR', 'Saç rengi', C.sac]], v: 'head' },
+    { k: 'gozT', ic: '👁️', ad: 'Göz', o: K.EYE, col: [['goz', 'Göz rengi', C.goz]], v: 'face' },
+    { k: 'agiz', ic: '👄', ad: 'Ağız', o: K.MOUTH, col: [], v: 'face' },
+    { k: 'ust', ic: '🧥', ad: 'Üst', o: yok, col: [['ustR', 'Üst rengi', C.giysi]], v: 'body' },
+    { k: 'alt', ic: '👖', ad: 'Alt', o: yok, col: [['altR', 'Alt rengi', C.giysi]], v: 'legs' },
+    { k: 'ayak', ic: '👢', ad: 'Ayakkabı', o: yok, col: [['ayakR', 'Ayakkabı rengi', C.giysi]], v: 'feet' },
+    { k: 'kafa', ic: '👑', ad: 'Kafa', o: K.KAFA, col: [['kafaR', 'Renk', C.aks]], v: 'head' },
+    { k: 'kulak', ic: '💎', ad: 'Küpe', o: K.KULAK, col: [['kulakR', 'Renk', C.aks]], v: 'face' },
+    { k: 'yuz', ic: '🕶️', ad: 'Yüz', o: K.YUZ, col: [['yuzR', 'Renk', C.aks]], v: 'face' },
+    { k: 'boyun', ic: '🧣', ad: 'Boyun', o: K.BOYUN, col: [['boyunR', 'Renk', C.aks]], v: 'body' },
+    { k: 'sirt', ic: '🪽', ad: 'Sırt', o: K.SIRT, col: [['sirtR', 'Renk', C.aks]], v: 'full' },
+    { k: 'kuyruk', ic: '🦊', ad: 'Kuyruk', o: K.KUYRUK, col: [['kuyrukR', 'Renk', C.aks]], v: 'full', dir: 'e' },
+    { k: 'element', ic: '✨', ad: 'Element', o: K.ELEMENT, col: [], v: 'full' },
+  ]; tab = TABS[0];
+}
 const cv = $('cv'), g = cv.getContext('2d');
 function fit() { const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1); cv.width = r.width * d; cv.height = r.height * d; }
 addEventListener('resize', fit);
-const CL = Array.from({ length: 6 }, (_, i) => ({ x: Math.random(), y: .08 + Math.random() * .3, s: .6 + Math.random() * .8, v: .004 + Math.random() * .006 }));
+const CL = Array.from({ length: 6 }, () => ({ x: Math.random(), y: .08 + Math.random() * .3, s: .6 + Math.random() * .8, v: .004 + Math.random() * .006 }));
 const SP = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random(), p: Math.random() * 6 }));
 function cloud(x, y, s) { g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(x, y, 26 * s, 0, 7); g.arc(x + 30 * s, y - 12 * s, 32 * s, 0, 7); g.arc(x + 62 * s, y, 24 * s, 0, 7); g.rect(x, y, 62 * s, 24 * s); g.fill(); }
 function stage(W, H, t) {
   const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#5a7ae8'); sky.addColorStop(.5, '#a8b8f8'); sky.addColorStop(.75, '#ffd8c0'); sky.addColorStop(1, '#ffe8d0'); g.fillStyle = sky; g.fillRect(0, 0, W, H);
   const k = W / 700; for (const c of CL) { c.x += c.v / 60; if (c.x > 1.2) c.x = -.3; cloud(c.x * W, c.y * H, c.s * k); }
-  // uzak adalar
   g.fillStyle = 'rgba(110,130,200,.35)'; g.beginPath(); g.moveTo(0, H * .7); g.quadraticCurveTo(W * .15, H * .52, W * .3, H * .66); g.quadraticCurveTo(W * .5, H * .56, W * .7, H * .68); g.quadraticCurveTo(W * .88, H * .5, W, H * .64); g.lineTo(W, H); g.lineTo(0, H); g.fill();
   const gr = g.createLinearGradient(0, H * .72, 0, H); gr.addColorStop(0, '#9ad08a'); gr.addColorStop(1, '#5aa06a'); g.fillStyle = gr; g.beginPath(); g.moveTo(0, H * .78); g.quadraticCurveTo(W / 2, H * .7, W, H * .78); g.lineTo(W, H); g.lineTo(0, H); g.fill();
   for (const p of SP) { const a = (Math.sin(t * 2 + p.p) + 1) / 2; g.globalAlpha = a * .9; g.fillStyle = '#fff'; g.save(); g.translate(p.x * W, p.y * H * .7); g.rotate(Math.PI / 4); g.fillRect(-2 * k, -2 * k, 4 * k, 4 * k); g.restore(); } g.globalAlpha = 1;
@@ -89,13 +95,12 @@ function stage(W, H, t) {
 function frame() {
   const W = cv.width, H = cv.height, t = performance.now() / 1000; stage(W, H, t);
   const R = cv.getBoundingClientRect(), d = W / R.width, top = $('nameIn').getBoundingClientRect().bottom - R.top, bot = $('ctrl').getBoundingClientRect().top - R.top;
-  const avail = (bot - top) * d, sc = Math.min(W / 120, avail / 195), cx = W / 2, cy = top * d + avail * .94;
-  // podyum (rün çemberi)
+  const avail = (bot - top) * d, sc = Math.min(W / 520, avail / 760), cx = W / 2, cy = top * d + avail * .95;
   g.save(); g.translate(cx, cy); g.scale(1, .26); const ec = me.element !== 'yok' ? K.ELC[me.element] : '#f4dfa8';
-  g.fillStyle = 'rgba(255,250,235,.75)'; g.beginPath(); g.arc(0, 0, 46 * sc, 0, 7); g.fill(); g.strokeStyle = '#d8b060'; g.lineWidth = 2 * sc / 2; g.beginPath(); g.arc(0, 0, 46 * sc, 0, 7); g.stroke(); g.beginPath(); g.arc(0, 0, 38 * sc, 0, 7); g.stroke();
-  g.shadowColor = ec; g.shadowBlur = 16; g.strokeStyle = ec; g.rotate(t * .4); for (let i = 0; i < 8; i++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(40 * sc, 0); g.lineTo(44 * sc, 3 * sc); g.lineTo(40 * sc, 6 * sc); g.stroke(); } g.restore();
+  g.fillStyle = 'rgba(255,250,235,.75)'; g.beginPath(); g.arc(0, 0, 190 * sc, 0, 7); g.fill(); g.strokeStyle = '#d8b060'; g.lineWidth = 2 * d; g.beginPath(); g.arc(0, 0, 190 * sc, 0, 7); g.stroke(); g.beginPath(); g.arc(0, 0, 160 * sc, 0, 7); g.stroke();
+  g.shadowColor = ec; g.shadowBlur = 16; g.strokeStyle = ec; g.rotate(t * .4); for (let i = 0; i < 8; i++) { g.rotate(Math.PI / 4); g.beginPath(); g.moveTo(168 * sc, 0); g.lineTo(182 * sc, 12 * sc); g.lineTo(168 * sc, 24 * sc); g.stroke(); } g.restore();
   const h = K.draw(g, me, cx, cy, sc, { dir: DIRS[di], anim, t });
-  if (anim === 'fish' && h) { const s = DIRS[di] === 'w' || DIRS[di] === 'n' ? -1 : 1; g.lineCap = 'round'; g.strokeStyle = '#6a4220'; g.lineWidth = 3.4 * sc / 2; g.beginPath(); g.moveTo(h.hx - s * 6 * sc, h.hy + 8 * sc); g.quadraticCurveTo(h.hx + s * 30 * sc, h.hy - 30 * sc, h.hx + s * 62 * sc, h.hy - 60 * sc); g.stroke(); g.strokeStyle = '#e8c06a'; g.lineWidth *= .4; g.stroke(); g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = .6 * sc / 2; g.beginPath(); g.moveTo(h.hx + s * 62 * sc, h.hy - 60 * sc); g.quadraticCurveTo(h.hx + s * 75 * sc, h.hy, h.hx + s * 70 * sc, h.hy + 40 * sc); g.stroke(); }
+  if (anim === 'fish' && h) { const s = DIRS[di] === 'w' || DIRS[di] === 'n' ? -1 : 1, k = sc * 2.2; g.lineCap = 'round'; g.strokeStyle = '#6a4220'; g.lineWidth = 7 * sc; g.beginPath(); g.moveTo(h.hx - s * 14 * k, h.hy + 12 * k); g.quadraticCurveTo(h.hx + s * 60 * k, h.hy - 60 * k, h.hx + s * 120 * k, h.hy - 120 * k); g.stroke(); g.strokeStyle = '#e8c06a'; g.lineWidth = 2.5 * sc; g.stroke(); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.2 * d; g.beginPath(); g.moveTo(h.hx + s * 120 * k, h.hy - 120 * k); g.quadraticCurveTo(h.hx + s * 150 * k, h.hy, h.hx + s * 140 * k, h.hy + 80 * k); g.stroke(); }
   requestAnimationFrame(frame);
 }
 let dragX = null; cv.addEventListener('pointerdown', e => dragX = e.clientX); addEventListener('pointerup', () => dragX = null);
@@ -103,20 +108,21 @@ addEventListener('pointermove', e => { if (dragX == null) return; if (Math.abs(e
 document.querySelectorAll('[data-r]').forEach(b => b.onclick = () => di = (di + 4 + +b.dataset.r) % 4);
 document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => { anim = b.dataset.a; document.querySelectorAll('[data-a]').forEach(x => x.classList.toggle('on', x === b)); });
 function tabs() { $('tabs').innerHTML = ''; TABS.forEach(T => { const b = document.createElement('button'); b.innerHTML = `<i>${T.ic}</i>${T.ad}`; b.classList.toggle('on', T === tab); b.onclick = () => { tab = T; tabs(); opts(); colors(); }; $('tabs').appendChild(b); }); }
+const FR = { full: [800, .96, 0], head: [300, .5, 553], face: [190, .5, 512], body: [430, .5, 370], legs: [420, .5, 170], feet: [230, .62, 20] };
 function thumb(c, cfg, T) { const x = c.getContext('2d'), w = c.width; const bg = x.createLinearGradient(0, 0, 0, w); bg.addColorStop(0, '#dfe6fb'); bg.addColorStop(1, '#fff3e2'); x.fillStyle = bg; x.fillRect(0, 0, w, w);
-  let k, cy; if (T.v === 'face') { k = w / 40; cy = w * .5 + 117 * k; } else if (T.v === 'head') { k = w / 64; cy = w * .58 + 128 * k; } else if (T.v === 'body') { k = w / 100; cy = w * .5 + 80 * k; } else if (T.v === 'legs') { k = w / 80; cy = w * .92; } else { k = w / 190; cy = w * .96; }
-  K.draw(x, cfg, w / 2, cy, k, { t: 1.3 }); }
+  const [span, fy, off] = FR[T.v] || FR.full, k = w / span; K.draw(x, cfg, w / 2, w * fy + off * k, k, { t: 1.3, dir: T.dir || 's' }); }
 function opts() { const box = $('opts'); box.innerHTML = '';
-  if (!tab.o) { box.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px 10px;color:#8a8aa8;font-weight:800">Aşağıdan rengini seç 👇</div>`; return; }
-  for (const [v, ad] of Object.entries(tab.o)) { const b = document.createElement('button'); b.className = 'op' + (me[tab.k] === v ? ' on' : ''); const c = document.createElement('canvas'); c.width = c.height = 168; b.appendChild(c); b.insertAdjacentHTML('beforeend', `<span>${ad}</span>`); thumb(c, Object.assign({}, me, { [tab.k]: v }), tab); b.onclick = () => { me[tab.k] = v; opts(); }; box.appendChild(b); } }
+  for (const [v, ad] of Object.entries(tab.o)) { const b = document.createElement('button'); b.className = 'op' + (me[tab.k] === v ? ' on' : ''); const c = document.createElement('canvas'); c.width = c.height = 168; b.appendChild(c); b.insertAdjacentHTML('beforeend', `<span>${ad}</span>`); thumb(c, Object.assign({}, me, { [tab.k]: v }), tab); b.onclick = () => { me[tab.k] = v; opts(); }; box.appendChild(b); }
+  if (tab.k === 'sac' || tab.k === 'ust') box.insertAdjacentHTML('beforeend', `<div style="grid-column:1/-1;text-align:center;padding:8px;color:#8a8aa8;font-weight:800;font-size:12px">Yeni kombinler eklendikçe burada çoğalacak ✨</div>`); }
 function colors() { const box = $('colors'); box.innerHTML = ''; box.style.display = tab.col.length ? '' : 'none';
   for (const [key, lbl, list] of tab.col) { const r = document.createElement('div'); r.className = 'cr'; r.innerHTML = `<b>${lbl}</b>`; const s = document.createElement('div'); s.className = 'sws';
-    for (const c of list) { const b = document.createElement('button'); b.className = 'sw' + (me[key] === c ? ' on' : ''); b.style.background = c; b.onclick = () => { me[key] = c; colors(); opts(); }; s.appendChild(b); }
-    const p = document.createElement('label'); p.className = 'pick'; const i = document.createElement('input'); i.type = 'color'; i.value = me[key]; i.oninput = () => { me[key] = i.value; }; i.onchange = () => { colors(); opts(); }; p.appendChild(i); s.appendChild(p); r.appendChild(s); box.appendChild(r); } }
+    for (const c of list) { const b = document.createElement('button'); b.className = 'sw' + (me[key] === c ? ' on' : ''); if (c) b.style.background = c; else { b.style.background = 'conic-gradient(#2a2238 0 25%,#fff 0 50%,#2a2238 0 75%,#fff 0)'; b.title = 'Orijinal'; } b.onclick = () => { me[key] = c; colors(); opts(); }; s.appendChild(b); }
+    const p = document.createElement('label'); p.className = 'pick'; const i = document.createElement('input'); i.type = 'color'; i.value = me[key] || '#888888'; i.oninput = () => { me[key] = i.value; }; i.onchange = () => { colors(); opts(); }; p.appendChild(i); s.appendChild(p); r.appendChild(s); box.appendChild(r); } }
 const pick = a => a[Math.floor(Math.random() * a.length)], ks = o => Object.keys(o);
-$('rnd').onclick = () => { const sr = pick(C.sac);
-  Object.assign(me, { ten: pick(C.ten.slice(0, 6)), sac: pick(ks(K.HAIR)), sacR: sr, sacU: Math.random() < .5 ? sr : pick(C.sac), goz: pick(C.goz), gozT: pick(ks(K.EYE)), agiz: pick(ks(K.MOUTH)), ust: pick(ks(K.UST)), ustR: pick(C.giysi), trim: pick(C.trim), alt: pick(ks(K.ALT)), altR: pick(C.giysi), ayak: pick(ks(K.AYAK)), aks: Math.random() < .6 ? pick(ks(K.AKS)) : 'yok', element: Math.random() < .7 ? pick(ks(K.ELEMENT).slice(1)) : 'yok' });
+$('rnd').onclick = () => { const kom = K.kombinler().map(x => x[0]);
+  Object.assign(me, { cins: pick(['e', 'k']), sac: pick(kom), sacR: pick(C.sac), ust: pick(kom), ustR: pick(C.giysi), alt: pick(kom), altR: pick(C.giysi), ayak: pick(kom), ayakR: pick(C.giysi), goz: pick(C.goz), gozT: pick(ks(K.EYE)), agiz: pick(ks(K.MOUTH)),
+    kafa: Math.random() < .5 ? pick(ks(K.KAFA)) : 'yok', kafaR: pick(C.aks), kulak: Math.random() < .5 ? pick(ks(K.KULAK)) : 'yok', kulakR: pick(C.aks), yuz: Math.random() < .35 ? pick(ks(K.YUZ)) : 'yok', yuzR: pick(C.aks), boyun: Math.random() < .4 ? pick(ks(K.BOYUN)) : 'yok', boyunR: pick(C.aks), sirt: Math.random() < .35 ? pick(ks(K.SIRT)) : 'yok', sirtR: pick(C.aks), kuyruk: Math.random() < .35 ? pick(ks(K.KUYRUK)) : 'yok', kuyrukR: pick(C.aks), element: Math.random() < .6 ? pick(ks(K.ELEMENT).slice(1)) : 'yok' });
   anim = 'cheer'; setTimeout(() => anim === 'cheer' && (anim = 'idle'), 1200); opts(); colors(); };
-$('save').onclick = () => { me.ad = $('nameIn').value.trim(); try { localStorage.setItem('bk_anime', JSON.stringify(me)); } catch (e) {} $('toast').classList.add('on'); setTimeout(() => $('toast').classList.remove('on'), 1800); anim = 'cheer'; setTimeout(() => anim = 'idle', 1500); };
-fit(); tabs(); opts(); colors(); frame();
+$('save').onclick = () => { me.ad = $('nameIn').value.trim(); try { localStorage.setItem('bk_kukla', JSON.stringify(me)); } catch (e) {} $('toast').classList.add('on'); setTimeout(() => $('toast').classList.remove('on'), 1800); anim = 'cheer'; setTimeout(() => anim = 'idle', 1500); };
+fit(); K.load('bk/').then(() => { buildTabs(); tabs(); opts(); colors(); frame(); });
 </script></body></html>
