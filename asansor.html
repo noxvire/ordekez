@@ -77,6 +77,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
  </div>
  <div class="box mright"><div class="ptitle">Karakterini Tasarla</div><div id="ctabs"></div><div id="copts"></div><div id="ccols"></div></div>
 </div></div>
+<div id="clickHint" style="display:none;position:fixed;left:50%;top:40%;transform:translateX(-50%);z-index:6;background:rgba(10,14,40,.7);border:1px solid #e8c06a;color:#f4dfa8;padding:8px 16px;border-radius:999px;font-weight:900;pointer-events:none">🖱️ Etrafa bakmak için ekrana tıkla</div>
 <div id="hud"><div id="cross"></div><div id="hint"></div><div id="big"></div>
   <div id="info"></div><div id="help">WASD yürü · Shift koş · Boşluk zıpla<br>E etkileşim · T sohbet · Esc menü</div>
   <div id="chatLog"></div><input id="chatIn" maxlength="120" placeholder="Mesaj yaz, Enter ile gönder">
@@ -98,7 +99,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 <script src="guncel.js"></script>
 <script type="module">
 import * as THREE from './three-uzay.js';
-import { makeDuck, norm, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=5';
+import { makeDuck, norm, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=8';
 import { Reflector } from './gltf.js?v=9006';
 const $ = id => document.getElementById(id);
 const SB_URL = 'https://servvglgsudtjouqknvx.supabase.co', SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
@@ -290,6 +291,7 @@ function buildCab() {
   // ayna (arka duvar)
   const mfr = new THREE.Mesh(new THREE.BoxGeometry(.03, 1.96, 2.76), M.gold); mfr.position.set(EL.x1 - .01, 1.5, cz); g.add(mfr);
   MIRROR = new Reflector(new THREE.PlaneGeometry(2.6, 1.8), { clipBias: .003, textureWidth: 512, textureHeight: 360, color: '#c8ccd4' }); MIRROR.position.set(EL.x1 - .03, 1.5, cz); MIRROR.rotation.y = -Math.PI / 2; MIRROR.camera.layers.enableAll(); g.add(MIRROR);
+  solidBox(g, EL.x1 - .32, EL.x1, 0, EL.h, EL.z0, EL.z1);
   MIRROR_OFF = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 1.8), new THREE.MeshStandardMaterial({ color: '#dfe6f2', metalness: 1, roughness: .08 })); MIRROR_OFF.position.copy(MIRROR.position); MIRROR_OFF.rotation.copy(MIRROR.rotation); g.add(MIRROR_OFF);
   // tırabzanlar
   for (const [x, z, w, d] of [[cx + .3, EL.z0 + .1, 2.2, .06], [cx + .85, EL.z1 - .1, 1.1, .06], [EL.x1 - .1, cz, .06, 2.6]]) { const r = new THREE.Mesh(new THREE.BoxGeometry(w, .06, d), M.gold); r.position.set(x, .95, z); g.add(r); }
@@ -452,10 +454,10 @@ function closeChat() { chatOpen = false; $('chatIn').style.display = 'none'; $('
 const PAUSED = () => $('pause').style.display === 'flex';
 function clearKeys() { for (const k in keys) keys[k] = false; }
 addEventListener('blur', clearKeys);
-addEventListener('keydown', e => { if (!playing || chatOpen || PAUSED() || (!TOUCH && !locked)) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'KeyT' || e.code === 'Enter') { e.preventDefault(); openChat(); } });
+addEventListener('keydown', e => { if (e.code === 'Escape' && playing && !chatOpen) { if (PAUSED()) resume(); else if (!locked) { clearKeys(); $('clickHint').style.display = 'none'; $('pause').style.display = 'flex'; } return; } if (!playing || chatOpen || PAUSED()) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'KeyT' || e.code === 'Enter') { e.preventDefault(); openChat(); } });
 addEventListener('keyup', e => { keys[e.code] = false; });
 renderer.domElement.addEventListener('click', () => { if (playing && !TOUCH && !chatOpen) renderer.domElement.requestPointerLock?.(); audio(); });
-document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; if (!locked) clearKeys(); if (!locked && playing && !chatOpen && !TOUCH) $('pause').style.display = 'flex'; else $('pause').style.display = 'none'; });
+document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; if (locked) $('clickHint').style.display = 'none'; if (!locked) clearKeys(); if (!locked && playing && !chatOpen && !TOUCH) $('pause').style.display = 'flex'; else $('pause').style.display = 'none'; });
 addEventListener('mousemove', e => { if (!locked) return; const k = .0022 * SET.sens; P.yaw -= e.movementX * k; P.pitch = clamp(P.pitch - e.movementY * k, -1.45, 1.45); });
 function interact() { if (lookAtButton()) pressButton(); }
 function lookAtButton() { if (!BUTTON || !inCab()) return false; const bp = new THREE.Vector3(); BUTTON.getWorldPosition(bp); const d = bp.clone().sub(camera.position); if (d.length() > 2.3) return false; const f = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion); return f.dot(d.normalize()) > .82; }
@@ -522,7 +524,8 @@ $('bKur').onclick = () => start(newCode());
 $('bKatil').onclick = () => { const c = $('codeIn').value.trim().toUpperCase(); if (c.length !== 4) { $('msgM').textContent = '4 haneli oda kodunu yaz'; return; } start(c); };
 $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bKatil').click(); });
 $('bTek').onclick = () => start('');
-$('bDevam').onclick = () => { $('pause').style.display = 'none'; renderer.domElement.requestPointerLock?.(); };
+function resume() { $('pause').style.display = 'none'; try { const p = renderer.domElement.requestPointerLock?.(); if (p && p.catch) p.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !TOUCH && !PAUSED()) $('clickHint').style.display = 'block'; }, 250); }
+$('bDevam').onclick = resume;
 $('bCik').onclick = () => location.href = 'index.html';
 $('bLink').onclick = () => { const u = location.origin + location.pathname + '?oda=' + ROOM; navigator.clipboard?.writeText(u); $('bLink').textContent = ROOM ? '✅ Kopyalandı' : 'Tek başınasın'; };
 $('pCode').textContent = '';
@@ -553,6 +556,6 @@ function loop(now) {
   renderer.render(scene, camera); requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__T = { P, ES, DUR, ROSTER, makeAvatar, start, pressButton, inCab, loadFloor };
+window.__T = { collide, get COLL() { return COLL; }, get locked() { return locked; }, P, ES, DUR, ROSTER, makeAvatar, start, pressButton, inCab, loadFloor };
 </script>
 </body></html>
