@@ -216,7 +216,7 @@ function solidBox(group, x0, x1, y0, y1, z0, z1) { COLL.push({ x0, x1, y0, y1, z
 const lobby = new THREE.Group(); scene.add(lobby);
 function plant(g, x, z, s = 1) { const p = new THREE.Group(); p.position.set(x, 0, z); p.scale.setScalar(s); const pot = new THREE.Mesh(new THREE.CylinderGeometry(.42, .34, .8, 10), M.pot); pot.position.y = .4; p.add(pot); for (let i = 0; i < 9; i++) { const l = new THREE.Mesh(new THREE.ConeGeometry(.16, 1.5 + rnd() * .8, 4), i % 2 ? M.leaf : M.leaf2); const a = i / 9 * Math.PI * 2; l.position.set(Math.cos(a) * .2, 1.4, Math.sin(a) * .2); l.rotation.set(Math.sin(a) * .6, 0, -Math.cos(a) * .6); p.add(l); } g.add(p); solidBox(g, x - .45 * s, x + .45 * s, 0, 1.2, z - .45 * s, z + .45 * s); }
 function palm(g, x, z) { const p = new THREE.Group(); p.position.set(x, 0, z); const pot = new THREE.Mesh(new THREE.CylinderGeometry(.6, .5, 1, 10), M.pot); pot.position.y = .5; p.add(pot); const tr = new THREE.Mesh(new THREE.CylinderGeometry(.09, .13, 3.2, 6), new THREE.MeshStandardMaterial({ color: '#8a6a4a', flatShading: true })); tr.position.y = 2.4; p.add(tr); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, l = new THREE.Mesh(new THREE.BoxGeometry(2.2, .04, .4), M.leaf2); l.position.set(Math.cos(a) * 1, 3.9, Math.sin(a) * 1); l.rotation.y = -a; l.rotation.z = -.35; p.add(l); } g.add(p); solidBox(g, x - .6, x + .6, 0, 1.2, z - .6, z + .6); }
-const INTER = [], SEATS = [];
+const INTER = [], SEATS = [], BILL = []; // BILL: hep oyuncuya dönen düz heykel resimleri
 function sofa(g, x, z, rot) { const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = rot; const seat = new THREE.Mesh(new THREE.BoxGeometry(2.6, .45, 1), M.sofa); seat.position.y = .32; s.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(2.6, .7, .25), M.sofa); back.position.set(0, .8, -.4); s.add(back); for (const sx of [-1.3, 1.3]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(.25, .65, 1), M.sofa); arm.position.set(sx, .5, 0); s.add(arm); } for (const px of [-.7, .7]) { const c = new THREE.Mesh(new THREE.BoxGeometry(.6, .5, .18), M.navy); c.position.set(px, .78, -.22); c.rotation.x = -.15; s.add(c); } g.add(s); const w = Math.abs(Math.cos(rot)) > .5 ? 1.4 : .55, d = Math.abs(Math.cos(rot)) > .5 ? .55 : 1.4; solidBox(g, x - w, x + w, 0, .9, z - d, z + d);
   const cs = Math.cos(rot), sn = Math.sin(rot), W = (lx, lz) => [x + lx * cs + lz * sn, z - lx * sn + lz * cs];
   for (const sx of [-.65, .65]) { const [wx, wz] = W(sx, .05), [ex, ez] = W(sx, 1.05), seat = { x: wx, z: wz, y: .42, yaw: rot + Math.PI, ex, ez }; SEATS.push(seat); INTER.push({ x: wx, z: wz, y: .5, r: 1.7, label: 'Otur', ok: () => ES.floor === 0, fn: () => sitDown(seat) }); } }
@@ -294,7 +294,7 @@ function buildLobby() {
     const rim = new THREE.Mesh(new THREE.BoxGeometry(.76, .03, .76), M.gold); rim.position.set(23.45, 1.33, z); cg.add(rim);
     solidBox(cg, 23.08, 23.82, 0, 1.35, z - .38, z + .38);
     const tex = new THREE.TextureLoader().load(src); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
-    const st = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.5), new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: .3, roughness: .45, side: THREE.DoubleSide })); st.position.set(23.42, 1.34 + .75, z); st.rotation.y = -Math.PI / 2; cg.add(st);
+    const st = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.5), new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: .3, roughness: .45, side: THREE.DoubleSide })); st.position.set(23.45, 1.34 + .75, z); st.rotation.y = -Math.PI / 2; cg.add(st); BILL.push(st);
   }
   // fotoğraflar (sol: kız, sağ: erkek), kırmızı halı, aplikler, sehpalar
   { const tl = new THREE.TextureLoader();
@@ -455,7 +455,7 @@ function jump() { if (SIT) { if (!PIANO) standUp(); return; } if (P.on && !chatO
 
 /* ================= ASANSÖR DURUMU ================= */
 // faz: 'acik' | 'kapaniyor' | 'gidiyor' | 'aciliyor'
-const MAXKAT = 100; // ileride 1000 olabilir
+const MAXKAT = 1000; // kat sayısı henüz belli değil
 const ES = { floor: 0, phase: 'acik', target: 0, t: 0, dur: 0, max: 0, seen: [] };
 const DUR = { kapaniyor: 4, gidiyor: 6.5, aciliyor: 1.4 };
 let ROOMSEED = 0;
@@ -472,7 +472,8 @@ function pressButton() {
   if (FLOOR && FLOOR.bittiMi && !FLOOR.bittiMi(CTX)) { showBig('Önce bu katı bitirmelisin!'); return; }
   if (isHost()) hostStart(); else netSend('req', {});
 }
-function hostStart() { if (ES.phase !== 'acik') return; const pool = []; for (let i = 1; i <= MAXKAT; i++) if (!ES.seen.includes(i)) pool.push(i); const target = pool.length ? pool[Math.floor(Math.random() * pool.length)] : 0; const seen = target ? ES.seen.concat(target) : []; const st = { target, floor: ES.floor, seen }; applyRemote({ ph: 'kapaniyor', ...st }); netSend('el', { ph: 'kapaniyor', ...st }); }
+const RASTGELE = false; // haritalar hazır olunca true: katlar rastgele ve tekrarsız gelir
+function hostStart() { if (ES.phase !== 'acik') return; if (!RASTGELE) { const target = ES.floor + 1 > MAXKAT ? 0 : ES.floor + 1, st = { target, floor: ES.floor, seen: [] }; applyRemote({ ph: 'kapaniyor', ...st }); netSend('el', { ph: 'kapaniyor', ...st }); return; } const pool = []; for (let i = 1; i <= MAXKAT; i++) if (!ES.seen.includes(i)) pool.push(i); const target = pool.length ? pool[Math.floor(Math.random() * pool.length)] : 0; const seen = target ? ES.seen.concat(target) : []; const st = { target, floor: ES.floor, seen }; applyRemote({ ph: 'kapaniyor', ...st }); netSend('el', { ph: 'kapaniyor', ...st }); }
 function applyRemote(m) { if (m.seen) ES.seen = m.seen; setPhase(m.ph, { target: m.target, floor: m.floor }); }
 function updateElevator(dt) {
   if (ES.phase !== 'acik') { ES.t += dt; if (ES.t >= ES.dur) { if (ES.phase === 'kapaniyor') setPhase('gidiyor'); else if (ES.phase === 'gidiyor') setPhase('aciliyor'); else if (ES.phase === 'aciliyor') setPhase('acik'); } }
@@ -663,7 +664,7 @@ function ambTick(dt) { if (!AMB) { if (playing && AC) ambStart(); return; } cons
   if (!inLobby) return; AMB.ev -= dt; if (AMB.ev <= 0) { AMB.ev = 18 + Math.random() * 25; const r = Math.random(); if (r < .45) phoneRing(); else if (r < .75) { tone(1318, 1.2, 'sine', .018); tone(1046, 1.6, 'sine', .015, .35); } else { tone(523, .5, 'sine', .02); tone(659, .5, 'sine', .02, .3); tone(784, .9, 'sine', .02, .6); } } }
 function phoneRing() { const d = Math.hypot(P.x - 3, P.z + 8), v = Math.max(.15, 1 - d / 22) * .035; for (let k = 0; k < 2; k++) for (let i = 0; i < 10; i++) { tone(440, .045, 'sine', v, k * 1.1 + i * .05); tone(480, .045, 'sine', v, k * 1.1 + i * .05); } setTimeout(() => recepSay(TEL[Math.floor(Math.random() * TEL.length)], true), 2600); }
 // resepsiyonist
-const RECEP_LAF = ['Ördekez Corporation\'a hoş geldiniz! Asansörler sağdaki koridorda.', '100 kat var ama hangisine gideceğinizi asansör seçiyor. Ben karışmam.', 'Bir katı gördüyseniz bir daha göremezsiniz. Kurallar böyle.', 'Asansördeki aynaya çok bakmayın. Bazen o da size bakıyor.', 'Koltuklara oturabilirsiniz. Piyanoyu kötü çalarsanız müdüre şikayet ederim.', 'Hayır, merdiven yok. Hiç olmadı.', 'Bugün 100. kattan geri dönen olmadı. Yani… iyi eğlenceler!', 'Kırmızı halıya basmadan önce ayaklarınızı silin. Ah, perdeliymiş.', 'Müdür Bey toplantıda. 1997\'den beri.', 'Koridordaki fotoğraflar mı? Şirketin kurucuları. Fazla soru sormayın.', 'Vak.', 'Asansör müziğini ben seçtim. Beğendiniz mi?', 'Ziyaretçi kartınız yok mu? Neyse, ördeksiniz zaten.', 'Kayıp eşyalar bürosu 47. katta. Ya da 12. Değişiyor.'];
+const RECEP_LAF = ['Ördekez Corporation\'a hoş geldiniz! Asansörler sağdaki koridorda.', 'Asansördeki aynaya çok bakmayın. Bazen o da size bakıyor.', 'Koltuklara oturabilirsiniz. Piyanoyu kötü çalarsanız müdüre şikayet ederim.', 'Hayır, merdiven yok. Hiç olmadı.', 'Kırmızı halıya basmadan önce ayaklarınızı silin. Ah, perdeliymiş.', 'Müdür Bey toplantıda. 1997\'den beri.', 'Koridordaki fotoğraflar mı? Şirketin kurucuları. Fazla soru sormayın.', 'Vak.', 'Asansör müziğini ben seçtim. Beğendiniz mi?', 'Ziyaretçi kartınız yok mu? Neyse, ördeksiniz zaten.', 'Kayıp eşyalar bürosu 47. katta. Ya da 12. Değişiyor.'];
 const TEL = ['📞 Alo, Ördekez Corp buyrun? …Hayır efendim, 13. kat yok. Sormayın.', '📞 Alo? …Yine mi asansörde kaldınız? Düğmeye basın efendim.', '📞 Alo? …Hayır, burası fırın değil. İyi günler.', '📞 Ördekez Corp? …Müdür Bey toplantıda. Evet, hâlâ.'];
 let RECEP = null, RECEP_B = null, RECEP_T = 0, RECEP_I = 0;
 function bubbleSprite(txt) { const c = document.createElement('canvas'), W = 640; const g = c.getContext('2d'); g.font = '800 30px Nunito'; const words = txt.split(' '), lines = []; let l = ''; for (const w of words) { const t = l ? l + ' ' + w : w; if (g.measureText(t).width > W - 70 && l) { lines.push(l); l = w; } else l = t; } lines.push(l); const H = 40 + lines.length * 40 + 24; c.width = W; c.height = H; g.font = '800 30px Nunito'; g.fillStyle = 'rgba(255,250,236,.96)'; g.beginPath(); g.roundRect(6, 6, W - 12, H - 30, 22); g.fill(); g.beginPath(); g.moveTo(W / 2 - 16, H - 25); g.lineTo(W / 2, H - 4); g.lineTo(W / 2 + 16, H - 25); g.fill(); g.fillStyle = '#2a2040'; g.textAlign = 'center'; lines.forEach((s, i) => g.fillText(s, W / 2, 50 + i * 40)); const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false, transparent: true })); sp.scale.set(3.2, 3.2 * H / W, 1); sp.renderOrder = 5; return sp; }
@@ -729,6 +730,7 @@ function loop(now) {
   if (FLOOR && FLOOR.guncelle) FLOOR.guncelle(dt, CTX);
   if (HOLO) { HOLO.material.opacity = .7 + Math.sin(now / 300) * .15; }
   updOthers(dt); netTick(now); lobbyTick(dt);
+  for (const b of BILL) { let r = Math.atan2(camera.position.x - b.position.x, camera.position.z - b.position.z) + Math.PI / 2; r = Math.atan2(Math.sin(r), Math.cos(r)); b.rotation.y = -Math.PI / 2 + clamp(r, -1, 1); }
   if (ME) { ME.root.position.set(P.x, P.y, P.z); ME.root.rotation.y = P.yaw; if (MYEMOT > 0) { MYEMOT -= dt; if (P.moving || !P.on) MYEMOT = 0; } const me = MYEMOT > 0 ? MYEMO : null; ME.update(dt, { hiz: P.moving ? 1 : 0, kosu: keys.ShiftLeft || keys.ShiftRight || JOY.run, zipla: !P.on, [me]: me ? 1 : 0 }); }
   for (let i = POPS.length - 1; i >= 0; i--) { const q = POPS[i]; q.t += dt; q.sp.position.y = 1.9 + q.t * .5; q.sp.material.opacity = Math.max(0, 1 - q.t / 1.8); if (q.t > 1.8) { q.par.remove(q.sp); POPS.splice(i, 1); } }
   if (MIRROR) { const near = SET.mir && Math.hypot(P.x - 25.5, P.z + 4) < 9; MIRROR.visible = !!near; MIRROR_OFF.visible = !near; }
