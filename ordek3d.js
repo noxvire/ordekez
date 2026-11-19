@@ -135,7 +135,7 @@ export function makeDuck(THREE, cfg = {}) {
   if (k5 === 'kabuk') { mesh(new THREE.SphereGeometry(.4, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), R, [0, .5, .3], [Math.PI / 2, 0, 0], [1, 1, .6], back); for (let i = 0; i < 7; i++) { const a = i / 6 * Math.PI * 2, rr = i === 6 ? 0 : .2; mesh(new THREE.CylinderGeometry(.08, .08, .02, 6), toon(darken(C.sirtR, .25)), [Math.cos(a) * rr, .5 + Math.sin(a) * rr, .53 + (i === 6 ? .02 : 0)], [Math.PI / 2, 0, 0], [1, 1, 1], back); } }
 
   // ===== EL =====
-  const E = toon(C.elR), k6 = C.el, hand = new THREE.Group(); hand.position.set(.04, -.32, -.08); hand.rotation.z = -.55; wings[1].add(hand); if (!['balon', 'bayrak', 'tirpan'].includes(C.el)) hand.scale.setScalar(1.6);
+  const E = toon(C.elR), k6 = C.el, hand = new THREE.Group(); hand.position.set(-.04, -.32, -.08); hand.rotation.z = .55; wings[0].add(hand); // eşyalar sol elde, selam sağ elle if (!['balon', 'bayrak', 'tirpan'].includes(C.el)) hand.scale.setScalar(1.6);
   if (k6 === 'balon') { mesh(new THREE.CylinderGeometry(.006, .006, 1.05), toon('#ffffff'), [.12, .5, 0], [0, 0, -.23], [1, 1, 1], hand); mesh(S(.22, 20, 16), toon(C.elR, { roughness: .15 }), [.25, 1.25, 0], [0, 0, 0], [1, 1.15, 1], hand); }
   if (k6 === 'cicek') { mesh(new THREE.CylinderGeometry(.01, .01, .3), toon('#4a9a3a'), [0, .1, -.05], [-.3, 0, 0], [1, 1, 1], hand); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(S(.05, 10, 8), E, [Math.cos(a) * .06, .27, -.1 + Math.sin(a) * .06], [0, 0, 0], [1, 1, 1], hand); } mesh(S(.04), toon('#ffd23f'), [0, .27, -.1], [0, 0, 0], [1, 1, 1], hand); }
   if (k6 === 'kilic') { const g = new THREE.Group(); g.rotation.x = -.6; hand.add(g); mesh(new THREE.BoxGeometry(.04, .55, .015), toon('#e8ecf4', { metalness: .8, roughness: .2 }), [0, .35, 0], [0, 0, 0], [1, 1, 1], g); mesh(new THREE.BoxGeometry(.16, .03, .04), M.gold, [0, .07, 0], [0, 0, 0], [1, 1, 1], g); mesh(new THREE.CylinderGeometry(.02, .02, .12), E, [0, 0, 0], [0, 0, 0], [1, 1, 1], g); }
@@ -153,6 +153,7 @@ export function makeDuck(THREE, cfg = {}) {
     mesh(new THREE.BoxGeometry(.07, .09, .07), toon('#2a0a10', { metalness: .4, roughness: .3 }), [0, 1.13, 0], [0, 0, 0], [1, 1, 1], sc);
     mesh(new THREE.OctahedronGeometry(.035), toon('#ff2a1a', { emissive: '#ff1a0a', emissiveIntensity: 1.5 }), [0, 1.13, -.045], [0, 0, 0], [1, 1, 1], sc); }
   if (k6 === 'bayrak') { mesh(new THREE.CylinderGeometry(.015, .015, 1), toon('#8a6a4a'), [0, .4, 0], [0, 0, 0], [1, 1, 1], hand); mesh(S(.03), M.gold, [0, .91, 0], [0, 0, 0], [1, 1, 1], hand); const f = mesh(new THREE.PlaneGeometry(.42, .27, 8, 1), toon(C.elR, { side: THREE.DoubleSide }), [.21, .75, 0], [0, 0, 0], [1, 1, 1], hand); f.userData.flag = 1; }
+  hand.scale.x = -Math.abs(hand.scale.x); // sağ el için yapılmış eşyaları sol ele aynala
 
   const flames = [], capes = [], flags = [], glows = []; root.traverse(o => { if (o.userData.glow) glows.push(o); if (o.userData.flame) flames.push(o); if (o.userData.cape) capes.push(o); if (o.userData.flag) flags.push(o); });
   let t = Math.random() * 10, blink = 2, wave = 0;
