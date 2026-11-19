@@ -3366,7 +3366,7 @@ const SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
 const TOK = 'ordekez_token', USR = 'ordekez_user';
 const ls = window.localStorage;
 const rawSet = Storage.prototype.setItem, rawRemove = Storage.prototype.removeItem;
-const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_') || k.startsWith('ni_') || k.startsWith('tk_') || k.startsWith('sv_'));
+const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_') || k.startsWith('ni_') || k.startsWith('tk_') || k.startsWith('sv_') || k === 'as_env' || k === 'as_duck');
 
 async function rpc(fn, args){
   const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) });
@@ -3391,6 +3391,7 @@ function better(k, a, b){              // a: sunucu, b: yerel
     base.cls = Object.assign({}, B.cls || {}, A.cls || {}); base.clsStart = Object.assign({}, B.clsStart || {}, A.clsStart || {});
     base.clsXp = {}; for (const k2 of new Set([...Object.keys(A.clsXp || {}), ...Object.keys(B.clsXp || {})])) base.clsXp[k2] = Math.max((A.clsXp || {})[k2] || 0, (B.clsXp || {})[k2] || 0);
     base.clsFix = A.clsFix || B.clsFix; return JSON.stringify(base); } catch(e){ return a; } }
+  if (k === 'as_env'){ try { const A = JSON.parse(a), B = JSON.parse(b), u = (x, y) => [...new Set([...(x || []), ...(y || [])])]; return JSON.stringify({ items: u(A.items, B.items), rozet: u(A.rozet, B.rozet) }); } catch(e){ return a; } }
   if (k === 'sv_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); return (B.oyun || 0) > (A.oyun || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'tk_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); if ((A.v === 2) !== (B.v === 2)) return A.v === 2 ? a : b; return (B.toplam || 0) > (A.toplam || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'dk_save'){ try { return (JSON.parse(b).night || 0) > (JSON.parse(a).night || 0) ? b : a; } catch(e){ return a; } }
