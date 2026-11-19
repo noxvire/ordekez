@@ -610,6 +610,7 @@ function start(code) {
   if (code) { netStart(code); history.replaceState(null, '', '?oda=' + code); }
   ME = makeDuck(THREE, DUCK); ME.root.scale.setScalar(1.15); ME.root.traverse(o => o.layers.set(1)); scene.add(ME.root);
   try { warmMirror(); } catch (e) {}
+  { const kn = parseInt(Q.get('kat')); if (kn > 0 && (KATLAR[kn] || kn < 50)) setTimeout(() => { ES.floor = kn; ES.target = kn; ES.done = Array.from({ length: kn - 1 }, (_, i) => i + 1); loadFloor(kn); P.x = EL.x0 + 1.4; P.z = -4; P.y = 0; P.yaw = Math.PI / 2; updInfo(); }, 300); }
   hotbarDraw();
   updInfo(); showBig('ÖRDEKEZ LOBİSİ<br><small style="font:800 16px Nunito">Asansörler sağdaki koridorda →</small>');
   if (!TOUCH) renderer.domElement.requestPointerLock?.();
