@@ -60,6 +60,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 #pause{position:fixed;inset:0;z-index:15;display:none;align-items:center;justify-content:center;background:rgba(5,8,24,.55)}
 /* mobil */
 #mob{display:none}
+#piano{display:none;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:7;text-align:center;pointer-events:auto;background:rgba(10,14,40,.72);border:1px solid rgba(232,192,106,.6);border-radius:16px;padding:8px 12px 12px}#piano .pt{font-weight:900;font-size:13px;color:#f4dfa8;margin-bottom:6px}#piano .pk{position:relative;height:120px;margin:0 auto;touch-action:none}#piano .wk{position:relative;display:inline-block;width:42px;height:118px;margin-right:2px;background:#f6f4ee;border-radius:0 0 7px 7px;vertical-align:top;cursor:pointer}#piano .bk{position:absolute;top:0;width:28px;height:72px;background:#15151c;border-radius:0 0 5px 5px;z-index:2;cursor:pointer}#piano span{position:absolute;bottom:6px;left:0;right:0;font:900 12px Nunito;color:#555}#piano .bk span{color:#ccc}#piano .on{background:#e8c06a!important}#piano .pq{margin-top:8px;border:0;border-radius:10px;padding:6px 18px;font:900 14px Nunito;background:#e8c06a;color:#1a1530;cursor:pointer}.pianoOn #mob{display:none!important}.pianoOn #help{display:none}
 .touch #mob{display:block}.touch #help{display:none}.touch #cross{display:none}
 #joy{position:fixed;left:22px;bottom:26px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);z-index:6;pointer-events:auto;touch-action:none}
 #joyK{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(244,223,168,.6)}
@@ -100,6 +101,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
    <div class="set">Ayna yansıması<div class="seg" id="sMir"><button data-m="1">Açık</button><button data-m="0">Kapalı</button></div></div>
   </div><button class="btn alt" id="bLink">🔗 Davet linkini kopyala</button><button class="btn alt" id="bCik">Çıkış</button></div></div>
 <div id="wheel"><div id="wSel"></div></div>
+<div id="piano"><div class="pt">🎹 Piyano · tuşlara bas · <b>Q</b> kalk</div><div class="pk"></div><button class="pq">Kalk</button></div>
 <div id="mob"><div id="joy"><div id="joyK"></div></div><button class="mb" id="mJ">⤒</button><button class="mb" id="mE">E</button><button class="mb" id="mM">😀</button><button class="mb" id="mT">💬</button></div>
 
 <script>addEventListener("error",e=>{const m=document.getElementById("msgM");if(m)m.textContent="Hata: "+(e.message||e.error)});</script>
@@ -214,7 +216,10 @@ function solidBox(group, x0, x1, y0, y1, z0, z1) { COLL.push({ x0, x1, y0, y1, z
 const lobby = new THREE.Group(); scene.add(lobby);
 function plant(g, x, z, s = 1) { const p = new THREE.Group(); p.position.set(x, 0, z); p.scale.setScalar(s); const pot = new THREE.Mesh(new THREE.CylinderGeometry(.42, .34, .8, 10), M.pot); pot.position.y = .4; p.add(pot); for (let i = 0; i < 9; i++) { const l = new THREE.Mesh(new THREE.ConeGeometry(.16, 1.5 + rnd() * .8, 4), i % 2 ? M.leaf : M.leaf2); const a = i / 9 * Math.PI * 2; l.position.set(Math.cos(a) * .2, 1.4, Math.sin(a) * .2); l.rotation.set(Math.sin(a) * .6, 0, -Math.cos(a) * .6); p.add(l); } g.add(p); solidBox(g, x - .45 * s, x + .45 * s, 0, 1.2, z - .45 * s, z + .45 * s); }
 function palm(g, x, z) { const p = new THREE.Group(); p.position.set(x, 0, z); const pot = new THREE.Mesh(new THREE.CylinderGeometry(.6, .5, 1, 10), M.pot); pot.position.y = .5; p.add(pot); const tr = new THREE.Mesh(new THREE.CylinderGeometry(.09, .13, 3.2, 6), new THREE.MeshStandardMaterial({ color: '#8a6a4a', flatShading: true })); tr.position.y = 2.4; p.add(tr); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, l = new THREE.Mesh(new THREE.BoxGeometry(2.2, .04, .4), M.leaf2); l.position.set(Math.cos(a) * 1, 3.9, Math.sin(a) * 1); l.rotation.y = -a; l.rotation.z = -.35; p.add(l); } g.add(p); solidBox(g, x - .6, x + .6, 0, 1.2, z - .6, z + .6); }
-function sofa(g, x, z, rot) { const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = rot; const seat = new THREE.Mesh(new THREE.BoxGeometry(2.6, .45, 1), M.sofa); seat.position.y = .32; s.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(2.6, .7, .25), M.sofa); back.position.set(0, .8, -.4); s.add(back); for (const sx of [-1.3, 1.3]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(.25, .65, 1), M.sofa); arm.position.set(sx, .5, 0); s.add(arm); } for (const px of [-.7, .7]) { const c = new THREE.Mesh(new THREE.BoxGeometry(.6, .5, .18), M.navy); c.position.set(px, .78, -.22); c.rotation.x = -.15; s.add(c); } g.add(s); const w = Math.abs(Math.cos(rot)) > .5 ? 1.4 : .55, d = Math.abs(Math.cos(rot)) > .5 ? .55 : 1.4; solidBox(g, x - w, x + w, 0, .9, z - d, z + d); }
+const INTER = [], SEATS = [];
+function sofa(g, x, z, rot) { const s = new THREE.Group(); s.position.set(x, 0, z); s.rotation.y = rot; const seat = new THREE.Mesh(new THREE.BoxGeometry(2.6, .45, 1), M.sofa); seat.position.y = .32; s.add(seat); const back = new THREE.Mesh(new THREE.BoxGeometry(2.6, .7, .25), M.sofa); back.position.set(0, .8, -.4); s.add(back); for (const sx of [-1.3, 1.3]) { const arm = new THREE.Mesh(new THREE.BoxGeometry(.25, .65, 1), M.sofa); arm.position.set(sx, .5, 0); s.add(arm); } for (const px of [-.7, .7]) { const c = new THREE.Mesh(new THREE.BoxGeometry(.6, .5, .18), M.navy); c.position.set(px, .78, -.22); c.rotation.x = -.15; s.add(c); } g.add(s); const w = Math.abs(Math.cos(rot)) > .5 ? 1.4 : .55, d = Math.abs(Math.cos(rot)) > .5 ? .55 : 1.4; solidBox(g, x - w, x + w, 0, .9, z - d, z + d);
+  const cs = Math.cos(rot), sn = Math.sin(rot), W = (lx, lz) => [x + lx * cs + lz * sn, z - lx * sn + lz * cs];
+  for (const sx of [-.65, .65]) { const [wx, wz] = W(sx, .05), [ex, ez] = W(sx, 1.05), seat = { x: wx, z: wz, y: .42, yaw: rot + Math.PI, ex, ez }; SEATS.push(seat); INTER.push({ x: wx, z: wz, y: .5, r: 1.7, label: 'Otur', ok: () => ES.floor === 0, fn: () => sitDown(seat) }); } }
 function buildLobby() {
   const g = lobby;
   // zemin + halı + yıldız
@@ -432,6 +437,7 @@ function collide(nx, nz, y) {
 function groundAt(x, z, y) { let gy = 0; for (const c of COLL) { if (!collActive(c)) continue; if (x + P.r * .7 > c.x0 && x - P.r * .7 < c.x1 && z + P.r * .7 > c.z0 && z - P.r * .7 < c.z1 && c.y1 <= y + .36) gy = Math.max(gy, c.y1); } return gy; }
 function movePlayer(dt) {
   if (PAUSED()) { clearKeys(); }
+  if (SIT) { P.x = SIT.x; P.z = SIT.z; P.y = SIT.y; P.vy = 0; P.on = true; P.moving = false; if (!PIANO && !chatOpen && (keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD || keys.ArrowUp || keys.ArrowDown || Math.hypot(JOY.x, JOY.y) > .5)) standUp(); return; }
   let fx = 0, fz = 0; if (!chatOpen) { if (keys.KeyW || keys.ArrowUp) fz += 1; if (keys.KeyS || keys.ArrowDown) fz -= 1; if (keys.KeyA || keys.ArrowLeft) fx -= 1; if (keys.KeyD || keys.ArrowRight) fx += 1; }
   fx += JOY.x; fz += -JOY.y;
   const len = Math.hypot(fx, fz); if (len > 1) { fx /= len; fz /= len; }
@@ -445,18 +451,19 @@ function movePlayer(dt) {
   if (P.y < -30) { P.x = 25.5; P.z = -4; P.y = 0; P.vy = 0; }
   P.moving = len > .1;
 }
-function jump() { if (P.on && !chatOpen) { P.vy = 7.2; P.on = false; } }
+function jump() { if (SIT) { if (!PIANO) standUp(); return; } if (P.on && !chatOpen) { P.vy = 7.2; P.on = false; } }
 
 /* ================= ASANSÖR DURUMU ================= */
 // faz: 'acik' | 'kapaniyor' | 'gidiyor' | 'aciliyor'
-const ES = { floor: 0, phase: 'acik', target: 0, t: 0, dur: 0, max: 0 };
+const MAXKAT = 100; // ileride 1000 olabilir
+const ES = { floor: 0, phase: 'acik', target: 0, t: 0, dur: 0, max: 0, seen: [] };
 const DUR = { kapaniyor: 4, gidiyor: 6.5, aciliyor: 1.4 };
 let ROOMSEED = 0;
 function doorClosedAmt() { if (ES.phase === 'acik') return 0; if (ES.phase === 'gidiyor') return 1; const k = clamp(ES.t / ES.dur, 0, 1); if (ES.phase === 'kapaniyor') return clamp((k - .55) / .45, 0, 1); return 1 - k; }
 function setPhase(ph, extra = {}) { Object.assign(ES, extra); ES.phase = ph; ES.t = 0; ES.dur = DUR[ph] || 0;
-  if (ph === 'kapaniyor') { showBig('Kapılar kapanıyor…'); click(); }
-  if (ph === 'gidiyor') { if (!inCab()) { P.x = EL.x0 + .7 + Math.random() * 1.6; P.z = EL.z0 + .5 + Math.random() * 2; P.y = 0; P.vy = 0; showBig('Yetişemedin! Asansöre çekildin 😵'); } humSet(true); setTimeout(() => loadFloor(ES.target), 400); }
-  if (ph === 'aciliyor') { humSet(false); ding(); ES.floor = ES.target; showBig(ES.floor === 0 ? 'LOBİ' : `KAT ${ES.floor}` + (FLOOR && FLOOR.ad ? `<br><small style="font:800 16px Nunito">${FLOOR.ad}</small>` : '')); }
+  if (ph === 'kapaniyor') { showBig('Kapılar kapanıyor…'); click(); doorSnd(2.2); }
+  if (ph === 'gidiyor') { if (SIT) standUp(); if (!inCab()) { P.x = EL.x0 + .7 + Math.random() * 1.6; P.z = EL.z0 + .5 + Math.random() * 2; P.y = 0; P.vy = 0; showBig('Yetişemedin! Asansöre çekildin 😵'); } humSet(true); setTimeout(() => loadFloor(ES.target), 400); }
+  if (ph === 'aciliyor') { humSet(false); ding(); doorSnd(.1); ES.floor = ES.target; showBig(ES.floor === 0 ? 'LOBİ' : `KAT ${ES.floor}` + (FLOOR && FLOOR.ad ? `<br><small style="font:800 16px Nunito">${FLOOR.ad}</small>` : '')); }
 }
 function isHost() { if (!online) return true; const ids = Object.keys(ROSTER).concat(MYID); let best = MYID, bj = JOINED; for (const id in ROSTER) { const j = ROSTER[id].j || 9e15; if (j < bj || (j === bj && id < best)) { bj = j; best = id; } } return best === MYID; }
 function pressButton() {
@@ -465,8 +472,8 @@ function pressButton() {
   if (FLOOR && FLOOR.bittiMi && !FLOOR.bittiMi(CTX)) { showBig('Önce bu katı bitirmelisin!'); return; }
   if (isHost()) hostStart(); else netSend('req', {});
 }
-function hostStart() { if (ES.phase !== 'acik') return; const target = Math.min(1000, ES.floor + 1); const st = { target, floor: ES.floor }; applyRemote({ ph: 'kapaniyor', ...st }); netSend('el', { ph: 'kapaniyor', ...st }); }
-function applyRemote(m) { setPhase(m.ph, { target: m.target, floor: m.floor }); }
+function hostStart() { if (ES.phase !== 'acik') return; const pool = []; for (let i = 1; i <= MAXKAT; i++) if (!ES.seen.includes(i)) pool.push(i); const target = pool.length ? pool[Math.floor(Math.random() * pool.length)] : 0; const seen = target ? ES.seen.concat(target) : []; const st = { target, floor: ES.floor, seen }; applyRemote({ ph: 'kapaniyor', ...st }); netSend('el', { ph: 'kapaniyor', ...st }); }
+function applyRemote(m) { if (m.seen) ES.seen = m.seen; setPhase(m.ph, { target: m.target, floor: m.floor }); }
 function updateElevator(dt) {
   if (ES.phase !== 'acik') { ES.t += dt; if (ES.t >= ES.dur) { if (ES.phase === 'kapaniyor') setPhase('gidiyor'); else if (ES.phase === 'gidiyor') setPhase('aciliyor'); else if (ES.phase === 'aciliyor') setPhase('acik'); } }
   const k = doorClosedAmt(); doorL.position.z = (EL.z0 + EL.z1) / 2 - .75 - (1 - k) * 1.45; doorR.position.z = (EL.z0 + EL.z1) / 2 + .75 + (1 - k) * 1.45;
@@ -496,14 +503,15 @@ function netStart(code) {
   const sb = window.supabase.createClient(SB_URL, SB_KEY, { realtime: { params: { eventsPerSecond: 20 } } });
   chan = sb.channel('asansor-' + code, { config: { broadcast: { self: false }, presence: { key: MYID } } });
   chan.on('presence', { event: 'sync' }, () => { const st = chan.presenceState(), seen = {}; for (const id in st) { if (id === MYID) continue; seen[id] = 1; const info = st[id][0]; const o = ROSTER[id] || (ROSTER[id] = { x: 2, y: 0, z: 9, yaw: 0, tx: 2, ty: 0, tz: 9, tyaw: 0 }); o.n = info.n; o.j = info.j; o.cfg = info.cfg; if (!o.mesh || JSON.stringify(info.cfg || {}) !== o.cfgS) makeAvatar(id); } for (const id in ROSTER) if (!seen[id]) { if (ROSTER[id].mesh) scene.remove(ROSTER[id].mesh); delete ROSTER[id]; } updInfo(); });
-  chan.on('presence', { event: 'join' }, ({ key, newPresences }) => { if (key !== MYID && newPresences[0]) { chatLine('sys', `👋 ${esc(newPresences[0].n)} odaya girdi`); if (isHost()) setTimeout(() => netSend('state', { floor: ES.floor, ph: ES.phase, target: ES.target, t: ES.t }), 600); } });
+  chan.on('presence', { event: 'join' }, ({ key, newPresences }) => { if (key !== MYID && newPresences[0]) { chatLine('sys', `👋 ${esc(newPresences[0].n)} odaya girdi`); if (isHost()) setTimeout(() => netSend('state', { floor: ES.floor, ph: ES.phase, target: ES.target, t: ES.t, seen: ES.seen }), 600); } });
   chan.on('presence', { event: 'leave' }, ({ key, leftPresences }) => { if (key !== MYID && leftPresences[0]) chatLine('sys', `${esc(leftPresences[0].n)} ayrıldı`); });
   chan.on('broadcast', { event: 'p' }, ({ payload: p }) => { const o = ROSTER[p.i]; if (!o) return; o.tx = p.x; o.ty = p.y; o.tz = p.z; o.tyaw = p.r; o.mv = p.m; });
   chan.on('broadcast', { event: 'c' }, ({ payload: p }) => { const o = ROSTER[p.i]; chatLine('', `<b>${esc(o ? o.n : '?')}:</b> ${esc(p.t)}`); if (o) { o.bub = p.t; o.bubT = 6; setBubble(o); } tone(880, .08, 'triangle', .04); });
-  chan.on('broadcast', { event: 'e' }, ({ payload: p }) => { const o = ROSTER[p.i]; if (!o) return; o.emo = p.k; o.emoT = p.k === 'otur' ? 999 : p.k === 'dans' ? 6 : 3; if (o.mesh && ['kalp', 'gul', 'selam', 'sevin'].includes(p.k)) emoPop(o.mesh, p.k); });
+  chan.on('broadcast', { event: 'e' }, ({ payload: p }) => { const o = ROSTER[p.i]; if (!o) return; o.emo = p.k; o.emoT = p.k === 'kalk' ? 0 : p.k === 'otur' ? 999 : p.k === 'dans' ? 6 : 3; if (o.mesh && ['kalp', 'gul', 'selam', 'sevin'].includes(p.k)) emoPop(o.mesh, p.k); });
+  chan.on('broadcast', { event: 'n' }, ({ payload: p }) => { const o = ROSTER[p.i]; const d = o ? Math.hypot(o.x - P.x, o.z - P.z) : 5; if (ES.floor === 0) { pianoSnd(p.m, Math.max(.08, 1 - d / 30)); pressKeyVis(p.m); if (Math.random() < .3) noteFx(); } });
   chan.on('broadcast', { event: 'req' }, () => { if (isHost()) hostStart(); });
   chan.on('broadcast', { event: 'el' }, ({ payload: p }) => applyRemote(p));
-  chan.on('broadcast', { event: 'state' }, ({ payload: p }) => { if (p.floor !== ES.floor || (ES.floor === 0 && FLOOR)) { ES.floor = p.floor; ES.target = p.target; loadFloor(p.floor); if (p.floor) { P.x = EL.x0 + 1.2; P.z = -4; P.y = 0; } } });
+  chan.on('broadcast', { event: 'state' }, ({ payload: p }) => { if (p.seen) ES.seen = p.seen; if (p.floor !== ES.floor || (ES.floor === 0 && FLOOR)) { ES.floor = p.floor; ES.target = p.target; loadFloor(p.floor); if (p.floor) { P.x = EL.x0 + 1.2; P.z = -4; P.y = 0; } } });
   chan.subscribe(s => { if (s === 'SUBSCRIBED') { online = true; chan.track({ n: NAME, j: JOINED, cfg: DUCK }); chatLine('sys', `🟢 Oda <b>${code}</b> — arkadaşlarına kodu ver!`); updInfo(); } });
 }
 function netTick(now) { if (!online) return; const p = { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), r: +P.yaw.toFixed(2), m: P.moving ? (keys.ShiftLeft || keys.ShiftRight || JOY.run ? 2 : 1) : 0 }, s = JSON.stringify(p); if ((s !== lastP && now - lastSend > 90) || now - lastSend > 2000) { lastP = s; lastSend = now; netSend('p', p); } }
@@ -516,12 +524,12 @@ function makeAvatar(id) {
   scene.add(g); o.mesh = g;
 }
 function setBubble(o) { if (o.bubS) o.mesh.remove(o.bubS); o.bubS = nameSprite('💬 ' + o.bub.slice(0, 26)); o.bubS.position.y = 2.25; o.bubS.scale.set(1.8, .45, 1); o.mesh.add(o.bubS); }
-function updOthers(dt) { for (const id in ROSTER) { const o = ROSTER[id]; if (!o.mesh) continue; const k = Math.min(1, dt * 12); o.x = lerp(o.x, o.tx, k); o.y = lerp(o.y, o.ty, k); o.z = lerp(o.z, o.tz, k); let d = o.tyaw - o.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); o.yaw += d * k; o.mesh.position.set(o.x, o.y, o.z); o.mesh.rotation.y = o.yaw; if (o.emoT > 0) { o.emoT -= dt; if (o.mv) o.emoT = 0; } const oe = o.emoT > 0 ? o.emo : null; if (o.duck) o.duck.update(dt, { hiz: o.mv ? 1 : 0, kosu: o.mv === 2, zipla: o.ty > .3 && !inCab(o.x, o.z), konus: o.bubT > 4, [oe]: oe ? 1 : 0 }); if (o.bubT > 0) { o.bubT -= dt; if (o.bubT <= 0 && o.bubS) { o.mesh.remove(o.bubS); o.bubS = null; } } } }
+function updOthers(dt) { for (const id in ROSTER) { const o = ROSTER[id]; if (!o.mesh) continue; const k = Math.min(1, dt * 12); o.x = lerp(o.x, o.tx, k); o.y = lerp(o.y, o.ty, k); o.z = lerp(o.z, o.tz, k); let d = o.tyaw - o.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); o.yaw += d * k; o.mesh.position.set(o.x, o.y, o.z); o.mesh.rotation.y = o.yaw; if (o.emoT > 0) { o.emoT -= dt; if (o.mv) o.emoT = 0; } const oe = o.emoT > 0 ? o.emo : null; if (o.duck) o.duck.update(dt, { hiz: o.mv ? 1 : 0, kosu: o.mv === 2, zipla: o.ty > .3 && !inCab(o.x, o.z) && !(o.emoT > 0 && o.emo === 'otur'), konus: o.bubT > 4, [oe]: oe ? 1 : 0 }); if (o.bubT > 0) { o.bubT -= dt; if (o.bubT <= 0 && o.bubS) { o.mesh.remove(o.bubS); o.bubS = null; } } } }
 
 /* ================= HUD / SOHBET ================= */
 let bigT = 0; function showBig(html) { $('big').innerHTML = html; $('big').style.opacity = 1; bigT = 2.6; }
 function chatLine(cls, html) { const d = document.createElement('div'); if (cls) d.className = cls; d.innerHTML = html; $('chatLog').appendChild(d); while ($('chatLog').children.length > 6) $('chatLog').firstChild.remove(); setTimeout(() => d.style.opacity = .55, 12000); }
-function updInfo() { const n = Object.keys(ROSTER).length + 1; $('info').innerHTML = (ROOM ? `Oda: <b>${ROOM}</b> · ` : 'Tek başına · ') + `👥 ${n}` + (online && isHost() ? ' · 👑 sen yöneticisin' : '') + `<br>${ES.floor === 0 ? '🏢 Lobi' : '🛗 Kat ' + ES.floor}`; }
+function updInfo() { const n = Object.keys(ROSTER).length + 1; $('info').innerHTML = (ROOM ? `Oda: <b>${ROOM}</b> · ` : 'Tek başına · ') + `👥 ${n}` + (online && isHost() ? ' · 👑 sen yöneticisin' : '') + `<br>${ES.floor === 0 ? '🏢 Lobi' : '🛗 Kat ' + ES.floor}` + (ES.seen.length ? ` · ${ES.seen.length}/${MAXKAT} kat gezildi` : ''); }
 function openChat() { if (!online) { showBig('Sohbet için oda kur ya da katıl'); return; } chatOpen = true; $('chatIn').style.display = 'block'; $('chatIn').value = ''; setTimeout(() => $('chatIn').focus(), 10); if (document.pointerLockElement) document.exitPointerLock(); }
 addEventListener('keydown', e => { if (chatOpen && (e.key === 'Escape' || e.code === 'Escape')) { e.preventDefault(); e.stopPropagation(); closeChat(); } }, true);
 $('chatIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { const t = $('chatIn').value.trim().slice(0, 120); if (t) { chatLine('', `<b>${esc(NAME)}:</b> ${esc(t)}`); netSend('c', { t }); } closeChat(); } if (e.key === 'Escape') closeChat(); });
@@ -531,7 +539,7 @@ function closeChat() { if (!chatOpen) return; chatOpen = false; $('chatIn').styl
 const PAUSED = () => $('pause').style.display === 'flex';
 function clearKeys() { for (const k in keys) keys[k] = false; }
 addEventListener('blur', clearKeys);
-addEventListener('keydown', e => { if (e.code === 'Escape' && playing && !chatOpen) { if (PAUSED()) resume(); else if (!locked) { clearKeys(); $('clickHint').style.display = 'none'; $('pause').style.display = 'flex'; } return; } if (!playing || chatOpen || PAUSED()) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'Enter' || e.code === 'KeyT') { e.preventDefault(); openChat(); } if (e.code === 'KeyY' && !e.repeat) { e.preventDefault(); wheelOpen(); } });
+addEventListener('keydown', e => { if (PIANO && playing && !chatOpen && !PAUSED()) { if (e.code === 'KeyQ' || e.code === 'Escape') { stopPiano(); e.preventDefault(); return; } const m = PKEY[e.code]; if (m) { if (!e.repeat) playNote(m); e.preventDefault(); return; } if (['KeyE', 'KeyT', 'KeyY', 'Space', 'Enter'].includes(e.code)) return; } if (e.code === 'Escape' && playing && !chatOpen) { if (PAUSED()) resume(); else if (!locked) { clearKeys(); $('clickHint').style.display = 'none'; $('pause').style.display = 'flex'; } return; } if (!playing || chatOpen || PAUSED()) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'Enter' || e.code === 'KeyT') { e.preventDefault(); openChat(); } if (e.code === 'KeyY' && !e.repeat) { e.preventDefault(); wheelOpen(); } });
 addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'KeyY' && WH.open) wheelClose(true); });
 let tDown = 0, tTimer = null;
 const EMO = [['selam', '👋', 'Selam'], ['sevin', '🙌', 'Sevin'], ['dans', '💃', 'Dans'], ['otur', '🪑', 'Otur'], ['kalp', '❤️', 'Kalp'], ['gul', '😂', 'Gül']];
@@ -546,9 +554,9 @@ function emoPop(par, k) { if (!par) return; const ic = { kalp: '❤️', gul: '�
 const POPS = [];
 addEventListener('mousemove', e => { if (!WH.open || !locked) return; WH.x += e.movementX; WH.y += e.movementY; const L = Math.hypot(WH.x, WH.y); if (L > 160) { WH.x *= 160 / L; WH.y *= 160 / L; } if (L > 30) { let a = Math.atan2(WH.y, WH.x) + Math.PI / 2; a = (a + Math.PI * 2) % (Math.PI * 2); wheelSel(Math.round(a / (Math.PI * 2) * EMO.length) % EMO.length); } }, true);
 renderer.domElement.addEventListener('click', () => { if (playing && !TOUCH && !chatOpen) renderer.domElement.requestPointerLock?.(); audio(); });
-document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; if (locked) $('clickHint').style.display = 'none'; if (!locked) clearKeys(); if (!locked && playing && !chatOpen && !TOUCH) $('pause').style.display = 'flex'; else $('pause').style.display = 'none'; });
+document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; if (locked) $('clickHint').style.display = 'none'; if (!locked) clearKeys(); if (!locked && PIANO) { stopPiano(); $('pause').style.display = 'none'; $('clickHint').style.display = 'block'; return; } if (!locked && playing && !chatOpen && !TOUCH) $('pause').style.display = 'flex'; else $('pause').style.display = 'none'; });
 addEventListener('mousemove', e => { if (!locked || WH.open) return; const k = .0022 * SET.sens; P.yaw -= e.movementX * k; P.pitch = clamp(P.pitch - e.movementY * k, -1.45, 1.45); });
-function interact() { if (lookAtButton()) pressButton(); }
+function interact() { if (PIANO) return; if (SIT) { standUp(); return; } if (lookAtButton() || (TOUCH && inCab())) { pressButton(); return; } const it = nearInter(); if (it) it.fn(); }
 function lookAtButton() { if (!BUTTON || !inCab()) return false; const bp = new THREE.Vector3(); BUTTON.getWorldPosition(bp); const d = bp.clone().sub(camera.position); if (d.length() > 2.3) return false; const f = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion); return f.dot(d.normalize()) > .82; }
 // mobil kontroller
 const JOY = { x: 0, y: 0, run: false, id: null };
@@ -562,7 +570,7 @@ if (TOUCH) {
   renderer.domElement.addEventListener('touchstart', e => { for (const t of e.changedTouches) if (lookId === null) { lookId = t.identifier; lx = t.clientX; ly = t.clientY; } audio(); }, { passive: true });
   renderer.domElement.addEventListener('touchmove', e => { for (const t of e.changedTouches) if (t.identifier === lookId) { P.yaw -= (t.clientX - lx) * .005; P.pitch = clamp(P.pitch - (t.clientY - ly) * .005, -1.4, 1.4); lx = t.clientX; ly = t.clientY; } e.preventDefault(); }, { passive: false });
   renderer.domElement.addEventListener('touchend', e => { for (const t of e.changedTouches) if (t.identifier === lookId) lookId = null; });
-  $('mJ').addEventListener('touchstart', e => { e.preventDefault(); jump(); }); $('mE').addEventListener('touchstart', e => { e.preventDefault(); interact(); if (inCab()) pressButton(); }); $('mT').addEventListener('touchstart', e => { e.preventDefault(); openChat(); }); $('mM').addEventListener('touchstart', e => { e.preventDefault(); if (WH.open) wheelClose(false); else wheelOpen(); });
+  $('mJ').addEventListener('touchstart', e => { e.preventDefault(); jump(); }); $('mE').addEventListener('touchstart', e => { e.preventDefault(); interact(); }); $('mT').addEventListener('touchstart', e => { e.preventDefault(); openChat(); }); $('mM').addEventListener('touchstart', e => { e.preventDefault(); if (WH.open) wheelClose(false); else wheelOpen(); });
 }
 
 /* ================= BAŞLAT ================= */
@@ -641,26 +649,96 @@ rug(lobby, 11, 7, 3.4, 6, 0, '#7a1a22', '#e0b860'); rug(lobby, -8, -6, 4, 2.8, 0
 roses(lobby, -7.4, .49, 6); roses(lobby, 4.6, 1.23, -7); roses(lobby, 1.6, 1.23, -7.1);
 for (const x of [-10, -4.5, 3, 8]) sconce(lobby, x, 3.2, -11.98, 0); for (const x of [-10, -4, 2, 8]) sconce(lobby, x, 3.2, 11.98, Math.PI);
 
+/* ================= LOBİ: SES ORTAMI, RESEPSİYONİST, OTURMA, PİYANO ================= */
+let NOISE = null; function noiseBuf() { const a = audio(); if (!a) return null; if (!NOISE) { NOISE = a.createBuffer(1, a.sampleRate * 2, a.sampleRate); const d = NOISE.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; } return NOISE; }
+function stepSnd(v) { const a = audio(), b = noiseBuf(); if (!a || !b) return; v *= SET.vol; if (v < .002) return; const t = a.currentTime, s = a.createBufferSource(); s.buffer = b; const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1100 + Math.random() * 700; f.Q.value = 1.4; const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + .08); s.connect(f).connect(g).connect(a.destination); s.start(t, Math.random() * 1.5, .1); tone(70 + Math.random() * 20, .06, 'sine', v * .9 / Math.max(.01, SET.vol)); }
+function doorSnd(at = 0) { const a = audio(), b = noiseBuf(); if (!a || !b) return; const t = a.currentTime + at, s = a.createBufferSource(); s.buffer = b; s.loop = true; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 380; const g = a.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 * SET.vol, t + .25); g.gain.linearRampToValueAtTime(0, t + 1.6); s.connect(f).connect(g).connect(a.destination); s.start(t); s.stop(t + 1.7); }
+// kalabalık uğultusu: gürültü + kayan formant filtreleri
+let AMB = null;
+function ambStart() { const a = audio(), b = noiseBuf(); if (!a || !b || AMB) return; const s = a.createBufferSource(); s.buffer = b; s.loop = true; const out = a.createGain(); out.gain.value = 0; const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400; out.connect(a.destination); lp.connect(out); const F = [];
+  for (const fq of [450, 1050, 2300]) { const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = fq; f.Q.value = 5; const g = a.createGain(); g.gain.value = .3; s.connect(f).connect(g).connect(lp); F.push({ f, g, base: fq }); }
+  s.start(); AMB = { out, F, t: 0, ev: 12 + Math.random() * 10 }; }
+function ambTick(dt) { if (!AMB) { if (playing && AC) ambStart(); return; } const a = AC, t = a.currentTime; const inLobby = playing && ES.floor === 0 && !inCab(); const want = inLobby ? (P.x > 14 ? .05 : .09) * SET.vol : 0; AMB.out.gain.setTargetAtTime(want, t, .5);
+  AMB.t -= dt; if (AMB.t <= 0) { AMB.t = .12 + Math.random() * .2; for (const q of AMB.F) { q.f.frequency.setTargetAtTime(q.base * (.75 + Math.random() * .6), t, .06); q.g.gain.setTargetAtTime(.1 + Math.random() * .5, t, .08); } }
+  if (!inLobby) return; AMB.ev -= dt; if (AMB.ev <= 0) { AMB.ev = 18 + Math.random() * 25; const r = Math.random(); if (r < .45) phoneRing(); else if (r < .75) { tone(1318, 1.2, 'sine', .018); tone(1046, 1.6, 'sine', .015, .35); } else { tone(523, .5, 'sine', .02); tone(659, .5, 'sine', .02, .3); tone(784, .9, 'sine', .02, .6); } } }
+function phoneRing() { const d = Math.hypot(P.x - 3, P.z + 8), v = Math.max(.15, 1 - d / 22) * .035; for (let k = 0; k < 2; k++) for (let i = 0; i < 10; i++) { tone(440, .045, 'sine', v, k * 1.1 + i * .05); tone(480, .045, 'sine', v, k * 1.1 + i * .05); } setTimeout(() => recepSay(TEL[Math.floor(Math.random() * TEL.length)], true), 2600); }
+// resepsiyonist
+const RECEP_LAF = ['Ördekez Corporation\'a hoş geldiniz! Asansörler sağdaki koridorda.', '100 kat var ama hangisine gideceğinizi asansör seçiyor. Ben karışmam.', 'Bir katı gördüyseniz bir daha göremezsiniz. Kurallar böyle.', 'Asansördeki aynaya çok bakmayın. Bazen o da size bakıyor.', 'Koltuklara oturabilirsiniz. Piyanoyu kötü çalarsanız müdüre şikayet ederim.', 'Hayır, merdiven yok. Hiç olmadı.', 'Bugün 100. kattan geri dönen olmadı. Yani… iyi eğlenceler!', 'Kırmızı halıya basmadan önce ayaklarınızı silin. Ah, perdeliymiş.', 'Müdür Bey toplantıda. 1997\'den beri.', 'Koridordaki fotoğraflar mı? Şirketin kurucuları. Fazla soru sormayın.', 'Vak.', 'Asansör müziğini ben seçtim. Beğendiniz mi?', 'Ziyaretçi kartınız yok mu? Neyse, ördeksiniz zaten.', 'Kayıp eşyalar bürosu 47. katta. Ya da 12. Değişiyor.'];
+const TEL = ['📞 Alo, Ördekez Corp buyrun? …Hayır efendim, 13. kat yok. Sormayın.', '📞 Alo? …Yine mi asansörde kaldınız? Düğmeye basın efendim.', '📞 Alo? …Hayır, burası fırın değil. İyi günler.', '📞 Ördekez Corp? …Müdür Bey toplantıda. Evet, hâlâ.'];
+let RECEP = null, RECEP_B = null, RECEP_T = 0, RECEP_I = 0;
+function bubbleSprite(txt) { const c = document.createElement('canvas'), W = 640; const g = c.getContext('2d'); g.font = '800 30px Nunito'; const words = txt.split(' '), lines = []; let l = ''; for (const w of words) { const t = l ? l + ' ' + w : w; if (g.measureText(t).width > W - 70 && l) { lines.push(l); l = w; } else l = t; } lines.push(l); const H = 40 + lines.length * 40 + 24; c.width = W; c.height = H; g.font = '800 30px Nunito'; g.fillStyle = 'rgba(255,250,236,.96)'; g.beginPath(); g.roundRect(6, 6, W - 12, H - 30, 22); g.fill(); g.beginPath(); g.moveTo(W / 2 - 16, H - 25); g.lineTo(W / 2, H - 4); g.lineTo(W / 2 + 16, H - 25); g.fill(); g.fillStyle = '#2a2040'; g.textAlign = 'center'; lines.forEach((s, i) => g.fillText(s, W / 2, 50 + i * 40)); const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, depthTest: false, transparent: true })); sp.scale.set(3.2, 3.2 * H / W, 1); sp.renderOrder = 5; return sp; }
+function recepSay(txt, tel) { if (!RECEP) return; if (RECEP_B) lobby.remove(RECEP_B); RECEP_B = bubbleSprite(txt); RECEP_B.position.set(3, 2.85, -7.6); lobby.add(RECEP_B); RECEP_T = 5.5; RECEP.tel = !!tel; if (!tel) { RECEP.sel = 1.6; } const d = Math.hypot(P.x - 3, P.z + 8.3); for (let i = 0; i < 4; i++) tone(500 + Math.random() * 300, .06, 'square', .012 * Math.max(.2, 1 - d / 15), i * .09); }
+function recepTalk() { const i = RECEP_I++ === 0 ? 0 : 1 + Math.floor(Math.random() * (RECEP_LAF.length - 1)); recepSay(RECEP_LAF[i]); }
+function recepTick(dt) { if (!RECEP) return; const dx = P.x - 3, dz = P.z + 8.3, near = Math.hypot(dx, dz) < 8 && ES.floor === 0; const want = near ? Math.atan2(-dx, -dz) : Math.PI; let d = want - RECEP.root.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d)); RECEP.root.rotation.y += d * Math.min(1, dt * 4); if (RECEP.sel > 0) RECEP.sel -= dt; RECEP.update(dt, { hiz: 0, konus: RECEP_T > 2.5, selam: RECEP.sel > 0 ? 1 : 0 }); if (RECEP_T > 0) { RECEP_T -= dt; if (RECEP_T <= 0 && RECEP_B) { lobby.remove(RECEP_B); RECEP_B = null; } } }
+// oturma
+let SIT = null, PIANO = null;
+function sitDown(s) { SIT = s; P.x = s.x; P.z = s.z; P.y = s.y; P.vy = 0; P.on = true; P.yaw = s.yaw; P.pitch = -.08; clearKeys(); MYEMO = 'otur'; MYEMOT = 999; netSend('e', { k: 'otur' }); }
+function standUp() { if (!SIT) return; const s = SIT; SIT = null; if (PIANO) stopPiano(true); P.x = s.ex; P.z = s.ez; P.y = 0; MYEMOT = 0; netSend('e', { k: 'kalk' }); }
+// piyano
+const PIA = { x: 6.6, z: 9.6, keys: {} };
+function buildPiano(g) { const { x, z } = PIA, gr = new THREE.Group(); gr.position.set(x, 0, z); g.add(gr);
+  const blk = new THREE.MeshStandardMaterial({ color: '#0b0b12', roughness: .12, metalness: .35 }), wht = new THREE.MeshStandardMaterial({ color: '#f6f4ee', roughness: .3 }), kb = new THREE.MeshStandardMaterial({ color: '#111', roughness: .3 });
+  const sh = new THREE.Shape(); sh.moveTo(-.78, 0); sh.lineTo(.78, 0); sh.lineTo(.78, -.55); sh.bezierCurveTo(.78, -1.1, .05, -1.0, .02, -1.55); sh.bezierCurveTo(0, -1.95, -.3, -2.05, -.78, -2.05); sh.lineTo(-.78, 0);
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: .34, bevelEnabled: false, curveSegments: 20 }), blk); body.rotation.x = Math.PI / 2; body.position.y = 1.02; gr.add(body);
+  const lidG = new THREE.Group(); lidG.position.set(-.78, 1.03, 0); lidG.rotation.z = .5; gr.add(lidG); const lid = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: .03, bevelEnabled: false, curveSegments: 20 }), blk); lid.rotation.x = Math.PI / 2; lid.position.set(.78, .03, 0); lidG.add(lid);
+  const prop = new THREE.Mesh(new THREE.CylinderGeometry(.012, .012, .62), M.gold); prop.position.set(.5, 1.3, -1.0); prop.rotation.z = .18; gr.add(prop);
+  const inner = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshStandardMaterial({ color: '#b8893a', roughness: .5, metalness: .4, side: THREE.DoubleSide })); inner.rotation.x = Math.PI / 2; inner.position.y = 1.025; inner.scale.setScalar(.94); gr.add(inner);
+  for (const [lx, lz] of [[-.68, -.12], [.68, -.12], [-.6, -1.85]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.06, .045, .7, 10), blk); l.position.set(lx, .35, lz); gr.add(l); const c = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .05, 10), M.gold); c.position.set(lx, .03, lz); gr.add(c); }
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(1.6, .1, .34), blk); bed.position.set(0, .74, .17); gr.add(bed); const cheek = new THREE.Mesh(new THREE.BoxGeometry(1.6, .14, .04), blk); cheek.position.set(0, .86, -.01); gr.add(cheek);
+  const stand = new THREE.Mesh(new THREE.BoxGeometry(.7, .32, .02), blk); stand.position.set(0, 1.2, -.1); stand.rotation.x = -.25; gr.add(stand);
+  const WN = 28, kw = 1.46 / WN; let wi = 0; const order = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+  for (let m = 36; m < 36 + 48; m++) { const black = order[m % 12]; if (!black) { const k = new THREE.Mesh(new THREE.BoxGeometry(kw * .92, .035, .26), wht); k.position.set(-.73 + kw * (wi + .5), .81, .2); gr.add(k); PIA.keys[m] = { mesh: k, y: .81, t: 0 }; wi++; } else { const k = new THREE.Mesh(new THREE.BoxGeometry(kw * .55, .04, .16), kb); k.position.set(-.73 + kw * wi, .845, .14); gr.add(k); PIA.keys[m] = { mesh: k, y: .845, t: 0 }; } }
+  const pedal = new THREE.Mesh(new THREE.BoxGeometry(.24, .04, .12), M.gold); pedal.position.set(0, .06, .05); gr.add(pedal);
+  const bench = new THREE.Mesh(new THREE.BoxGeometry(.85, .1, .38), blk); bench.position.set(0, .48, .82); gr.add(bench); const cush = new THREE.Mesh(new THREE.BoxGeometry(.82, .05, .35), new THREE.MeshStandardMaterial({ color: '#2a1a40', roughness: .9 })); cush.position.set(0, .55, .82); gr.add(cush);
+  for (const bx of [-.36, .36]) for (const bz of [.68, .96]) { const l = new THREE.Mesh(new THREE.BoxGeometry(.05, .45, .05), blk); l.position.set(bx, .22, bz); gr.add(l); }
+  solidBox(g, x - .82, x + .82, 0, 1.05, z - 2.05, z + .34); solidBox(g, x - .45, x + .45, 0, .5, z + .62, z + 1.02);
+  INTER.push({ x, z: z + .82, y: .6, r: 1.9, label: 'Piyano çal', ok: () => ES.floor === 0, fn: startPiano }); }
+const PKEY = { KeyA: 60, KeyW: 61, KeyS: 62, KeyE: 63, KeyD: 64, KeyF: 65, KeyT: 66, KeyG: 67, KeyY: 68, KeyH: 69, KeyU: 70, KeyJ: 71, KeyK: 72, KeyO: 73, KeyL: 74, KeyP: 75, Semicolon: 76 };
+function pianoSnd(m, v = 1) { const a = audio(); if (!a) return; v *= .11 * SET.vol; if (v < .002) return; const f = 440 * Math.pow(2, (m - 69) / 12), t = a.currentTime, d = 2.4 - (m - 48) * .025; const g = a.createGain(), lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(Math.min(9000, f * 8), t); lp.frequency.exponentialRampToValueAtTime(Math.max(300, f * 2), t + d); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .006); g.gain.exponentialRampToValueAtTime(v * .35, t + .25); g.gain.exponentialRampToValueAtTime(.0001, t + d); lp.connect(g).connect(a.destination);
+  for (const [mul, typ, amp, det] of [[1, 'triangle', 1, 0], [1, 'sine', .7, 2], [2, 'sine', .35, -1], [3, 'sine', .12, 0], [4, 'sine', .05, 0]]) { const o = a.createOscillator(), og = a.createGain(); o.type = typ; o.frequency.value = f * mul; o.detune.value = det; og.gain.value = amp; o.connect(og).connect(lp); o.start(t); o.stop(t + d + .05); } }
+function pressKeyVis(m) { const k = PIA.keys[m]; if (k) k.t = .16; const el = document.querySelector(`#piano [data-m="${m}"]`); if (el) { el.classList.add('on'); setTimeout(() => el.classList.remove('on'), 160); } }
+function playNote(m) { pianoSnd(m); pressKeyVis(m); netSend('n', { m }); if (Math.random() < .3 && ME) noteFx(); }
+function noteFx() { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.font = '52px serif'; g.fillStyle = ['#f4dfa8', '#ff9ac8', '#9ad0ff'][Math.floor(Math.random() * 3)]; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(Math.random() < .5 ? '♪' : '♫', 32, 34); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthTest: false })); sp.scale.set(.35, .35, 1); sp.position.set(PIA.x + (Math.random() - .5) * 1.2, 1.4, PIA.z - .6 - Math.random() * .8); lobby.add(sp); NOTES.push({ sp, t: 0 }); }
+const NOTES = [];
+function startPiano() { sitDown({ x: PIA.x, z: PIA.z + .82, y: .5, yaw: 0, ex: PIA.x + 1.3, ez: PIA.z + 1.3 }); P.pitch = -.3; PIANO = true; $('piano').style.display = 'block'; document.body.classList.add('pianoOn'); }
+function stopPiano(fromStand) { if (!PIANO) return; PIANO = null; $('piano').style.display = 'none'; document.body.classList.remove('pianoOn'); if (!fromStand) standUp(); }
+(function () { const p = $('piano'), kb = p.querySelector('.pk'); const names = { 60: 'A', 61: 'W', 62: 'S', 63: 'E', 64: 'D', 65: 'F', 66: 'T', 67: 'G', 68: 'Y', 69: 'H', 70: 'U', 71: 'J', 72: 'K', 73: 'O', 74: 'L', 75: 'P', 76: 'Ş' }; const order = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0]; let wi = 0;
+  for (let m = 60; m <= 76; m++) { const b = order[m % 12], d = document.createElement('div'); d.className = b ? 'bk' : 'wk'; d.dataset.m = m; d.innerHTML = `<span>${names[m]}</span>`; if (b) d.style.left = (wi * 44 - 14) + 'px'; else wi++; const hit = e => { e.preventDefault(); playNote(m); }; d.addEventListener('touchstart', hit, { passive: false }); d.addEventListener('mousedown', hit); kb.appendChild(d); }
+  kb.style.width = wi * 44 + 'px'; p.querySelector('.pq').addEventListener('click', () => stopPiano()); p.querySelector('.pq').addEventListener('touchstart', e => { e.preventDefault(); stopPiano(); }); })();
+// en yakın etkileşim
+function nearInter() { if (!playing || SIT) return null; const f = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion), v = new THREE.Vector3(); let best = null, bs = 1e9; for (const it of INTER) { if (it.ok && !it.ok()) continue; const d = Math.hypot(it.x - P.x, it.z - P.z); if (d > it.r) continue; v.set(it.x - camera.position.x, it.y - camera.position.y, it.z - camera.position.z).normalize(); const dot = f.dot(v); if (dot < .5 && d > .7) continue; const s = d - dot * 2; if (s < bs) { bs = s; best = it; } } return best; }
+function lobbyTick(dt) { recepTick(dt); ambTick(dt);
+  for (const m in PIA.keys) { const k = PIA.keys[m]; if (k.t > 0) { k.t -= dt; k.mesh.position.y = k.y - .012; k.mesh.rotation.x = .05; } else if (k.mesh.rotation.x) { k.mesh.position.y = k.y; k.mesh.rotation.x = 0; } }
+  for (let i = NOTES.length - 1; i >= 0; i--) { const q = NOTES[i]; q.t += dt; q.sp.position.y += dt * .6; q.sp.material.opacity = Math.max(0, 1 - q.t / 1.6); if (q.t > 1.6) { lobby.remove(q.sp); NOTES.splice(i, 1); } }
+  // ayak sesleri
+  if (playing && P.moving && P.on && !SIT) { STEP -= dt; if (STEP <= 0) { STEP = keys.ShiftLeft || keys.ShiftRight || JOY.run ? .29 : .4; stepSnd(.06); } } else STEP = .05;
+  for (const id in ROSTER) { const o = ROSTER[id]; if (!o.mesh || !o.mv || o.ty > .3) { o.st = .1; continue; } o.st = (o.st || 0) - dt; if (o.st <= 0) { o.st = o.mv === 2 ? .29 : .4; const d = Math.hypot(o.x - P.x, o.z - P.z); stepSnd(.06 * Math.max(0, 1 - d / 14)); } const tg = o.tag; if (tg) { const d = Math.hypot(o.x - P.x, o.z - P.z), s = Math.max(1, d / 7); tg.scale.set(1.2 * s, .3 * s, 1); } } }
+let STEP = 0;
+// kur
+RECEP = makeDuck(THREE, norm({ renk: '#f6f4ee', goz: 'mutlu', sapka: 'kep', sapkaR: '#a81c2c', boyun: 'papyon', boyunR: '#1a1a2a', yuz: 'monokl', yuzR: '#c8a050' })); RECEP.root.scale.setScalar(1.6); RECEP.root.position.set(3, 0, -8.3); RECEP.root.rotation.y = Math.PI; lobby.add(RECEP.root); RECEP.sel = 0;
+INTER.push({ x: 3, z: -6, y: 1.5, r: 2.6, label: 'Resepsiyonistle konuş', ok: () => ES.floor === 0, fn: recepTalk });
+buildPiano(lobby);
+
 try { const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromScene(scene, .04).texture; scene.environmentIntensity = .45; } catch (e) {}
 let last = performance.now();
 function loop(now) {
   const dt = Math.min(.05, (now - last) / 1000); last = now;
   if (playing) movePlayer(dt);
-  camera.position.set(P.x, P.y + P.h + (P.moving && P.on ? Math.sin(now / 120) * .035 : 0), P.z); camera.rotation.set(P.pitch, P.yaw, 0, 'YXZ');
+  camera.position.set(P.x, P.y + (SIT ? 1.02 : P.h) + (P.moving && P.on ? Math.sin(now / 120) * .035 : 0), P.z); camera.rotation.set(P.pitch, P.yaw, 0, 'YXZ');
   updateElevator(dt);
   if (FLOOR && FLOOR.guncelle) FLOOR.guncelle(dt, CTX);
   if (HOLO) { HOLO.material.opacity = .7 + Math.sin(now / 300) * .15; }
-  updOthers(dt); netTick(now);
+  updOthers(dt); netTick(now); lobbyTick(dt);
   if (ME) { ME.root.position.set(P.x, P.y, P.z); ME.root.rotation.y = P.yaw; if (MYEMOT > 0) { MYEMOT -= dt; if (P.moving || !P.on) MYEMOT = 0; } const me = MYEMOT > 0 ? MYEMO : null; ME.update(dt, { hiz: P.moving ? 1 : 0, kosu: keys.ShiftLeft || keys.ShiftRight || JOY.run, zipla: !P.on, [me]: me ? 1 : 0 }); }
   for (let i = POPS.length - 1; i >= 0; i--) { const q = POPS[i]; q.t += dt; q.sp.position.y = 1.9 + q.t * .5; q.sp.material.opacity = Math.max(0, 1 - q.t / 1.8); if (q.t > 1.8) { q.par.remove(q.sp); POPS.splice(i, 1); } }
   if (MIRROR) { const near = SET.mir && Math.hypot(P.x - 25.5, P.z + 4) < 9; MIRROR.visible = !!near; MIRROR_OFF.visible = !near; }
   musicTick(dt);
   if (bigT > 0) { bigT -= dt; if (bigT <= 0) $('big').style.opacity = 0; }
-  const h = playing && lookAtButton(); $('hint').style.display = h ? 'block' : 'none'; if (h) $('hint').textContent = TOUCH ? 'E: Asansörü çalıştır' : '[E] Asansörü çalıştır';
+  const h = playing && lookAtButton(), it = !h && playing ? nearInter() : null, hs = SIT && !PIANO; $('hint').style.display = h || it || hs ? 'block' : 'none'; if (h) $('hint').textContent = TOUCH ? 'E: Asansörü çalıştır' : '[E] Asansörü çalıştır'; else if (it) $('hint').textContent = (TOUCH ? 'E: ' : '[E] ') + it.label; else if (hs) $('hint').textContent = TOUCH ? 'E: Kalk' : '[E] / WASD: Kalk';
   if (Math.floor(now / 500) !== Math.floor((now - dt * 1000) / 500)) updInfo();
   renderer.render(scene, camera); requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-window.__T = { collide, get COLL() { return COLL; }, get locked() { return locked; }, P, ES, DUR, ROSTER, makeAvatar, start, pressButton, inCab, loadFloor };
+window.__T = { get SEATS() { return SEATS; }, sitDown, standUp, startPiano, stopPiano, playNote, recepTalk, nearInter, hostStart, camera, collide, get COLL() { return COLL; }, get locked() { return locked; }, P, ES, DUR, ROSTER, makeAvatar, start, pressButton, inCab, loadFloor };
 </script>
 </body></html>
