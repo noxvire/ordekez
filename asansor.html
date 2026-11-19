@@ -70,7 +70,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
   <div class="star">✦</div><div class="logo">ÖRDEKEZ<small>ASANSÖR · 100 KAT</small></div>
   <canvas id="duckCv" width="420" height="380"></canvas>
   <div class="anrow"><button class="ch" data-pa="idle">🧍</button><button class="ch" data-pa="selam">👋</button><button class="ch" data-pa="walk">🚶</button><button class="ch" data-pa="sevin">🙌</button><button class="ch" id="bSpin">⏸ Dönme</button><button class="ch" id="bRnd">🎲 Rastgele</button></div>
-  <input id="nameIn" maxlength="16" placeholder="Adın">
+  <div id="acct" style="display:none;margin:6px 0;padding:9px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid rgba(232,192,106,.4);font-weight:900;color:#f4dfa8"></div><input id="nameIn" maxlength="16" placeholder="Adın (misafir)">
   <button class="btn" id="bKur">🏢 Oda Kur</button>
   <div class="row"><input id="codeIn" maxlength="4" placeholder="KOD"><button class="btn alt" id="bKatil">Katıl</button></div>
   <button class="btn alt" id="bTek">👤 Tek Başına</button>
@@ -487,6 +487,8 @@ function start(code) {
   if (!TOUCH) renderer.domElement.requestPointerLock?.();
 }
 let HESAP = ''; const TOKEN = (() => { try { return localStorage.getItem('ordekez_token'); } catch (e) { return null; } })();
+function setAcct(n) { if (!n) return; $('nameIn').value = n; $('nameIn').style.display = 'none'; $('acct').style.display = 'block'; $('acct').textContent = '👤 ' + n + ' olarak giriyorsun'; }
+if (TOKEN) { try { setAcct(localStorage.getItem('ordekez_user')); } catch (e) {} }
 let DUCK = norm((() => { try { return JSON.parse(localStorage.getItem('as_duck') || '{}'); } catch (e) { return {}; } })());
 const pv = (() => { const c = $('duckCv'); let r; try { r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: true, preserveDrawingBuffer: true }); } catch (e) { return null; } r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.setPixelRatio(1); r.setSize(420, 380, false);
   const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight('#fff', '#b0a490', 1.4)); const dl = new THREE.DirectionalLight('#fff4e0', 2.2); dl.position.set(2, 4, -4); sc.add(dl);
@@ -515,7 +517,7 @@ const pick = a => a[Math.floor(Math.random() * a.length)];
 $('bRnd').onclick = () => { const keep = DUCK; DUCK.renk = pick(RENKLER); DUCK.gaga = pick(GAGA.slice(0, 4)); DUCK.gobek = null; DUCK.goz = pick(Object.keys(GOZ)); for (const k in KATEGORI) { const ks = Object.keys(KATEGORI[k].o); DUCK[k] = Math.random() < (k === 'sapka' ? .85 : .45) ? pick(ks.slice(1)) : 'yok'; DUCK[k + 'R'] = pick(SUSLER); } DUCK = Object.assign(DUCK, izinli(DUCK, HESAP)); for (const kat of ['goz','sapka','sirt','el']) if (ozelMi(kat, DUCK[kat]) && Math.random() < .6) DUCK[kat] = kat === 'goz' ? 'normal' : 'yok'; pvBuild(); opts(); cols(); if (pv) { pv.anim = 'sevin'; setTimeout(() => pv.anim = 'idle', 1300); } };
 if (pv) { const c = $('duckCv'); c.addEventListener('pointerdown', e => pv.drag = e.clientX); addEventListener('pointerup', () => pv.drag = null); addEventListener('pointermove', e => { if (pv.drag == null) return; pv.yaw += (e.clientX - pv.drag) * .012; pv.drag = e.clientX; }); }
 DUCK = izinli(DUCK, HESAP); pvBuild(); tabs(); opts(); cols(); pvLoop();
-if (TOKEN) fetch(SB_URL + '/rest/v1/rpc/ben', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: TOKEN }) }).then(r => r.ok ? r.json() : null).then(res => { if (!res || !res.kullanici_adi) return; HESAP = String(res.kullanici_adi).toLowerCase(); if (!$('nameIn').value) $('nameIn').value = res.kullanici_adi; opts(); if (HESAP === 'noxvire') $('msgM').innerHTML = '<span style="color:#ff6a6a">😈 Hoş geldin Noxvire — sana özel parçalar açıldı!</span>'; }).catch(() => {});
+if (TOKEN) fetch(SB_URL + '/rest/v1/rpc/ben', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: TOKEN }) }).then(r => r.ok ? r.json() : null).then(res => { if (!res || !res.kullanici_adi) return; HESAP = String(res.kullanici_adi).toLowerCase(); setAcct(res.kullanici_adi); opts(); if (HESAP === 'noxvire') $('msgM').innerHTML = '<span style="color:#ff6a6a">😈 Hoş geldin Noxvire — sana özel parçalar açıldı!</span>'; }).catch(() => {});
 // ayarlar
 function setUI() { $('sSens').value = SET.sens; $('sFov').value = SET.fov; $('sVol').value = SET.vol; document.querySelectorAll('#sGfx button').forEach(b => b.classList.toggle('on', +b.dataset.q === SET.gfx)); document.querySelectorAll('#sMir button').forEach(b => b.classList.toggle('on', +b.dataset.m === SET.mir)); }
 $('sSens').oninput = e => { SET.sens = +e.target.value; saveSet(); }; $('sFov').oninput = e => { SET.fov = +e.target.value; camera.fov = SET.fov; camera.updateProjectionMatrix(); saveSet(); }; $('sVol').oninput = e => { SET.vol = +e.target.value; saveSet(); };
