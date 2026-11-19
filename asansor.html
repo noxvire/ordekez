@@ -64,7 +64,11 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 #joy{position:fixed;left:22px;bottom:26px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);z-index:6;pointer-events:auto;touch-action:none}
 #joyK{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(244,223,168,.6)}
 .mb{position:fixed;z-index:6;width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(10,14,40,.5);color:#fff;font:900 20px Nunito;pointer-events:auto;touch-action:none}
-#mJ{right:24px;bottom:30px}#mE{right:98px;bottom:62px}#mT{right:24px;bottom:104px;width:48px;height:48px;font-size:16px}
+#wheel{position:fixed;left:50%;top:50%;width:320px;height:320px;margin:-160px 0 0 -160px;border-radius:50%;z-index:12;display:none;background:radial-gradient(circle,rgba(10,14,40,.2) 0 22%,rgba(10,14,40,.72) 23% 70%,transparent 71%);}
+#wheel .we{position:absolute;width:76px;height:76px;margin:-38px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font:900 11px Nunito;color:#e8e4ff;background:rgba(255,255,255,.08);border:2px solid rgba(232,192,106,.35);cursor:pointer;transition:transform .1s}
+#wheel .we b{font-size:30px;line-height:1}#wheel .we.on{transform:scale(1.18);background:linear-gradient(#fff2cf,#e8c06a);color:#1a1530;border-color:#fff}
+#wSel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:900 14px Nunito;color:#f4dfa8;text-align:center;width:90px}
+#mJ{right:24px;bottom:30px}#mM{right:84px;bottom:136px;width:48px;height:48px;font-size:20px}#mE{right:98px;bottom:62px}#mT{right:24px;bottom:104px;width:48px;height:48px;font-size:16px}
 </style></head><body>
 <a class="back" href="index.html" id="backA">← Ördekez</a>
 <div id="menu"><div class="mwrap">
@@ -82,7 +86,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 </div></div>
 <div id="clickHint" style="display:none;position:fixed;left:50%;top:40%;transform:translateX(-50%);z-index:6;background:rgba(10,14,40,.7);border:1px solid #e8c06a;color:#f4dfa8;padding:8px 16px;border-radius:999px;font-weight:900;pointer-events:none">🖱️ Etrafa bakmak için ekrana tıkla</div>
 <div id="hud"><div id="cross"></div><div id="hint"></div><div id="big"></div>
-  <div id="info"></div><div id="help">WASD yürü · Shift koş · Boşluk zıpla<br>E etkileşim · T sohbet · Esc menü</div>
+  <div id="info"></div><div id="help">WASD yürü · Shift koş · Boşluk zıpla<br>E etkileşim · Enter sohbet · T basılı tut: emote · Esc menü</div>
   <div id="chatLog"></div><input id="chatIn" maxlength="120" placeholder="Mesaj yaz, Enter ile gönder">
 </div>
 <div id="pause"><div class="box"><div class="logo" style="font-size:28px">DURAKLATILDI</div><p id="pCode" style="font-weight:800"></p>
@@ -95,14 +99,15 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
    <div class="set">Grafik<div class="seg" id="sGfx"><button data-q="0">Düşük</button><button data-q="1">Orta</button><button data-q="2">Yüksek</button></div></div>
    <div class="set">Ayna yansıması<div class="seg" id="sMir"><button data-m="1">Açık</button><button data-m="0">Kapalı</button></div></div>
   </div><button class="btn alt" id="bLink">🔗 Davet linkini kopyala</button><button class="btn alt" id="bCik">Çıkış</button></div></div>
-<div id="mob"><div id="joy"><div id="joyK"></div></div><button class="mb" id="mJ">⤒</button><button class="mb" id="mE">E</button><button class="mb" id="mT">💬</button></div>
+<div id="wheel"><div id="wSel"></div></div>
+<div id="mob"><div id="joy"><div id="joyK"></div></div><button class="mb" id="mJ">⤒</button><button class="mb" id="mE">E</button><button class="mb" id="mM">😀</button><button class="mb" id="mT">💬</button></div>
 
 <script>addEventListener("error",e=>{const m=document.getElementById("msgM");if(m)m.textContent="Hata: "+(e.message||e.error)});</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="guncel.js"></script>
 <script type="module">
 import * as THREE from './three-uzay.js';
-import { makeDuck, norm, ozelMi, izinli, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=9';
+import { makeDuck, norm, ozelMi, izinli, RENKLER, SUSLER, GAGA, KATEGORI, GOZ } from './ordek3d.js?v=10';
 import { Reflector } from './gltf.js?v=9006';
 const $ = id => document.getElementById(id);
 const SB_URL = 'https://servvglgsudtjouqknvx.supabase.co', SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
@@ -428,6 +433,7 @@ function netStart(code) {
   chan.on('presence', { event: 'leave' }, ({ key, leftPresences }) => { if (key !== MYID && leftPresences[0]) chatLine('sys', `${esc(leftPresences[0].n)} ayrıldı`); });
   chan.on('broadcast', { event: 'p' }, ({ payload: p }) => { const o = ROSTER[p.i]; if (!o) return; o.tx = p.x; o.ty = p.y; o.tz = p.z; o.tyaw = p.r; o.mv = p.m; });
   chan.on('broadcast', { event: 'c' }, ({ payload: p }) => { const o = ROSTER[p.i]; chatLine('', `<b>${esc(o ? o.n : '?')}:</b> ${esc(p.t)}`); if (o) { o.bub = p.t; o.bubT = 6; setBubble(o); } tone(880, .08, 'triangle', .04); });
+  chan.on('broadcast', { event: 'e' }, ({ payload: p }) => { const o = ROSTER[p.i]; if (!o) return; o.emo = p.k; o.emoT = p.k === 'otur' ? 999 : p.k === 'dans' ? 6 : 3; if (o.mesh && ['kalp', 'gul', 'selam', 'sevin'].includes(p.k)) emoPop(o.mesh, p.k); });
   chan.on('broadcast', { event: 'req' }, () => { if (isHost()) hostStart(); });
   chan.on('broadcast', { event: 'el' }, ({ payload: p }) => applyRemote(p));
   chan.on('broadcast', { event: 'state' }, ({ payload: p }) => { if (p.floor !== ES.floor || (ES.floor === 0 && FLOOR)) { ES.floor = p.floor; ES.target = p.target; loadFloor(p.floor); if (p.floor) { P.x = EL.x0 + 1.2; P.z = -3.5; P.y = 0; } } });
@@ -443,7 +449,7 @@ function makeAvatar(id) {
   scene.add(g); o.mesh = g;
 }
 function setBubble(o) { if (o.bubS) o.mesh.remove(o.bubS); o.bubS = nameSprite('💬 ' + o.bub.slice(0, 26)); o.bubS.position.y = 2.25; o.bubS.scale.set(1.8, .45, 1); o.mesh.add(o.bubS); }
-function updOthers(dt) { for (const id in ROSTER) { const o = ROSTER[id]; if (!o.mesh) continue; const k = Math.min(1, dt * 12); o.x = lerp(o.x, o.tx, k); o.y = lerp(o.y, o.ty, k); o.z = lerp(o.z, o.tz, k); let d = o.tyaw - o.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); o.yaw += d * k; o.mesh.position.set(o.x, o.y, o.z); o.mesh.rotation.y = o.yaw; if (o.duck) o.duck.update(dt, { hiz: o.mv ? 1 : 0, kosu: o.mv === 2, zipla: o.ty > .3 && !inCab(o.x, o.z), konus: o.bubT > 4 }); if (o.bubT > 0) { o.bubT -= dt; if (o.bubT <= 0 && o.bubS) { o.mesh.remove(o.bubS); o.bubS = null; } } } }
+function updOthers(dt) { for (const id in ROSTER) { const o = ROSTER[id]; if (!o.mesh) continue; const k = Math.min(1, dt * 12); o.x = lerp(o.x, o.tx, k); o.y = lerp(o.y, o.ty, k); o.z = lerp(o.z, o.tz, k); let d = o.tyaw - o.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); o.yaw += d * k; o.mesh.position.set(o.x, o.y, o.z); o.mesh.rotation.y = o.yaw; if (o.emoT > 0) { o.emoT -= dt; if (o.mv) o.emoT = 0; } const oe = o.emoT > 0 ? o.emo : null; if (o.duck) o.duck.update(dt, { hiz: o.mv ? 1 : 0, kosu: o.mv === 2, zipla: o.ty > .3 && !inCab(o.x, o.z), konus: o.bubT > 4, [oe]: oe ? 1 : 0 }); if (o.bubT > 0) { o.bubT -= dt; if (o.bubT <= 0 && o.bubS) { o.mesh.remove(o.bubS); o.bubS = null; } } } }
 
 /* ================= HUD / SOHBET ================= */
 let bigT = 0; function showBig(html) { $('big').innerHTML = html; $('big').style.opacity = 1; bigT = 2.6; }
@@ -457,11 +463,23 @@ function closeChat() { chatOpen = false; $('chatIn').style.display = 'none'; $('
 const PAUSED = () => $('pause').style.display === 'flex';
 function clearKeys() { for (const k in keys) keys[k] = false; }
 addEventListener('blur', clearKeys);
-addEventListener('keydown', e => { if (e.code === 'Escape' && playing && !chatOpen) { if (PAUSED()) resume(); else if (!locked) { clearKeys(); $('clickHint').style.display = 'none'; $('pause').style.display = 'flex'; } return; } if (!playing || chatOpen || PAUSED()) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'KeyT' || e.code === 'Enter') { e.preventDefault(); openChat(); } });
-addEventListener('keyup', e => { keys[e.code] = false; });
+addEventListener('keydown', e => { if (e.code === 'Escape' && playing && !chatOpen) { if (PAUSED()) resume(); else if (!locked) { clearKeys(); $('clickHint').style.display = 'none'; $('pause').style.display = 'flex'; } return; } if (!playing || chatOpen || PAUSED()) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'Enter') { e.preventDefault(); openChat(); } if (e.code === 'KeyT' && !e.repeat) { e.preventDefault(); tDown = performance.now(); clearTimeout(tTimer); tTimer = setTimeout(() => { if (keys.KeyT) wheelOpen(); }, 220); } });
+addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'KeyT' && playing && !chatOpen) { clearTimeout(tTimer); if (WH.open) wheelClose(true); else if (performance.now() - tDown < 220 && !PAUSED()) openChat(); } });
+let tDown = 0, tTimer = null;
+const EMO = [['selam', '👋', 'Selam'], ['sevin', '🙌', 'Sevin'], ['dans', '💃', 'Dans'], ['otur', '🪑', 'Otur'], ['kalp', '❤️', 'Kalp'], ['gul', '😂', 'Gül']];
+const WH = { open: false, x: 0, y: 0, sel: -1 };
+(function () { const w = $('wheel'); EMO.forEach(([k, ic, ad], i) => { const a = -Math.PI / 2 + i / EMO.length * Math.PI * 2, d = document.createElement('div'); d.className = 'we'; d.style.left = 160 + Math.cos(a) * 112 + 'px'; d.style.top = 160 + Math.sin(a) * 112 + 'px'; d.innerHTML = `<b>${ic}</b>${ad}`; d.onmouseenter = () => wheelSel(i); d.onclick = () => { wheelSel(i); wheelClose(true); }; d.ontouchend = e => { e.preventDefault(); wheelSel(i); wheelClose(true); }; w.appendChild(d); }); })();
+function wheelSel(i) { WH.sel = i; document.querySelectorAll('#wheel .we').forEach((d, j) => d.classList.toggle('on', j === i)); $('wSel').innerHTML = i >= 0 ? EMO[i][2] : 'Seç'; }
+function wheelOpen() { if (!playing || chatOpen || PAUSED()) return; WH.open = true; WH.x = WH.y = 0; wheelSel(-1); $('wheel').style.display = 'block'; }
+function wheelClose(apply) { WH.open = false; $('wheel').style.display = 'none'; if (apply && WH.sel >= 0) doEmote(EMO[WH.sel][0]); }
+let MYEMO = null, MYEMOT = 0;
+function doEmote(k) { MYEMO = k; MYEMOT = k === 'otur' ? 999 : k === 'dans' ? 6 : 3; netSend('e', { k }); if (['kalp', 'gul', 'selam', 'sevin'].includes(k)) emoPop(ME ? ME.root : null, k); }
+function emoPop(par, k) { if (!par) return; const ic = { kalp: '❤️', gul: '😂', selam: '👋', sevin: '🎉' }[k]; const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.font = '96px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ic, 64, 70); const t = new THREE.CanvasTexture(c); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false })); sp.scale.set(.5, .5, 1); sp.position.y = 1.9; sp.layers.mask = par.layers ? par.layers.mask : 1; par.add(sp); POPS.push({ sp, par, t: 0 }); }
+const POPS = [];
+addEventListener('mousemove', e => { if (!WH.open || !locked) return; WH.x += e.movementX; WH.y += e.movementY; const L = Math.hypot(WH.x, WH.y); if (L > 160) { WH.x *= 160 / L; WH.y *= 160 / L; } if (L > 30) { let a = Math.atan2(WH.y, WH.x) + Math.PI / 2; a = (a + Math.PI * 2) % (Math.PI * 2); wheelSel(Math.round(a / (Math.PI * 2) * EMO.length) % EMO.length); } }, true);
 renderer.domElement.addEventListener('click', () => { if (playing && !TOUCH && !chatOpen) renderer.domElement.requestPointerLock?.(); audio(); });
 document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; if (locked) $('clickHint').style.display = 'none'; if (!locked) clearKeys(); if (!locked && playing && !chatOpen && !TOUCH) $('pause').style.display = 'flex'; else $('pause').style.display = 'none'; });
-addEventListener('mousemove', e => { if (!locked) return; const k = .0022 * SET.sens; P.yaw -= e.movementX * k; P.pitch = clamp(P.pitch - e.movementY * k, -1.45, 1.45); });
+addEventListener('mousemove', e => { if (!locked || WH.open) return; const k = .0022 * SET.sens; P.yaw -= e.movementX * k; P.pitch = clamp(P.pitch - e.movementY * k, -1.45, 1.45); });
 function interact() { if (lookAtButton()) pressButton(); }
 function lookAtButton() { if (!BUTTON || !inCab()) return false; const bp = new THREE.Vector3(); BUTTON.getWorldPosition(bp); const d = bp.clone().sub(camera.position); if (d.length() > 2.3) return false; const f = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion); return f.dot(d.normalize()) > .82; }
 // mobil kontroller
@@ -476,7 +494,7 @@ if (TOUCH) {
   renderer.domElement.addEventListener('touchstart', e => { for (const t of e.changedTouches) if (lookId === null) { lookId = t.identifier; lx = t.clientX; ly = t.clientY; } audio(); }, { passive: true });
   renderer.domElement.addEventListener('touchmove', e => { for (const t of e.changedTouches) if (t.identifier === lookId) { P.yaw -= (t.clientX - lx) * .005; P.pitch = clamp(P.pitch - (t.clientY - ly) * .005, -1.4, 1.4); lx = t.clientX; ly = t.clientY; } e.preventDefault(); }, { passive: false });
   renderer.domElement.addEventListener('touchend', e => { for (const t of e.changedTouches) if (t.identifier === lookId) lookId = null; });
-  $('mJ').addEventListener('touchstart', e => { e.preventDefault(); jump(); }); $('mE').addEventListener('touchstart', e => { e.preventDefault(); interact(); if (inCab()) pressButton(); }); $('mT').addEventListener('touchstart', e => { e.preventDefault(); openChat(); });
+  $('mJ').addEventListener('touchstart', e => { e.preventDefault(); jump(); }); $('mE').addEventListener('touchstart', e => { e.preventDefault(); interact(); if (inCab()) pressButton(); }); $('mT').addEventListener('touchstart', e => { e.preventDefault(); openChat(); }); $('mM').addEventListener('touchstart', e => { e.preventDefault(); if (WH.open) wheelClose(false); else wheelOpen(); });
 }
 
 /* ================= BAŞLAT ================= */
@@ -554,7 +572,8 @@ function loop(now) {
   if (FLOOR && FLOOR.guncelle) FLOOR.guncelle(dt, CTX);
   if (HOLO) { HOLO.material.opacity = .7 + Math.sin(now / 300) * .15; }
   updOthers(dt); netTick(now);
-  if (ME) { ME.root.position.set(P.x, P.y, P.z); ME.root.rotation.y = P.yaw; ME.update(dt, { hiz: P.moving ? 1 : 0, kosu: keys.ShiftLeft || keys.ShiftRight || JOY.run, zipla: !P.on }); }
+  if (ME) { ME.root.position.set(P.x, P.y, P.z); ME.root.rotation.y = P.yaw; if (MYEMOT > 0) { MYEMOT -= dt; if (P.moving || !P.on) MYEMOT = 0; } const me = MYEMOT > 0 ? MYEMO : null; ME.update(dt, { hiz: P.moving ? 1 : 0, kosu: keys.ShiftLeft || keys.ShiftRight || JOY.run, zipla: !P.on, [me]: me ? 1 : 0 }); }
+  for (let i = POPS.length - 1; i >= 0; i--) { const q = POPS[i]; q.t += dt; q.sp.position.y = 1.9 + q.t * .5; q.sp.material.opacity = Math.max(0, 1 - q.t / 1.8); if (q.t > 1.8) { q.par.remove(q.sp); POPS.splice(i, 1); } }
   if (MIRROR) { const near = SET.mir && Math.hypot(P.x - 25.5, P.z + 3.5) < 9; MIRROR.visible = !!near; MIRROR_OFF.visible = !near; }
   muzak(dt, playing && inCab());
   if (bigT > 0) { bigT -= dt; if (bigT <= 0) $('big').style.opacity = 0; }

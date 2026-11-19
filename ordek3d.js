@@ -164,9 +164,14 @@ export function makeDuck(THREE, cfg = {}) {
     wings.forEach((w, i) => { const s = i ? 1 : -1; let r = s * (sp > .05 ? .25 + Math.abs(Math.sin(ph)) * .35 * (1 + run) : .08 + Math.sin(t * 2.2) * .04); if (st.zipla) r = s * 1.2 + s * Math.sin(t * 30) * .3; if (st.sevin) r = s * (2.2 + Math.sin(t * 18) * .4); if (i === 1 && C.el !== 'yok' && !st.zipla && !st.sevin) r = .55 + (sp > .05 ? Math.sin(ph) * .1 : 0); w.rotation.z = r; });
     if (st.selam) { wave += dt; wings[1].rotation.z = 2.4 + Math.sin(wave * 14) * .45; } else wave = 0;
     head.rotation.z = sp > .05 ? -Math.sin(ph) * .08 : Math.sin(t * 1.3) * .05; head.rotation.x = Math.sin(t * 1.7) * .03;
+    hip.rotation.y = 0;
+    if (st.dans && sp < .05) { hip.rotation.y = Math.sin(t * 6) * .55; hip.position.y = Math.abs(Math.sin(t * 12)) * .09; hip.rotation.z = Math.sin(t * 6) * .12; wings.forEach((w, i) => w.rotation.z = (i ? 1 : -1) * (1.3 + Math.sin(t * 12 + i * Math.PI) * .9)); feet.forEach((ft, i) => ft.position.y = .12 + Math.max(0, Math.sin(t * 6 + i * Math.PI)) * .1); head.rotation.z = Math.sin(t * 12) * .15; }
+    if (st.otur && sp < .05) { hip.position.y = -.14; hip.rotation.x = -.08; feet.forEach(ft => { ft.position.z = -.2; ft.position.y = .06; }); wings.forEach((w, i) => w.rotation.z = (i ? 1 : -1) * .12); head.rotation.z = Math.sin(t * 1.1) * .08; }
+    if (st.gul && sp < .05) { hip.position.y = Math.abs(Math.sin(t * 18)) * .03; head.rotation.x = -.25 + Math.sin(t * 18) * .06; wings.forEach((w, i) => w.rotation.z = (i ? 1 : -1) * (.5 + Math.abs(Math.sin(t * 9)) * .4)); lo.position.y = -.06 - Math.abs(Math.sin(t * 18)) * .05; }
+    if (st.kalp && sp < .05) { wings.forEach((w, i) => w.rotation.z = (i ? 1 : -1) * (.9 + Math.sin(t * 3) * .1)); hip.rotation.z = Math.sin(t * 3) * .1; head.rotation.z = Math.sin(t * 3) * .12; }
     blink -= dt; const b = blink < .12 ? .1 : 1; if (blink < 0) blink = 2 + Math.random() * 3; if (C.goz !== 'mutlu' && C.goz !== 'kalp' && C.goz !== 'yildiz') eyes.forEach(e => e.scale.y = b); else eyes.forEach(e => e.scale.setScalar(1 + Math.sin(t * 6) * .06));
     tail.rotation.z = Math.sin(t * (sp > .05 ? 14 : 4)) * .3;
-    lo.position.y = st.konus ? -.06 - Math.abs(Math.sin(t * 20)) * .04 : -.06;
+    if (!st.gul) lo.position.y = st.konus ? -.06 - Math.abs(Math.sin(t * 20)) * .04 : -.06;
     bw.forEach((w, i) => w.rotation.y = (i ? -1 : 1) * (.3 + Math.sin(t * (sp > .05 ? 10 : 3)) * .25));
     glows.forEach(g => g.material.emissiveIntensity = 1.2 + Math.sin(t * 4) * .5);
     flames.forEach(f => f.scale.set(1, .7 + Math.random() * .6 + sp * .4, 1));
