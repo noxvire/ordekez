@@ -1,77 +1,141 @@
-// Ördekez — 3D chibi ördek karakteri
-// import { makeDuck } from './ordek3d.js';  const d = makeDuck(THREE, {renk, sapka, aks}); scene.add(d.root); d.update(dt, {hiz:0..1, kosu, zipla, selam});
-export const RENKLER = { sari: '#ffd23f', beyaz: '#f6f4ee', pembe: '#ffa8c8', mavi: '#8ac8ff', yesil: '#9ad87a', mor: '#c8a0ff', turuncu: '#ffa84a', gri: '#a8acb8', siyah: '#3a3a44' };
-export const SAPKALAR = { yok: 'Yok', kep: 'Kep', bere: 'Bere', tac: 'Taç', silindir: 'Silindir', yaprak: 'Yaprak', kovboy: 'Kovboy' };
-export const AKSESUAR = { yok: 'Yok', papyon: 'Papyon', kravat: 'Kravat', atki: 'Atkı', gozluk: 'Gözlük', kulaklik: 'Kulaklık' };
-export function makeDuck(THREE, opt = {}) {
-  const body = opt.renk || '#ffd23f', acc = opt.aksR || '#2c3c8c';
+// Ördekez — 3D chibi ördek karakteri v2
+// const d = makeDuck(THREE, cfg); scene.add(d.root); d.update(dt, {hiz, kosu, zipla, selam, sevin, konus});
+export const RENKLER = ['#ffd23f', '#f6f4ee', '#ffa8c8', '#8ac8ff', '#9ad87a', '#c8a0ff', '#ffa84a', '#a8acb8', '#3a3a44', '#7a5a3a', '#5ad0c0', '#ff6a6a'];
+export const SUSLER = ['#2c3c8c', '#d83a4a', '#ff6aa8', '#ff7a3a', '#ffd23f', '#3ab07a', '#4ab0ff', '#7a5aff', '#2a2a3a', '#f4f4f4', '#e8c06a', '#8a5a3a'];
+export const GAGA = ['#ff9a2a', '#ffc83a', '#ff7a6a', '#ffa8c8', '#3a3a44', '#e8e4dc'];
+export const KATEGORI = {
+  sapka: { ad: 'Şapka', ic: '🎩', o: { yok: 'Yok', ordek: 'Ördek Şapka', kedi: 'Kedi Şapka', kurbaga: 'Kurbağa Şapka', kep: 'Kep', bere: 'Bere', tac: 'Taç', silindir: 'Silindir', kovboy: 'Kovboy', parti: 'Parti', sihirbaz: 'Büyücü', sef: 'Şef', korsan: 'Korsan', viking: 'Viking', tavsan: 'Tavşan Kulağı', bandana: 'Bandana', yaprak: 'Yaprak', cicek: 'Çiçek' } },
+  yuz: { ad: 'Gözlük', ic: '🕶️', o: { yok: 'Yok', gozluk: 'Yuvarlak', gunes: 'Güneş', kalp: 'Kalp', yildiz: 'Yıldız', monokl: 'Monokl', maske: 'Kahraman Maskesi', kayak: 'Kayak Gözlüğü' } },
+  kulak: { ad: 'Kulak', ic: '🎧', o: { yok: 'Yok', kulaklik: 'Kulaklık', kulakmuf: 'Peluş Kulaklık', kupe: 'Halka Küpe', tasli: 'Taşlı Küpe' } },
+  boyun: { ad: 'Boyun', ic: '🎀', o: { yok: 'Yok', papyon: 'Papyon', kravat: 'Kravat', atki: 'Atkı', kolye: 'Kolye', madalya: 'Madalya', fular: 'Fular', yaka: 'Gömlek Yakası' } },
+  sirt: { ad: 'Sırt', ic: '🪽', o: { yok: 'Yok', melek: 'Melek Kanadı', seytan: 'Şeytan Kanadı', canta: 'Sırt Çantası', jetpack: 'Jetpack', pelerin: 'Pelerin', kabuk: 'Kaplumbağa Kabuğu' } },
+  el: { ad: 'Elinde', ic: '🎈', o: { yok: 'Yok', balon: 'Balon', cicek: 'Çiçek', kilic: 'Kılıç', dondurma: 'Dondurma', kahve: 'Kahve', bayrak: 'Bayrak' } },
+};
+export const GOZ = { normal: 'Normal', buyuk: 'Kocaman', mutlu: 'Mutlu ^^', uykulu: 'Uykulu', kizgin: 'Kızgın', yildiz: 'Yıldız', kalp: 'Kalp' };
+export const DEF = { renk: '#ffd23f', gobek: null, gaga: '#ff9a2a', goz: 'normal', yanak: true, sapka: 'yok', sapkaR: '#2c3c8c', yuz: 'yok', yuzR: '#2a2a3a', kulak: 'yok', kulakR: '#d83a4a', boyun: 'yok', boyunR: '#d83a4a', sirt: 'yok', sirtR: '#f4f4f4', el: 'yok', elR: '#ff6aa8' };
+export function norm(c = {}) { const o = Object.assign({}, DEF, c); if (c.aks && !c.boyun && !c.yuz && !c.kulak) { if (['papyon', 'kravat', 'atki'].includes(c.aks)) o.boyun = c.aks; if (c.aks === 'gozluk') o.yuz = 'gozluk'; if (c.aks === 'kulaklik') o.kulak = 'kulaklik'; if (c.aksR) o.sapkaR = o.boyunR = o.kulakR = c.aksR; } for (const k in KATEGORI) if (!KATEGORI[k].o[o[k]]) o[k] = 'yok'; if (!GOZ[o.goz]) o.goz = 'normal'; return o; }
+
+export function makeDuck(THREE, cfg = {}) {
+  const C = norm(cfg);
   const toon = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .55, metalness: 0 }, o));
-  const M = { body: toon(body), belly: toon(new THREE.Color(body).lerp(new THREE.Color('#ffffff'), .45)), beak: toon('#ff9a2a', { roughness: .4 }), eye: toon('#1a1420', { roughness: .15 }), white: toon('#ffffff', { roughness: .2 }), cheek: toon('#ff8aa8', { transparent: true, opacity: .55 }), acc: toon(acc), gold: toon('#e8c06a', { metalness: .7, roughness: .3 }) };
+  const lighten = (c, k) => '#' + new THREE.Color(c).lerp(new THREE.Color('#ffffff'), k).getHexString();
+  const darken = (c, k) => '#' + new THREE.Color(c).lerp(new THREE.Color('#10101a'), k).getHexString();
+  const M = { body: toon(C.renk), belly: toon(C.gobek || lighten(C.renk, .45)), beak: toon(C.gaga, { roughness: .4 }), foot: toon(C.gaga, { roughness: .5 }), eye: toon('#1a1420', { roughness: .15 }), white: toon('#ffffff', { roughness: .2 }), cheek: toon('#ff8aa8', { transparent: true, opacity: .55 }), gold: toon('#e8c06a', { metalness: .75, roughness: .28 }), dark: toon('#22222c', { roughness: .4 }) };
   const S = (r, w = 24, h = 18) => new THREE.SphereGeometry(r, w, h);
+  const mesh = (geo, mat, p = [0, 0, 0], r = [0, 0, 0], s = [1, 1, 1], par) => { const m = new THREE.Mesh(geo, mat); m.position.set(...p); m.rotation.set(...r); m.scale.set(...s); if (par) par.add(m); return m; };
   const root = new THREE.Group(), hip = new THREE.Group(); root.add(hip);
-  // gövde
-  const torso = new THREE.Mesh(S(.42), M.body); torso.scale.set(1, .92, .95); torso.position.y = .48; hip.add(torso);
-  const belly = new THREE.Mesh(S(.34), M.belly); belly.scale.set(.92, .82, .55); belly.position.set(0, .43, -.24); hip.add(belly);
-  const tail = new THREE.Mesh(new THREE.ConeGeometry(.12, .26, 12), M.body); tail.rotation.x = -2.3; tail.position.set(0, .62, .4); hip.add(tail);
-  // kafa
+  mesh(S(.42), M.body, [0, .48, 0], [0, 0, 0], [1, .92, .95], hip);
+  mesh(S(.34), M.belly, [0, .43, -.24], [0, 0, 0], [.92, .82, .55], hip);
+  const tail = mesh(new THREE.ConeGeometry(.12, .26, 12), M.body, [0, .62, .4], [-2.3, 0, 0], [1, 1, 1], hip);
   const head = new THREE.Group(); head.position.y = 1.02; hip.add(head);
-  const skull = new THREE.Mesh(S(.4, 28, 22), M.body); head.add(skull);
-  const tuft = new THREE.Group(); tuft.position.set(0, .38, .02); head.add(tuft); for (const [a, s] of [[-.4, .8], [0, 1], [.45, .75]]) { const t = new THREE.Mesh(new THREE.ConeGeometry(.05 * s, .2 * s, 8), M.body); t.position.set(Math.sin(a) * .04, .07 * s, 0); t.rotation.z = -a; tuft.add(t); }
-  // gaga
+  mesh(S(.4, 28, 22), M.body, [0, 0, 0], [0, 0, 0], [1, 1, 1], head);
+  const tuft = new THREE.Group(); tuft.position.set(0, .38, .02); head.add(tuft); for (const [a, s] of [[-.4, .8], [0, 1], [.45, .75]]) mesh(new THREE.ConeGeometry(.05 * s, .2 * s, 8), M.body, [Math.sin(a) * .04, .07 * s, 0], [0, 0, -a], [1, 1, 1], tuft);
   const beak = new THREE.Group(); beak.position.set(0, -.08, -.36); head.add(beak);
-  const up = new THREE.Mesh(S(.16, 20, 12), M.beak); up.scale.set(1.25, .42, 1); beak.add(up);
-  const lo = new THREE.Mesh(S(.14, 20, 12), M.beak); lo.scale.set(1.1, .32, .85); lo.position.set(0, -.06, .02); beak.add(lo);
-  // gözler
+  mesh(S(.16, 20, 12), M.beak, [0, 0, 0], [0, 0, 0], [1.25, .42, 1], beak);
+  const lo = mesh(S(.14, 20, 12), M.beak, [0, -.06, .02], [0, 0, 0], [1.1, .32, .85], beak);
   const eyes = [];
-  for (const s of [-1, 1]) { const e = new THREE.Group(); e.position.set(s * .17, .05, -.33); e.rotation.y = s * -.3; head.add(e);
-    const b = new THREE.Mesh(S(.085, 16, 12), M.eye); b.scale.set(.9, 1.15, .5); e.add(b);
-    const h1 = new THREE.Mesh(S(.03, 10, 8), M.white); h1.position.set(-.025, .04, -.035); e.add(h1); const h2 = new THREE.Mesh(S(.014, 8, 6), M.white); h2.position.set(.03, -.03, -.035); e.add(h2);
-    eyes.push(e);
-    const ck = new THREE.Mesh(S(.07, 12, 8), M.cheek); ck.scale.set(1.2, .6, .4); ck.position.set(s * .27, -.1, -.26); ck.rotation.y = s * -.6; head.add(ck); }
-  // kanatlar
+  for (const s of [-1, 1]) { const e = new THREE.Group(); e.position.set(s * .17, .05, -.33); e.rotation.y = s * -.3; head.add(e); eyes.push(e); const g = C.goz;
+    if (g === 'mutlu') mesh(new THREE.TorusGeometry(.06, .018, 8, 16, Math.PI), M.eye, [0, -.02, -.02], [0, 0, 0], [1, 1, 1], e);
+    else if (g === 'kalp' || g === 'yildiz') { const sh = new THREE.Shape(); if (g === 'kalp') { sh.moveTo(0, -.07); sh.bezierCurveTo(-.11, 0, -.06, .08, 0, .03); sh.bezierCurveTo(.06, .08, .11, 0, 0, -.07); } else { for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .035 : .085; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } }
+      mesh(new THREE.ExtrudeGeometry(sh, { depth: .02, bevelEnabled: false }), toon(g === 'kalp' ? '#ff3a6a' : '#ffc83a', { emissive: g === 'kalp' ? '#ff3a6a' : '#ffc83a', emissiveIntensity: .25 }), [0, 0, -.03], [0, Math.PI, 0], [1, 1, 1], e); }
+    else { const big = g === 'buyuk' ? 1.3 : 1; mesh(S(.085, 16, 12), M.eye, [0, 0, 0], [0, 0, 0], [.9 * big, 1.15 * big, .5], e); mesh(S(.03 * big, 10, 8), M.white, [-.025 * big, .04 * big, -.035], [0, 0, 0], [1, 1, 1], e); mesh(S(.014 * big, 8, 6), M.white, [.03 * big, -.03 * big, -.035], [0, 0, 0], [1, 1, 1], e);
+      if (g === 'uykulu') mesh(new THREE.SphereGeometry(.095, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), M.body, [0, 0, -.005], [0, 0, 0], [.95, 1.25, .6], e);
+      if (g === 'kizgin') mesh(new THREE.BoxGeometry(.15, .028, .03), M.eye, [s * .01, .11, -.03], [0, 0, s * -.45], [1, 1, 1], e); }
+    if (C.yanak !== false) mesh(S(.07, 12, 8), M.cheek, [s * .27, -.1, -.26], [0, s * -.6, 0], [1.2, .6, .4], head); }
   const wings = [];
-  for (const s of [-1, 1]) { const w = new THREE.Group(); w.position.set(s * .38, .62, 0); hip.add(w); const m = new THREE.Mesh(S(.2, 16, 12), M.body); m.scale.set(.38, .95, .7); m.position.set(s * .02, -.15, 0); m.rotation.z = s * .25; w.add(m); wings.push(w); }
-  // ayaklar
+  for (const s of [-1, 1]) { const w = new THREE.Group(); w.position.set(s * .38, .62, 0); hip.add(w); mesh(S(.2, 16, 12), M.body, [s * .02, -.15, 0], [0, 0, s * .25], [.38, .95, .7], w); wings.push(w); }
   const feet = [];
-  for (const s of [-1, 1]) { const f = new THREE.Group(); f.position.set(s * .17, .12, 0); root.add(f);
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .14, 8), M.beak); leg.position.y = -.03; f.add(leg);
-    const foot = new THREE.Mesh(S(.12, 16, 10), M.beak); foot.scale.set(.9, .3, 1.3); foot.position.set(0, -.1, -.05); f.add(foot); feet.push(f); }
-  // şapka
-  const hat = new THREE.Group(); hat.position.y = .3; head.add(hat);
-  function setHat(k) { while (hat.children.length) hat.remove(hat.children[0]); tuft.visible = k === 'yok' || k === 'tac' || k === 'yaprak'; const A = M.acc;
-    if (k === 'kep') { const c = new THREE.Mesh(new THREE.SphereGeometry(.34, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), A); c.position.y = -.04; hat.add(c); const v = new THREE.Mesh(new THREE.CylinderGeometry(.24, .24, .03, 24, 1, false, 0, Math.PI), A); v.rotation.y = Math.PI / 2; v.position.set(0, -.03, -.22); v.scale.set(1, 1, 1.3); hat.add(v); const b = new THREE.Mesh(S(.04), M.white); b.position.y = .3; hat.add(b); }
-    if (k === 'bere') { const c = new THREE.Mesh(new THREE.SphereGeometry(.36, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), A); c.position.y = -.06; hat.add(c); const r = new THREE.Mesh(new THREE.TorusGeometry(.33, .05, 10, 32), toon(new THREE.Color(acc).lerp(new THREE.Color('#fff'), .3))); r.rotation.x = Math.PI / 2; r.position.y = -.04; hat.add(r); const p = new THREE.Mesh(S(.1), M.white); p.position.y = .32; hat.add(p); }
-    if (k === 'tac') { const c = new THREE.Mesh(new THREE.CylinderGeometry(.17, .17, .12, 5, 1, true), M.gold); c.position.y = .03; hat.add(c); for (let i = 0; i < 5; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(.045, .12, 6), M.gold); const a = i / 5 * Math.PI * 2; sp.position.set(Math.cos(a) * .16, .14, Math.sin(a) * .16); hat.add(sp); const g = new THREE.Mesh(S(.025), toon(['#ff4a6a', '#4ab0ff', '#3ad09a'][i % 3])); g.position.set(Math.cos(a) * .17, .03, Math.sin(a) * .17); hat.add(g); } hat.rotation.z = .15; hat.position.x = .06; }
-    if (k === 'silindir') { const c = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, .32, 24), A); c.position.y = .16; hat.add(c); const b = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .025, 24), A); hat.add(b); const band = new THREE.Mesh(new THREE.CylinderGeometry(.185, .185, .05, 24), M.gold); band.position.y = .04; hat.add(band); }
-    if (k === 'yaprak') { const l = new THREE.Mesh(S(.1, 12, 8), toon('#5ac85a')); l.scale.set(.5, .15, 1.2); l.position.set(.08, .12, 0); l.rotation.set(.3, .5, .5); hat.add(l); }
-    if (k === 'kovboy') { const c = new THREE.Mesh(new THREE.CylinderGeometry(.2, .24, .22, 20), toon('#8a5a3a')); c.position.y = .1; hat.add(c); const b = new THREE.Mesh(new THREE.TorusGeometry(.32, .06, 8, 28), toon('#8a5a3a')); b.rotation.x = Math.PI / 2; b.scale.set(1, 1.2, .4); hat.add(b); }
-  }
-  const accG = new THREE.Group(); hip.add(accG);
-  function setAcc(k) { while (accG.children.length) accG.remove(accG.children[0]); const A = M.acc;
-    if (k === 'papyon') for (const s of [-1, 1]) { const w = new THREE.Mesh(new THREE.ConeGeometry(.08, .14, 4), A); w.rotation.z = s * Math.PI / 2; w.position.set(s * .07, .8, -.3); accG.add(w); }
-    if (k === 'papyon') { const k2 = new THREE.Mesh(S(.035), A); k2.position.set(0, .8, -.31); accG.add(k2); }
-    if (k === 'kravat') { const t = new THREE.Mesh(new THREE.ConeGeometry(.06, .3, 4), A); t.rotation.x = Math.PI; t.position.set(0, .64, -.37); t.rotation.z = Math.PI / 4; accG.add(t); const n = new THREE.Mesh(S(.045), A); n.position.set(0, .8, -.32); accG.add(n); }
-    if (k === 'atki') { const r = new THREE.Mesh(new THREE.TorusGeometry(.28, .07, 10, 30), A); r.rotation.x = Math.PI / 2; r.position.y = .82; accG.add(r); const e = new THREE.Mesh(new THREE.BoxGeometry(.1, .28, .06), A); e.position.set(.14, .66, -.26); e.rotation.z = .2; accG.add(e); }
-    if (k === 'gozluk') { const fr = toon('#1a1420'); for (const s of [-1, 1]) { const r = new THREE.Mesh(new THREE.TorusGeometry(.09, .015, 8, 20), fr); r.position.set(s * .17, 1.07, -.41); r.rotation.y = s * -.3; accG.add(r); } const br = new THREE.Mesh(new THREE.BoxGeometry(.12, .015, .015), fr); br.position.set(0, 1.08, -.43); accG.add(br); }
-    if (k === 'kulaklik') { const band = new THREE.Mesh(new THREE.TorusGeometry(.42, .03, 8, 30, Math.PI), toon('#2a2a3a')); band.position.y = 1.02; accG.add(band); for (const s of [-1, 1]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(.11, .11, .08, 18), A); c.rotation.z = Math.PI / 2; c.position.set(s * .41, 1.02, 0); accG.add(c); } }
-  }
-  setHat(opt.sapka || 'yok'); setAcc(opt.aks || 'yok');
-  root.traverse(o => { if (o.isMesh) { o.castShadow = true; } });
+  for (const s of [-1, 1]) { const f = new THREE.Group(); f.position.set(s * .17, .12, 0); root.add(f); mesh(new THREE.CylinderGeometry(.04, .04, .14, 8), M.foot, [0, -.03, 0], [0, 0, 0], [1, 1, 1], f); mesh(S(.12, 16, 10), M.foot, [0, -.1, -.05], [0, 0, 0], [.9, .3, 1.3], f); feet.push(f); }
+
+  // ===== ŞAPKA =====
+  const hat = new THREE.Group(); head.add(hat); const H = toon(C.sapkaR), H2 = toon(lighten(C.sapkaR, .35)), Hd = toon(darken(C.sapkaR, .3));
+  const dome = (r, mat, y = 0, cut = .5) => mesh(new THREE.SphereGeometry(r, 28, 14, 0, Math.PI * 2, 0, Math.PI * cut), mat, [0, y, 0], [0, 0, 0], [1, 1, 1], hat);
+  const k = C.sapka; tuft.visible = ['yok', 'tac', 'yaprak', 'cicek', 'tavsan', 'parti'].includes(k);
+  if (k === 'ordek') { dome(.43, H, .1, .45); mesh(new THREE.TorusGeometry(.405, .04, 8, 32), H2, [0, .12, 0], [Math.PI / 2, 0, 0], [1, 1, 1], hat);
+    mesh(S(.1, 16, 10), toon('#ff9a2a'), [0, .3, -.38], [0, 0, 0], [1.3, .42, 1], hat); for (const s of [-1, 1]) { mesh(S(.055, 12, 10), M.white, [s * .13, .4, -.3], [0, 0, 0], [1, 1, .5], hat); mesh(S(.032, 10, 8), M.eye, [s * .13, .4, -.33], [0, 0, 0], [1, 1, .5], hat); }
+    for (const [a, sc] of [[-.4, .8], [0, 1], [.45, .75]]) mesh(new THREE.ConeGeometry(.04 * sc, .16 * sc, 8), H, [Math.sin(a) * .04, .48 + .05 * sc, 0], [0, 0, -a], [1, 1, 1], hat); }
+  if (k === 'kedi') { dome(.42, H, .03, .52); mesh(new THREE.TorusGeometry(.415, .05, 8, 32), H2, [0, .03, 0], [Math.PI / 2, 0, 0], [1, 1, 1], hat);
+    for (const s of [-1, 1]) { mesh(new THREE.ConeGeometry(.12, .24, 4), H, [s * .24, .4, -.02], [0, Math.PI / 4, s * -.35], [1, 1, .6], hat); mesh(new THREE.ConeGeometry(.07, .15, 4), toon('#ffb0c8'), [s * .235, .39, -.06], [0, Math.PI / 4, s * -.35], [1, 1, .4], hat); } }
+  if (k === 'kurbaga') { dome(.42, H, .03, .52); for (const s of [-1, 1]) { mesh(S(.11, 16, 12), H, [s * .17, .43, -.08], [0, 0, 0], [1, 1, 1], hat); mesh(S(.07, 12, 10), M.white, [s * .17, .45, -.15], [0, 0, 0], [1, 1, .7], hat); mesh(S(.04, 10, 8), M.eye, [s * .17, .45, -.2], [0, 0, 0], [1, 1, .5], hat); } }
+  if (k === 'kep') { dome(.415, H, .05, .5); mesh(new THREE.CylinderGeometry(.3, .3, .03, 24, 1, false, 0, Math.PI), H, [0, .07, -.3], [0, Math.PI / 2, 0], [1, 1, 1.25], hat); mesh(S(.04), H2, [0, .46, 0], [0, 0, 0], [1, 1, 1], hat); }
+  if (k === 'bere') { dome(.42, H, .02, .52); mesh(new THREE.TorusGeometry(.41, .06, 10, 32), H2, [0, .04, 0], [Math.PI / 2, 0, 0], [1, 1, 1], hat); mesh(S(.11), M.white, [0, .47, 0], [0, 0, 0], [1, 1, 1], hat); }
+  if (k === 'tac') { const g = toon(C.sapkaR, { metalness: .75, roughness: .25, side: THREE.DoubleSide }); mesh(new THREE.CylinderGeometry(.2, .19, .12, 16, 1, true), g, [0, .41, 0], [0, 0, 0], [1, 1, 1], hat); for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; mesh(new THREE.ConeGeometry(.035, .1, 6), g, [Math.cos(a) * .19, .51, Math.sin(a) * .19], [0, 0, 0], [1, 1, 1], hat); mesh(S(.018), g, [Math.cos(a) * .19, .565, Math.sin(a) * .19], [0, 0, 0], [1, 1, 1], hat); if (i % 2 === 0) mesh(S(.026), toon(['#ff3a6a', '#3a9aff', '#3ad09a', '#b05aff'][i / 2]), [Math.cos(a) * .2, .41, Math.sin(a) * .2], [0, 0, 0], [1, 1, 1], hat); } }
+  if (k === 'silindir') { mesh(new THREE.CylinderGeometry(.42, .42, .025, 32), H, [0, .3, 0], [0, 0, 0], [1, 1, 1], hat); mesh(new THREE.CylinderGeometry(.22, .23, .36, 28), H, [0, .49, 0], [0, 0, 0], [1, 1, 1], hat); mesh(new THREE.CylinderGeometry(.232, .232, .07, 28), toon(C.sapkaR === '#d83a4a' ? '#2a2a3a' : '#d83a4a'), [0, .35, 0], [0, 0, 0], [1, 1, 1], hat); }
+  if (k === 'kovboy') { mesh(new THREE.CylinderGeometry(.24, .28, .24, 24), H, [0, .44, 0], [0, 0, 0], [1, 1, 1], hat); mesh(new THREE.TorusGeometry(.4, .07, 8, 32), H, [0, .3, 0], [Math.PI / 2, 0, 0], [1, 1.15, .45], hat); mesh(new THREE.CylinderGeometry(.4, .4, .02, 32), H, [0, .3, 0], [0, 0, 0], [1, 1, 1], hat); mesh(new THREE.CylinderGeometry(.285, .285, .05, 24), Hd, [0, .35, 0], [0, 0, 0], [1, 1, 1], hat); }
+  if (k === 'parti') { const c = new THREE.Group(); c.position.set(.1, .36, 0); c.rotation.z = -.2; hat.add(c); mesh(new THREE.ConeGeometry(.17, .42, 24), H, [0, .2, 0], [0, 0, 0], [1, 1, 1], c); for (let i = 0; i < 3; i++) mesh(new THREE.TorusGeometry(.13 - i * .04, .015, 6, 24), H2, [0, .08 + i * .11, 0], [Math.PI / 2, 0, 0], [1, 1, 1], c); mesh(S(.06), toon('#ffd23f'), [0, .43, 0], [0, 0, 0], [1, 1, 1], c); }
+  if (k === 'sihirbaz') { mesh(new THREE.CylinderGeometry(.48, .48, .025, 32), H, [0, .28, 0], [0, 0, 0], [1, 1, 1], hat); const c = new THREE.Group(); c.position.y = .29; hat.add(c); mesh(new THREE.ConeGeometry(.3, .6, 28), H, [0, .3, 0], [0, 0, 0], [1, 1, 1], c); const tip = new THREE.Group(); tip.position.set(0, .55, 0); tip.rotation.z = -.5; c.add(tip); mesh(new THREE.ConeGeometry(.1, .25, 16), H, [0, .1, 0], [0, 0, 0], [1, 1, 1], tip);
+    for (let i = 0; i < 5; i++) { const a = i * 1.3; mesh(new THREE.OctahedronGeometry(.035), toon('#ffd23f', { emissive: '#ffb02a', emissiveIntensity: .4 }), [Math.cos(a) * (.25 - i * .035), .12 + i * .09, Math.sin(a) * (.25 - i * .035)], [0, 0, 0], [1, 1, 1], c); } }
+  if (k === 'sef') { const w = toon('#fafafa'); mesh(new THREE.CylinderGeometry(.3, .3, .2, 24), w, [0, .36, 0], [0, 0, 0], [1, 1, 1], hat); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(S(.16), w, [Math.cos(a) * .17, .55, Math.sin(a) * .17], [0, 0, 0], [1, 1, 1], hat); } mesh(S(.18), w, [0, .6, 0], [0, 0, 0], [1, 1, 1], hat); }
+  if (k === 'korsan') { const b = new THREE.Group(); b.position.y = .36; hat.add(b); mesh(new THREE.SphereGeometry(.36, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), Hd, [0, -.06, 0], [0, 0, 0], [1, .8, 1], b);
+    mesh(new THREE.BoxGeometry(.7, .2, .04), Hd, [0, .06, -.2], [-.15, 0, 0], [1, 1, 1], b); mesh(new THREE.BoxGeometry(.7, .2, .04), Hd, [0, .06, .2], [.15, 0, 0], [1, 1, 1], b); mesh(S(.05), M.white, [0, .09, -.23], [0, 0, 0], [1, 1, .5], b); for (const s of [-1, 1]) mesh(new THREE.BoxGeometry(.11, .02, .02), M.white, [0, .03, -.23], [0, 0, s * .7], [1, 1, 1], b); mesh(new THREE.BoxGeometry(.72, .02, .045), M.gold, [0, .16, -.215], [-.15, 0, 0], [1, 1, 1], b); }
+  if (k === 'viking') { const met = toon('#c8ccd6', { metalness: .7, roughness: .3 }); dome(.42, met, .04, .52); mesh(new THREE.TorusGeometry(.415, .04, 8, 32), toon('#a8784a'), [0, .05, 0], [Math.PI / 2, 0, 0], [1, 1, 1], hat);
+    for (const s of [-1, 1]) { const h = new THREE.Group(); h.position.set(s * .36, .22, 0); h.rotation.z = s * -.5; hat.add(h); mesh(new THREE.ConeGeometry(.07, .3, 12), toon('#fff4dc'), [0, .15, 0], [0, 0, s * .4], [1, 1, 1], h); } }
+  if (k === 'tavsan') { mesh(new THREE.TorusGeometry(.4, .03, 8, 32, Math.PI), H, [0, .03, 0], [0, Math.PI / 2, 0], [1, 1, 1], hat); for (const s of [-1, 1]) { const e = new THREE.Group(); e.position.set(s * .14, .36, 0); e.rotation.z = s * -.2; hat.add(e); mesh(S(.09, 14, 10), H, [0, .22, 0], [0, 0, 0], [.75, 2.6, .4], e); mesh(S(.06, 12, 8), toon('#ffb0c8'), [0, .22, -.025], [0, 0, 0], [.6, 2.3, .3], e); } }
+  if (k === 'bandana') { mesh(new THREE.SphereGeometry(.415, 28, 10, 0, Math.PI * 2, 0, Math.PI * .34), H, [0, .02, 0], [0, 0, 0], [1, 1, 1], hat); mesh(new THREE.TorusGeometry(.385, .04, 8, 32), H, [0, .14, 0], [Math.PI / 2 - .08, 0, 0], [1, 1, 1], hat); for (const s of [-1, 1]) mesh(new THREE.ConeGeometry(.06, .2, 4), H, [s * .06, .1, .42], [Math.PI / 2 + .6, 0, s * .5], [1, 1, .4], hat); for (let i = 0; i < 8; i++) mesh(S(.016), M.white, [Math.cos(i * .8) * .25, .33, Math.sin(i * .8) * .25], [0, 0, 0], [1, 1, 1], hat); }
+  if (k === 'yaprak') { mesh(S(.1, 12, 8), toon('#5ac85a'), [.08, .48, 0], [.3, .5, .5], [.5, .15, 1.2], hat); }
+  if (k === 'cicek') { const c = new THREE.Group(); c.position.set(.2, .33, -.12); c.rotation.set(-.4, 0, -.5); hat.add(c); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(S(.06, 10, 8), H, [Math.cos(a) * .07, 0, Math.sin(a) * .07], [0, 0, 0], [1, .45, 1], c); } mesh(S(.045), toon('#ffd23f'), [0, .02, 0], [0, 0, 0], [1, .6, 1], c); }
+
+  // ===== GÖZLÜK =====
+  const Y = toon(C.yuzR, { roughness: .3 }), k2 = C.yuz;
+  const temples = () => { for (const s of [-1, 1]) mesh(new THREE.BoxGeometry(.016, .016, .3), Y, [s * .31, .06, -.2], [0, s * .25, 0], [1, 1, 1], head); };
+  if (k2 === 'gozluk' || k2 === 'gunes' || k2 === 'monokl') { for (const s of (k2 === 'monokl' ? [1] : [-1, 1])) { mesh(new THREE.TorusGeometry(.095, .014, 8, 24), k2 === 'monokl' ? M.gold : Y, [s * .17, .05, -.4], [0, s * -.3, 0], [1, 1, 1], head); mesh(new THREE.CircleGeometry(.092, 24), k2 === 'gunes' ? toon('#14121c', { roughness: .1, metalness: .3 }) : toon('#cfe4ff', { transparent: true, opacity: .25, roughness: .05 }), [s * .17, .05, -.398], [0, Math.PI + s * -.3, 0], [1, 1, 1], head); }
+    if (k2 === 'monokl') mesh(new THREE.TorusGeometry(.12, .004, 4, 20, 1.6), M.gold, [.24, -.1, -.36], [0, 0, -1.6], [1, 1, 1], head); else { mesh(new THREE.BoxGeometry(.12, .016, .016), Y, [0, .07, -.43], [0, 0, 0], [1, 1, 1], head); temples(); } }
+  if (k2 === 'kalp' || k2 === 'yildiz') { for (const s of [-1, 1]) { const sh = new THREE.Shape(); if (k2 === 'kalp') { sh.moveTo(0, -.1); sh.bezierCurveTo(-.15, 0, -.08, .11, 0, .05); sh.bezierCurveTo(.08, .11, .15, 0, 0, -.1); } else for (let i = 0; i < 10; i++) { const a = Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? .05 : .115; i ? sh.lineTo(Math.cos(a) * r, Math.sin(a) * r) : sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+      mesh(new THREE.ExtrudeGeometry(sh, { depth: .02, bevelEnabled: false }), toon(C.yuzR, { transparent: true, opacity: .85, roughness: .2 }), [s * .17, .05, -.4], [0, Math.PI + s * -.3, 0], [1, 1, 1], head); } mesh(new THREE.BoxGeometry(.1, .016, .016), Y, [0, .08, -.43], [0, 0, 0], [1, 1, 1], head); temples(); }
+  if (k2 === 'maske') { const sh = new THREE.Shape(); sh.moveTo(-.34, .06); sh.quadraticCurveTo(-.2, .2, 0, .08); sh.quadraticCurveTo(.2, .2, .34, .06); sh.quadraticCurveTo(.2, -.12, 0, -.03); sh.quadraticCurveTo(-.2, -.12, -.34, .06); mesh(new THREE.ExtrudeGeometry(sh, { depth: .03, bevelEnabled: false }), Y, [0, .03, -.37], [0, Math.PI, 0], [1, 1, 1], head); for (const s of [-1, 1]) mesh(S(.05, 10, 8), M.white, [s * .15, .06, -.41], [0, 0, 0], [1.3, .8, .3], head); mesh(new THREE.TorusGeometry(.38, .02, 6, 30), Y, [0, .06, 0], [Math.PI / 2, 0, 0], [1, 1, 1], head); }
+  if (k2 === 'kayak') { mesh(new THREE.TorusGeometry(.405, .035, 8, 40), Y, [0, .06, 0], [Math.PI / 2, 0, 0], [1, 1, 1], head); mesh(new THREE.SphereGeometry(.42, 32, 8, Math.PI * 1.15, Math.PI * .7, Math.PI * .4, Math.PI * .2), toon('#ffb02a', { metalness: .6, roughness: .1, emissive: '#ff6a2a', emissiveIntensity: .2 }), [0, .06, 0], [0, 0, 0], [1, 1, 1.02], head); }
+
+  // ===== KULAK =====
+  const K = toon(C.kulakR, { roughness: .35 }), k3 = C.kulak;
+  if (k3 === 'kulaklik' || k3 === 'kulakmuf') { const muff = k3 === 'kulakmuf'; mesh(new THREE.TorusGeometry(.43, .03, 8, 30, Math.PI), muff ? K : M.dark, [0, 0, 0], [0, Math.PI / 2, 0], [1, 1, 1], head); for (const s of [-1, 1]) { if (muff) mesh(S(.13, 16, 12), K, [s * .4, -.02, 0], [0, 0, 0], [.6, 1, 1], head); else { mesh(new THREE.CylinderGeometry(.12, .12, .09, 20), M.dark, [s * .42, -.02, 0], [0, 0, Math.PI / 2], [1, 1, 1], head); mesh(new THREE.CylinderGeometry(.09, .09, .02, 20), K, [s * .47, -.02, 0], [0, 0, Math.PI / 2], [1, 1, 1], head); } } }
+  if (k3 === 'kupe' || k3 === 'tasli') for (const s of [-1, 1]) { if (k3 === 'kupe') mesh(new THREE.TorusGeometry(.045, .01, 6, 16), K, [s * .385, -.17, .02], [0, Math.PI / 2, 0], [1, 1, 1], head); else { mesh(new THREE.CylinderGeometry(.005, .005, .06), M.gold, [s * .385, -.15, .02], [0, 0, 0], [1, 1, 1], head); mesh(new THREE.OctahedronGeometry(.04), toon(C.kulakR, { metalness: .4, roughness: .1, emissive: C.kulakR, emissiveIntensity: .25 }), [s * .385, -.21, .02], [0, 0, 0], [.8, 1.2, .8], head); } }
+
+  // ===== BOYUN =====
+  const B = toon(C.boyunR, { roughness: .45 }), k4 = C.boyun, neck = new THREE.Group(); hip.add(neck);
+  if (k4 === 'papyon') { const p = new THREE.Group(); p.position.set(0, .74, -.36); p.rotation.x = .25; neck.add(p); for (const s of [-1, 1]) mesh(new THREE.ConeGeometry(.075, .13, 4), B, [s * .065, 0, 0], [0, 0, s * Math.PI / 2], [1, 1, .5], p); mesh(S(.035), B, [0, 0, -.01], [0, 0, 0], [1, 1, .7], p); }
+  if (k4 === 'kravat') { mesh(new THREE.TorusGeometry(.3, .022, 6, 30), toon('#fafafa'), [0, .76, -.02], [Math.PI / 2 + .25, 0, 0], [1, 1, 1], neck); const t = new THREE.Group(); t.position.set(0, .74, -.36); t.rotation.x = .3; neck.add(t);
+    mesh(new THREE.BoxGeometry(.07, .06, .04), B, [0, 0, 0], [0, 0, 0], [1, 1, 1], t); const sh = new THREE.Shape(); sh.moveTo(-.035, 0); sh.lineTo(.035, 0); sh.lineTo(.06, -.22); sh.lineTo(0, -.29); sh.lineTo(-.06, -.22); sh.closePath(); mesh(new THREE.ExtrudeGeometry(sh, { depth: .02, bevelEnabled: false }), B, [0, -.02, -.005], [0, Math.PI, 0], [1, 1, 1], t); }
+  if (k4 === 'atki') { mesh(new THREE.TorusGeometry(.3, .075, 10, 30), B, [0, .78, -.02], [Math.PI / 2 + .2, 0, 0], [1, 1, 1], neck); mesh(new THREE.BoxGeometry(.12, .3, .06), B, [.13, .62, -.34], [-.3, 0, .15], [1, 1, 1], neck); }
+  if (k4 === 'kolye' || k4 === 'madalya') { mesh(new THREE.TorusGeometry(.3, .012, 6, 40), k4 === 'madalya' ? B : M.gold, [0, .74, -.03], [Math.PI / 2 + .45, 0, 0], [1, 1, 1], neck); if (k4 === 'kolye') mesh(new THREE.OctahedronGeometry(.045), toon(C.boyunR, { metalness: .3, roughness: .1, emissive: C.boyunR, emissiveIntensity: .3 }), [0, .6, -.38], [0, 0, 0], [1, 1.3, 1], neck); else { mesh(new THREE.CylinderGeometry(.075, .075, .02, 24), M.gold, [0, .57, -.39], [Math.PI / 2 - .3, 0, 0], [1, 1, 1], neck); mesh(new THREE.CylinderGeometry(.04, .04, .025, 5), toon('#fff4c8'), [0, .57, -.4], [Math.PI / 2 - .3, 0, 0], [1, 1, 1], neck); } }
+  if (k4 === 'fular') { mesh(new THREE.TorusGeometry(.3, .05, 8, 30), B, [0, .77, -.02], [Math.PI / 2 + .2, 0, 0], [1, 1, 1], neck); mesh(new THREE.ConeGeometry(.16, .22, 3), B, [0, .64, -.34], [Math.PI + .3, 0, 0], [1, 1, .35], neck); }
+  if (k4 === 'yaka') { for (const s of [-1, 1]) mesh(new THREE.ConeGeometry(.1, .16, 3), toon('#fafafa'), [s * .08, .74, -.33], [Math.PI + .4, 0, s * .5], [1, 1, .3], neck); mesh(S(.02), B, [0, .62, -.39], [0, 0, 0], [1, 1, 1], neck); mesh(S(.02), B, [0, .5, -.43], [0, 0, 0], [1, 1, 1], neck); }
+
+  // ===== SIRT =====
+  const R = toon(C.sirtR, { roughness: .5, side: THREE.DoubleSide }), k5 = C.sirt, back = new THREE.Group(); hip.add(back); const bw = [];
+  if (k5 === 'melek' || k5 === 'seytan') for (const s of [-1, 1]) { const w = new THREE.Group(); w.position.set(s * .15, .68, .36); back.add(w); bw.push(w);
+    if (k5 === 'melek') for (let i = 0; i < 4; i++) mesh(S(.13, 12, 10), R, [s * (.12 + i * .1), .1 + i * .04 - (i > 2 ? .06 : 0), .02 * i], [0, 0, s * (.5 - i * .25)], [1.3 - i * .15, .5, .25], w);
+    else { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(.2, .25); sh.lineTo(.45, .28); sh.quadraticCurveTo(.38, .15, .44, .05); sh.quadraticCurveTo(.33, .08, .3, -.04); sh.quadraticCurveTo(.2, .02, .16, -.1); sh.closePath(); mesh(new THREE.ExtrudeGeometry(sh, { depth: .02, bevelEnabled: false }), R, [0, 0, 0], [0, s < 0 ? Math.PI : 0, 0], [1, 1, 1], w); } }
+  if (k5 === 'canta') { mesh(new THREE.BoxGeometry(.42, .44, .22), R, [0, .55, .42], [0, 0, 0], [1, 1, 1], back); mesh(new THREE.BoxGeometry(.3, .16, .06), toon(darken(C.sirtR, .15)), [0, .45, .55], [0, 0, 0], [1, 1, 1], back); }
+  if (k5 === 'jetpack') { for (const s of [-1, 1]) { mesh(new THREE.CylinderGeometry(.1, .1, .42, 16), toon('#c8ccd6', { metalness: .7, roughness: .3 }), [s * .12, .58, .46], [0, 0, 0], [1, 1, 1], back); mesh(new THREE.ConeGeometry(.1, .12, 16), R, [s * .12, .85, .46], [0, 0, 0], [1, 1, 1], back); const fl = mesh(new THREE.ConeGeometry(.07, .22, 12), toon('#ffb02a', { emissive: '#ff6a1a', emissiveIntensity: 1.2, transparent: true, opacity: .85 }), [s * .12, .25, .46], [Math.PI, 0, 0], [1, 1, 1], back); fl.userData.flame = 1; } mesh(new THREE.BoxGeometry(.18, .3, .1), R, [0, .6, .42], [0, 0, 0], [1, 1, 1], back); }
+  if (k5 === 'pelerin') { const m = mesh(new THREE.CylinderGeometry(.3, .55, .9, 24, 4, true, -Math.PI * .45, Math.PI * .9), R, [0, .42, .06], [0, 0, 0], [1, 1, 1], back); m.userData.cape = 1; mesh(new THREE.TorusGeometry(.3, .025, 6, 24, Math.PI), M.gold, [0, .84, 0], [Math.PI / 2, 0, Math.PI], [1, 1, 1], back); }
+  if (k5 === 'kabuk') { mesh(new THREE.SphereGeometry(.4, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), R, [0, .5, .3], [Math.PI / 2, 0, 0], [1, 1, .6], back); for (let i = 0; i < 7; i++) { const a = i / 6 * Math.PI * 2, rr = i === 6 ? 0 : .2; mesh(new THREE.CylinderGeometry(.08, .08, .02, 6), toon(darken(C.sirtR, .25)), [Math.cos(a) * rr, .5 + Math.sin(a) * rr, .53 + (i === 6 ? .02 : 0)], [Math.PI / 2, 0, 0], [1, 1, 1], back); } }
+
+  // ===== EL =====
+  const E = toon(C.elR), k6 = C.el, hand = new THREE.Group(); hand.position.set(.04, -.32, -.04); wings[1].add(hand);
+  if (k6 === 'balon') { mesh(new THREE.CylinderGeometry(.004, .004, .8), toon('#ffffff'), [0, .4, 0], [0, 0, 0], [1, 1, 1], hand); mesh(S(.2, 20, 16), toon(C.elR, { roughness: .15 }), [0, .95, 0], [0, 0, 0], [1, 1.15, 1], hand); }
+  if (k6 === 'cicek') { mesh(new THREE.CylinderGeometry(.01, .01, .3), toon('#4a9a3a'), [0, .1, -.05], [-.3, 0, 0], [1, 1, 1], hand); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(S(.05, 10, 8), E, [Math.cos(a) * .06, .27, -.1 + Math.sin(a) * .06], [0, 0, 0], [1, 1, 1], hand); } mesh(S(.04), toon('#ffd23f'), [0, .27, -.1], [0, 0, 0], [1, 1, 1], hand); }
+  if (k6 === 'kilic') { const g = new THREE.Group(); g.rotation.x = -.6; hand.add(g); mesh(new THREE.BoxGeometry(.04, .55, .015), toon('#e8ecf4', { metalness: .8, roughness: .2 }), [0, .35, 0], [0, 0, 0], [1, 1, 1], g); mesh(new THREE.BoxGeometry(.16, .03, .04), M.gold, [0, .07, 0], [0, 0, 0], [1, 1, 1], g); mesh(new THREE.CylinderGeometry(.02, .02, .12), E, [0, 0, 0], [0, 0, 0], [1, 1, 1], g); }
+  if (k6 === 'dondurma') { mesh(new THREE.ConeGeometry(.06, .18, 12), toon('#d8a060'), [0, .02, -.05], [Math.PI, 0, 0], [1, 1, 1], hand); mesh(S(.07), E, [0, .14, -.05], [0, 0, 0], [1, 1, 1], hand); mesh(S(.02), toon('#ff3a4a'), [0, .22, -.05], [0, 0, 0], [1, 1, 1], hand); }
+  if (k6 === 'kahve') { mesh(new THREE.CylinderGeometry(.07, .055, .17, 16), toon('#fafafa'), [0, .04, -.06], [0, 0, 0], [1, 1, 1], hand); mesh(new THREE.CylinderGeometry(.072, .072, .07, 16), E, [0, .03, -.06], [0, 0, 0], [1, 1, 1], hand); mesh(new THREE.CylinderGeometry(.074, .074, .02, 16), toon('#4a3020'), [0, .13, -.06], [0, 0, 0], [1, 1, 1], hand); }
+  if (k6 === 'bayrak') { mesh(new THREE.CylinderGeometry(.01, .01, .7), toon('#8a6a4a'), [0, .3, 0], [0, 0, 0], [1, 1, 1], hand); const f = mesh(new THREE.PlaneGeometry(.32, .2, 6, 1), toon(C.elR, { side: THREE.DoubleSide }), [-.16, .54, 0], [0, 0, 0], [1, 1, 1], hand); f.userData.flag = 1; }
+
+  const flames = [], capes = [], flags = []; root.traverse(o => { if (o.userData.flame) flames.push(o); if (o.userData.cape) capes.push(o); if (o.userData.flag) flags.push(o); });
   let t = Math.random() * 10, blink = 2, wave = 0;
   function update(dt, st = {}) {
-    t += dt; const sp = st.hiz || 0, run = st.kosu ? 1 : 0, f = (8 + run * 5) * sp;
-    const ph = t * (9 + run * 4);
-    // yalpalama yürüyüş
+    t += dt; const sp = st.hiz || 0, run = st.kosu ? 1 : 0, ph = t * (9 + run * 4);
     hip.position.y = sp > .05 ? Math.abs(Math.sin(ph)) * (.06 + run * .04) : Math.sin(t * 2.2) * .015;
-    hip.rotation.z = sp > .05 ? Math.sin(ph) * (.14 + run * .04) : 0;
-    hip.rotation.x = -run * .18 * sp;
-    feet.forEach((ft, i) => { const s = i ? 1 : -1; ft.position.z = sp > .05 ? Math.sin(ph + (i ? Math.PI : 0)) * .16 * sp : 0; ft.position.y = .12 + (sp > .05 ? Math.max(0, Math.cos(ph + (i ? Math.PI : 0))) * .08 * sp : 0); });
-    wings.forEach((w, i) => { const s = i ? 1 : -1; let r = s * (sp > .05 ? .25 + Math.abs(Math.sin(ph)) * .35 * (1 + run) : .08 + Math.sin(t * 2.2) * .04); if (st.zipla) r = s * 1.2 + s * Math.sin(t * 30) * .3; if (st.sevin) r = s * (2.2 + Math.sin(t * 18) * .4); w.rotation.z = r; });
+    hip.rotation.z = sp > .05 ? Math.sin(ph) * (.14 + run * .04) : 0; hip.rotation.x = -run * .18 * sp;
+    feet.forEach((ft, i) => { ft.position.z = sp > .05 ? Math.sin(ph + (i ? Math.PI : 0)) * .16 * sp : 0; ft.position.y = .12 + (sp > .05 ? Math.max(0, Math.cos(ph + (i ? Math.PI : 0))) * .08 * sp : 0); });
+    wings.forEach((w, i) => { const s = i ? 1 : -1; let r = s * (sp > .05 ? .25 + Math.abs(Math.sin(ph)) * .35 * (1 + run) : .08 + Math.sin(t * 2.2) * .04); if (st.zipla) r = s * 1.2 + s * Math.sin(t * 30) * .3; if (st.sevin) r = s * (2.2 + Math.sin(t * 18) * .4); if (i === 1 && C.el !== 'yok' && !st.zipla && !st.sevin) r = .55 + (sp > .05 ? Math.sin(ph) * .1 : 0); w.rotation.z = r; });
     if (st.selam) { wave += dt; wings[1].rotation.z = 2.4 + Math.sin(wave * 14) * .45; } else wave = 0;
     head.rotation.z = sp > .05 ? -Math.sin(ph) * .08 : Math.sin(t * 1.3) * .05; head.rotation.x = Math.sin(t * 1.7) * .03;
-    blink -= dt; const b = blink < .12 ? .1 : 1; if (blink < 0) blink = 2 + Math.random() * 3; eyes.forEach(e => e.scale.y = b);
+    blink -= dt; const b = blink < .12 ? .1 : 1; if (blink < 0) blink = 2 + Math.random() * 3; if (C.goz !== 'mutlu' && C.goz !== 'kalp' && C.goz !== 'yildiz') eyes.forEach(e => e.scale.y = b); else eyes.forEach(e => e.scale.setScalar(1 + Math.sin(t * 6) * .06));
     tail.rotation.z = Math.sin(t * (sp > .05 ? 14 : 4)) * .3;
-    if (st.konus) lo.position.y = -.06 - Math.abs(Math.sin(t * 20)) * .04; else lo.position.y = -.06;
+    lo.position.y = st.konus ? -.06 - Math.abs(Math.sin(t * 20)) * .04 : -.06;
+    bw.forEach((w, i) => w.rotation.y = (i ? -1 : 1) * (.3 + Math.sin(t * (sp > .05 ? 10 : 3)) * .25));
+    flames.forEach(f => f.scale.set(1, .7 + Math.random() * .6 + sp * .4, 1));
+    capes.forEach(c => c.rotation.x = .1 + sp * .35 + Math.sin(t * 5) * .04);
+    flags.forEach(f => { const p = f.geometry.attributes.position; for (let i = 0; i < p.count; i++) { const x = p.getX(i); p.setZ(i, Math.sin(t * 8 + x * 20) * .03 * (.16 - x)); } p.needsUpdate = true; });
   }
-  return { root, update, setHat, setAcc, head };
+  return { root, update, head };
 }
