@@ -124,6 +124,11 @@ let AC = null; const audio = () => { if (!AC) try { AC = new (window.AudioContex
 function tone(f, d, type = 'sine', v = .08, at = 0) { const a = audio(); if (!a) return; v *= (typeof SET === 'object' ? SET.vol : 1); if (v <= 0) return; const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + at; o.type = type; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g).connect(a.destination); o.start(t); o.stop(t + d + .05); }
 const ding = () => { tone(1318, 1.4, 'sine', .12); tone(1046, 1.8, 'sine', .1, .35); };
 const click = () => tone(1800, .05, 'square', .03);
+const MUS = { lobi: new Audio('as_lobi.mp3'), asansor: new Audio('as_asansor.mp3') }; for (const k in MUS) { MUS[k].loop = true; MUS[k].volume = 0; MUS[k].preload = 'auto'; }
+const MUSV = { lobi: .35, asansor: .18 }; let musOn = false;
+function musicTick(dt) { if (!playing) return; if (!musOn) { musOn = true; for (const k in MUS) MUS[k].play().catch(() => { musOn = false; }); }
+  const want = { asansor: inCab() ? 1 : 0, lobi: !inCab() && ES.floor === 0 ? 1 : 0 };
+  for (const k in MUS) { const target = want[k] * MUSV[k] * SET.vol, a = MUS[k]; a.volume = Math.max(0, Math.min(1, a.volume + (target - a.volume) * Math.min(1, dt * 1.5))); } }
 let hum = null; function humSet(on) { const a = audio(); if (!a) return; if (on && !hum) { const o = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain(); o.type = 'sawtooth'; o.frequency.value = 48; o2.type = 'sine'; o2.frequency.value = 96; const f = a.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 220; g.gain.value = 0; o.connect(f); o2.connect(f); f.connect(g).connect(a.destination); o.start(); o2.start(); g.gain.linearRampToValueAtTime(.05 * SET.vol, a.currentTime + .6); hum = { o, o2, g }; } if (!on && hum) { const h = hum; hum = null; h.g.gain.linearRampToValueAtTime(0, a.currentTime + .5); setTimeout(() => { h.o.stop(); h.o2.stop(); }, 700); } }
 // asansör müziği
 const MUZ = [[262, 330, 392, 494], [220, 277, 330, 415], [247, 311, 370, 466], [196, 247, 294, 370]]; let muzI = 0, muzT = 0, muzVol = 0;
@@ -277,14 +282,27 @@ function buildLobby() {
   // yönlendirme tabelası
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 2.2), new THREE.MeshStandardMaterial({ map: canvasTex(128, 256, (gg, w, h) => { gg.fillStyle = '#1e2a6a'; gg.fillRect(0, 0, w, h); gg.strokeStyle = '#e8c06a'; gg.lineWidth = 4; gg.strokeRect(4, 4, w - 8, h - 8); gg.fillStyle = '#f4dfa8'; gg.font = '900 20px Nunito'; gg.textAlign = 'center'; gg.fillText('ASANSÖR', w / 2, 40); gg.font = '900 50px Nunito'; gg.fillText('→', w / 2, 110); gg.font = '800 16px Nunito'; ['1–100', 'KATLAR'].forEach((t, i) => gg.fillText(t, w / 2, 160 + i * 24)); }), emissive: '#ffffff', emissiveIntensity: .15 })); sign.position.set(13.95, 2.2, 1.2); sign.rotation.y = -Math.PI / 2; g.add(sign);
   // koridor sonu: asansör duvarı (x=24) + yan pasif asansörler
-  addBox(cg, .3, 3.5, 2.05, 24.15, 1.75, -6.0, M.wall); addBox(cg, .3, 3.5, 2.05, 24.15, 1.75, -1.0, M.wall); addBox(cg, .3, 1, 3, 24.15, 3.0, -3.5, M.wall);
+  addBox(cg, .3, 3.5, 1.55, 24.15, 1.75, -6.25, M.wall); addBox(cg, .3, 3.5, 1.55, 24.15, 1.75, -1.75, M.wall); addBox(cg, .3, 1, 3, 24.15, 3.0, -4, M.wall);
+  // heykeller (sütun üstünde)
+  const tl = new THREE.TextureLoader();
+  for (const [z, src, w] of [[-6.25, 'heykel_kiz.webp', 1.3], [-1.75, 'heykel_erkek.webp', 1.2]]) {
+    const base = new THREE.Mesh(new THREE.BoxGeometry(.75, .12, .75), M.white); base.position.set(23.45, .06, z); cg.add(base);
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(.26, .3, 1.1, 20), new THREE.MeshStandardMaterial({ map: T_WALL, roughness: .3 })); col.position.set(23.45, .67, z); cg.add(col);
+    for (let i = 0; i < 12; i++) { const fl = new THREE.Mesh(new THREE.BoxGeometry(.03, 1.05, .03), M.white); const a = i / 12 * Math.PI * 2; fl.position.set(23.45 + Math.cos(a) * .27, .67, z + Math.sin(a) * .27); cg.add(fl); }
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(.72, .1, .72), M.white); cap.position.set(23.45, 1.27, z); cg.add(cap);
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(.76, .03, .76), M.gold); rim.position.set(23.45, 1.33, z); cg.add(rim);
+    solidBox(cg, 23.08, 23.82, 0, 1.35, z - .38, z + .38);
+    const tex = tl.load(src); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+    const st = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.5), new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: .3, roughness: .45, side: THREE.DoubleSide })); st.position.set(23.42, 1.34 + .75, z); st.rotation.y = -Math.PI / 2; cg.add(st);
+    const sp = new THREE.SpotLight('#fff2d8', 9, 4, .5, .6, 1.2); sp.position.set(22.6, 3.4, z); sp.target.position.set(23.45, 2, z); cg.add(sp, sp.target);
+  }
   for (const z of [-7.0, -0.99]) { const dd = new THREE.Group(); const f = new THREE.Mesh(new THREE.BoxGeometry(2, 2.6, .1), M.gold); dd.add(f); const d1 = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.4, .12), M.steel); dd.add(d1); dd.position.set(20, 1.3, z + (z < -4 ? .12 : -.12)); cg.add(dd); }
   for (const z of [-6.95, -1.05]) { const tag = new THREE.Mesh(new THREE.PlaneGeometry(1.2, .3), new THREE.MeshBasicMaterial({ map: canvasTex(256, 64, (gg, w, h) => { gg.fillStyle = '#1a1a24'; gg.fillRect(0, 0, w, h); gg.fillStyle = '#ff6a4a'; gg.font = '900 30px Nunito'; gg.textAlign = 'center'; gg.fillText('BAKIMDA', w / 2, 44); }) })); tag.position.set(20, 2.85, z + (z < -4 ? .2 : -.2)); if (z > -4) tag.rotation.y = Math.PI; cg.add(tag); }
 }
 let HOLO = null;
 
 /* ================= ASANSÖR KABİNİ ================= */
-const EL = { x0: 24, x1: 27, z0: -5, z1: -2, h: 2.8 };
+const EL = { x0: 24, x1: 27, z0: -5.5, z1: -2.5, h: 2.8 };
 const cab = new THREE.Group(); scene.add(cab);
 const doorL = new THREE.Mesh(new THREE.BoxGeometry(.08, 2.5, 1.5), M.steel), doorR = new THREE.Mesh(new THREE.BoxGeometry(.08, 2.5, 1.5), M.steel);
 let dispTex, dispCtx, outTex, outCtx;
@@ -331,7 +349,7 @@ function bosKat(n) { // yapım aşamasındaki kat
   return { ad: 'Yapım Aşamasında', kur(g) {
     const fl = new THREE.Mesh(new THREE.PlaneGeometry(12, 10), new THREE.MeshStandardMaterial({ color: '#8a8e9a', roughness: .9 })); fl.rotation.x = -Math.PI / 2; fl.position.set(18, 0, -3.5); g.add(fl);
     addBox(g, 12, 3.5, .3, 18, 1.75, -8.6, M.white); addBox(g, 12, 3.5, .3, 18, 1.75, 1.6, M.white); addBox(g, .3, 3.5, 10, 12, 1.75, -3.5, M.white);
-    addBox(g, .3, 3.5, 3, 24.15, 1.75, -7, M.white); addBox(g, .3, 3.5, 3.4, 24.15, 1.75, -.2, M.white);
+    addBox(g, .3, 3.5, 3, 24.15, 1.75, -7, M.white); addBox(g, .3, 3.5, 4, 24.15, 1.75, -.5, M.white);
     const ce = new THREE.Mesh(new THREE.PlaneGeometry(12, 10), M.ceil); ce.rotation.x = Math.PI / 2; ce.position.set(18, 3.5, -3.5); g.add(ce);
     const tx = canvasTex(1024, 512, (gg, w, h) => { gg.fillStyle = '#f4f2ee'; gg.fillRect(0, 0, w, h); gg.fillStyle = '#e8c06a'; for (let i = -2; i < 14; i++) { gg.save(); gg.translate(i * 90, 0); gg.fillRect(0, h - 70, 45, 70); gg.restore(); } gg.fillStyle = '#2a2a34'; gg.font = '900 150px Cinzel, serif'; gg.textAlign = 'center'; gg.fillText('KAT ' + n, w / 2, 190); gg.font = '800 54px Nunito'; gg.fillText('🚧 Yapım aşamasında 🚧', w / 2, 300); gg.font = '700 34px Nunito'; gg.fillStyle = '#6a6a7a'; gg.fillText('Asansöre dön ve düğmeye bas', w / 2, 370); });
     const p = new THREE.Mesh(new THREE.PlaneGeometry(6, 3), new THREE.MeshStandardMaterial({ map: tx })); p.position.set(12.17, 1.75, -3.5); p.rotation.y = Math.PI / 2; g.add(p);
@@ -375,7 +393,7 @@ function movePlayer(dt) {
   if (!collide(P.x + dx, P.z, P.y)) P.x += dx; if (!collide(P.x, P.z + dz, P.y)) P.z += dz;
   P.vy -= 22 * dt; P.y += P.vy * dt; const gy = groundAt(P.x, P.z, P.y);
   if (P.y <= gy) { P.y = gy; P.vy = 0; P.on = true; } else P.on = false;
-  if (P.y < -30) { P.x = 25.5; P.z = -3.5; P.y = 0; P.vy = 0; }
+  if (P.y < -30) { P.x = 25.5; P.z = -4; P.y = 0; P.vy = 0; }
   P.moving = len > .1;
 }
 function jump() { if (P.on && !chatOpen) { P.vy = 7.2; P.on = false; } }
@@ -436,7 +454,7 @@ function netStart(code) {
   chan.on('broadcast', { event: 'e' }, ({ payload: p }) => { const o = ROSTER[p.i]; if (!o) return; o.emo = p.k; o.emoT = p.k === 'otur' ? 999 : p.k === 'dans' ? 6 : 3; if (o.mesh && ['kalp', 'gul', 'selam', 'sevin'].includes(p.k)) emoPop(o.mesh, p.k); });
   chan.on('broadcast', { event: 'req' }, () => { if (isHost()) hostStart(); });
   chan.on('broadcast', { event: 'el' }, ({ payload: p }) => applyRemote(p));
-  chan.on('broadcast', { event: 'state' }, ({ payload: p }) => { if (p.floor !== ES.floor || (ES.floor === 0 && FLOOR)) { ES.floor = p.floor; ES.target = p.target; loadFloor(p.floor); if (p.floor) { P.x = EL.x0 + 1.2; P.z = -3.5; P.y = 0; } } });
+  chan.on('broadcast', { event: 'state' }, ({ payload: p }) => { if (p.floor !== ES.floor || (ES.floor === 0 && FLOOR)) { ES.floor = p.floor; ES.target = p.target; loadFloor(p.floor); if (p.floor) { P.x = EL.x0 + 1.2; P.z = -4; P.y = 0; } } });
   chan.subscribe(s => { if (s === 'SUBSCRIBED') { online = true; chan.track({ n: NAME, j: JOINED, cfg: DUCK }); chatLine('sys', `🟢 Oda <b>${code}</b> — arkadaşlarına kodu ver!`); updInfo(); } });
 }
 function netTick(now) { if (!online) return; const p = { x: +P.x.toFixed(2), y: +P.y.toFixed(2), z: +P.z.toFixed(2), r: +P.yaw.toFixed(2), m: P.moving ? (keys.ShiftLeft || keys.ShiftRight || JOY.run ? 2 : 1) : 0 }, s = JSON.stringify(p); if ((s !== lastP && now - lastSend > 90) || now - lastSend > 2000) { lastP = s; lastSend = now; netSend('p', p); } }
@@ -536,8 +554,8 @@ document.querySelectorAll('[data-pa]').forEach(b => b.onclick = () => { if (pv) 
 const pick = a => a[Math.floor(Math.random() * a.length)];
 $('bRnd').onclick = () => { const keep = DUCK; DUCK.renk = pick(RENKLER); DUCK.gaga = pick(GAGA.slice(0, 4)); DUCK.gobek = null; DUCK.goz = pick(Object.keys(GOZ)); for (const k in KATEGORI) { const ks = Object.keys(KATEGORI[k].o); DUCK[k] = Math.random() < (k === 'sapka' ? .85 : .45) ? pick(ks.slice(1)) : 'yok'; DUCK[k + 'R'] = pick(SUSLER); } DUCK = Object.assign(DUCK, izinli(DUCK, HESAP)); for (const kat of ['goz','sapka','sirt','el']) if (ozelMi(kat, DUCK[kat]) && Math.random() < .6) DUCK[kat] = kat === 'goz' ? 'normal' : 'yok'; pvBuild(); opts(); cols(); if (pv) { pv.anim = 'sevin'; setTimeout(() => pv.anim = 'idle', 1300); } };
 if (pv) { const c = $('duckCv'); c.addEventListener('pointerdown', e => pv.drag = e.clientX); addEventListener('pointerup', () => pv.drag = null); addEventListener('pointermove', e => { if (pv.drag == null) return; pv.yaw += (e.clientX - pv.drag) * .012; pv.drag = e.clientX; }); }
-DUCK = izinli(DUCK, HESAP); pvBuild(); tabs(); opts(); cols(); pvLoop();
-if (TOKEN) fetch(SB_URL + '/rest/v1/rpc/ben', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: TOKEN }) }).then(r => r.ok ? r.json() : null).then(res => { if (!res || !res.kullanici_adi) return; HESAP = String(res.kullanici_adi).toLowerCase(); setAcct(res.kullanici_adi); opts(); if (HESAP === 'noxvire') $('msgM').innerHTML = '<span style="color:#ff6a6a">😈 Hoş geldin Noxvire — sana özel parçalar açıldı!</span>'; }).catch(() => {});
+if (!TOKEN) DUCK = izinli(DUCK, ''); pvBuild(); tabs(); opts(); cols(); pvLoop();
+if (TOKEN) fetch(SB_URL + '/rest/v1/rpc/ben', { method: 'POST', headers: { apikey: SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: TOKEN }) }).then(r => r.ok ? r.json() : null).then(res => { if (!res || !res.kullanici_adi) return; HESAP = String(res.kullanici_adi).toLowerCase(); setAcct(res.kullanici_adi); const before = JSON.stringify(DUCK); DUCK = izinli(DUCK, HESAP); if (JSON.stringify(DUCK) !== before) pvBuild(); opts(); if (HESAP === 'noxvire') $('msgM').innerHTML = '<span style="color:#ff6a6a">😈 Hoş geldin Noxvire — sana özel parçalar açıldı!</span>'; }).catch(() => {});
 // ayarlar
 function setUI() { $('sSens').value = SET.sens; $('sFov').value = SET.fov; $('sVol').value = SET.vol; document.querySelectorAll('#sGfx button').forEach(b => b.classList.toggle('on', +b.dataset.q === SET.gfx)); document.querySelectorAll('#sMir button').forEach(b => b.classList.toggle('on', +b.dataset.m === SET.mir)); }
 $('sSens').oninput = e => { SET.sens = +e.target.value; saveSet(); }; $('sFov').oninput = e => { SET.fov = +e.target.value; camera.fov = SET.fov; camera.updateProjectionMatrix(); saveSet(); }; $('sVol').oninput = e => { SET.vol = +e.target.value; saveSet(); };
@@ -574,8 +592,8 @@ function loop(now) {
   updOthers(dt); netTick(now);
   if (ME) { ME.root.position.set(P.x, P.y, P.z); ME.root.rotation.y = P.yaw; if (MYEMOT > 0) { MYEMOT -= dt; if (P.moving || !P.on) MYEMOT = 0; } const me = MYEMOT > 0 ? MYEMO : null; ME.update(dt, { hiz: P.moving ? 1 : 0, kosu: keys.ShiftLeft || keys.ShiftRight || JOY.run, zipla: !P.on, [me]: me ? 1 : 0 }); }
   for (let i = POPS.length - 1; i >= 0; i--) { const q = POPS[i]; q.t += dt; q.sp.position.y = 1.9 + q.t * .5; q.sp.material.opacity = Math.max(0, 1 - q.t / 1.8); if (q.t > 1.8) { q.par.remove(q.sp); POPS.splice(i, 1); } }
-  if (MIRROR) { const near = SET.mir && Math.hypot(P.x - 25.5, P.z + 3.5) < 9; MIRROR.visible = !!near; MIRROR_OFF.visible = !near; }
-  muzak(dt, playing && inCab());
+  if (MIRROR) { const near = SET.mir && Math.hypot(P.x - 25.5, P.z + 4) < 9; MIRROR.visible = !!near; MIRROR_OFF.visible = !near; }
+  musicTick(dt);
   if (bigT > 0) { bigT -= dt; if (bigT <= 0) $('big').style.opacity = 0; }
   const h = playing && lookAtButton(); $('hint').style.display = h ? 'block' : 'none'; if (h) $('hint').textContent = TOUCH ? 'E: Asansörü çalıştır' : '[E] Asansörü çalıştır';
   if (Math.floor(now / 500) !== Math.floor((now - dt * 1000) / 500)) updInfo();
