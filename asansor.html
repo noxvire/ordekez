@@ -86,7 +86,7 @@ input{width:100%;padding:11px 14px;margin:6px 0;border-radius:12px;border:1px so
 </div></div>
 <div id="clickHint" style="display:none;position:fixed;left:50%;top:40%;transform:translateX(-50%);z-index:6;background:rgba(10,14,40,.7);border:1px solid #e8c06a;color:#f4dfa8;padding:8px 16px;border-radius:999px;font-weight:900;pointer-events:none">🖱️ Etrafa bakmak için ekrana tıkla</div>
 <div id="hud"><div id="cross"></div><div id="hint"></div><div id="big"></div>
-  <div id="info"></div><div id="help">WASD yürü · Shift koş · Boşluk zıpla<br>E etkileşim · Enter sohbet · T basılı tut: emote · Esc menü</div>
+  <div id="info"></div><div id="help">WASD yürü · Shift koş · Boşluk zıpla<br>E etkileşim · T sohbet · Y basılı tut: emote · Esc menü</div>
   <div id="chatLog"></div><input id="chatIn" maxlength="120" placeholder="Mesaj yaz, Enter ile gönder">
 </div>
 <div id="pause"><div class="box"><div class="logo" style="font-size:28px">DURAKLATILDI</div><p id="pCode" style="font-weight:800"></p>
@@ -463,8 +463,8 @@ function closeChat() { chatOpen = false; $('chatIn').style.display = 'none'; $('
 const PAUSED = () => $('pause').style.display === 'flex';
 function clearKeys() { for (const k in keys) keys[k] = false; }
 addEventListener('blur', clearKeys);
-addEventListener('keydown', e => { if (e.code === 'Escape' && playing && !chatOpen) { if (PAUSED()) resume(); else if (!locked) { clearKeys(); $('clickHint').style.display = 'none'; $('pause').style.display = 'flex'; } return; } if (!playing || chatOpen || PAUSED()) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'Enter') { e.preventDefault(); openChat(); } if (e.code === 'KeyT' && !e.repeat) { e.preventDefault(); tDown = performance.now(); clearTimeout(tTimer); tTimer = setTimeout(() => { if (keys.KeyT) wheelOpen(); }, 220); } });
-addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'KeyT' && playing && !chatOpen) { clearTimeout(tTimer); if (WH.open) wheelClose(true); else if (performance.now() - tDown < 220 && !PAUSED()) openChat(); } });
+addEventListener('keydown', e => { if (e.code === 'Escape' && playing && !chatOpen) { if (PAUSED()) resume(); else if (!locked) { clearKeys(); $('clickHint').style.display = 'none'; $('pause').style.display = 'flex'; } return; } if (!playing || chatOpen || PAUSED()) return; keys[e.code] = true; if (e.code === 'Space') { jump(); e.preventDefault(); } if (e.code === 'KeyE') interact(); if (e.code === 'Enter' || e.code === 'KeyT') { e.preventDefault(); openChat(); } if (e.code === 'KeyY' && !e.repeat) { e.preventDefault(); wheelOpen(); } });
+addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'KeyY' && WH.open) wheelClose(true); });
 let tDown = 0, tTimer = null;
 const EMO = [['selam', '👋', 'Selam'], ['sevin', '🙌', 'Sevin'], ['dans', '💃', 'Dans'], ['otur', '🪑', 'Otur'], ['kalp', '❤️', 'Kalp'], ['gul', '😂', 'Gül']];
 const WH = { open: false, x: 0, y: 0, sel: -1 };
