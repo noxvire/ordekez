@@ -554,10 +554,6 @@
   #playNI::before{background:radial-gradient(circle at 75% 50%,rgba(255,216,74,.25),transparent 40%),repeating-linear-gradient(90deg,#3a2a1a 0 30px,#33251a 30px 60px),linear-gradient(180deg,#2a1d12,#140d07)}
   #playSV::before{background:radial-gradient(circle,rgba(255,255,255,.55) 2px,transparent 3px) 0 0/22px 22px,radial-gradient(circle at 80% 30%,#ffd0e6,transparent 50%),linear-gradient(135deg,#c2457f,#8a3a9e 55%,#5a2a8a);animation:svpaws 8s linear infinite}
   @keyframes svpaws{to{background-position:22px 44px,0 0,0 0}}
-  #playBK::before{background:repeating-linear-gradient(0deg,rgba(255,255,255,.12) 0 2px,transparent 2px 14px),linear-gradient(180deg,#5cc4d8,#2a78b0 60%,#1d5690);opacity:1;animation:bkw 4s linear infinite}
-  @keyframes bkw{to{background-position:0 28px,0 0}}
-  .tt-bk{font-family:'Lilita One',sans-serif;color:#fff;text-shadow:0 3px 0 #0d3a66;display:flex;align-items:center;gap:.35em;flex-wrap:wrap;line-height:1.05}.tt-bk b{color:#ffe57a;font-weight:400}
-  .tt-bk .yeni{font:800 .62rem Nunito,sans-serif;color:#0d3a66;background:#ffe57a;border-radius:8px;padding:1px 7px;text-shadow:none}
   #playTK::before{background:radial-gradient(circle,rgba(255,215,80,.55) 25%,rgba(190,120,0,.55) 27%,rgba(190,120,0,.55) 32%,transparent 34%) 0 0/46px 46px,radial-gradient(circle at 30% 30%,rgba(255,255,255,.45),transparent 50%),linear-gradient(135deg,#a3480a,#6b2a05);opacity:1;animation:coins 6s linear infinite}
   @keyframes coins{to{background-position:0 46px,0 0,0 0}}
   #playAY::before{background:radial-gradient(circle at 78% 50%,transparent 26px,rgba(255,60,60,.6) 27px,transparent 29px,transparent 44px,rgba(255,60,60,.35) 45px,transparent 47px),radial-gradient(circle,#fff 1px,transparent 1.5px) 0 0/28px 28px,radial-gradient(ellipse at 80% 120%,#7a7a8a,transparent 60%),linear-gradient(180deg,#05060f,#1a1c34);animation:stars 20s linear infinite}
@@ -647,7 +643,6 @@
       <button class="card" id="playDK" onclick="location.href='dukkan.html'"><img class="ic-img" src="dk_zeynep.png" alt="" style="image-rendering:pixelated;border-radius:8px"><span class="tt-dk"><small>Zeynep'in</small><b>DÜKKÂNI</b><i class="dk-open">AÇIK</i></span></button>
       <button class="card" id="playNI" data-soon style="opacity:.55;cursor:not-allowed;position:relative"><span class="ic-img" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#16120e;border-radius:8px">🚪</span><span class="tt-ni"><small>No, I'm Not a</small><b>Ördekez<i>🦆</i></b><em>ÇOK YAKINDA</em></span></button>
       <button class="card" id="playSV" onclick="location.href='survivor.html'"><img class="ic-img" src="zs_skin_0.webp" alt="" style="width:2.7rem;height:2.7rem;object-fit:cover;object-position:50% 12%;image-rendering:auto;background:radial-gradient(circle at 35% 30%,#ffd0e6,#ff6fae);border-radius:50%"><span class="tt-sv"><small>Zeynep</small><b><i class="ear l"></i><i class="ear r"></i>Survival</b><i class="paw">🐾</i></span></button>
-      <button class="card" id="playBK" onclick="location.href='balik.html'"><span class="ic" style="font-size:2.3rem">🎣</span><span class="tt-bk">Ördekez <b>Balıkçılık</b><small class="yeni">YENİ · ÇOK OYUNCULU</small></span></button>
       <button class="card" id="playTK" onclick="location.href='tikla.html'"><img class="ic-img" src="erdi_kafa.webp" alt="" style="width:2.7rem;height:2.7rem;object-fit:contain;image-rendering:auto;background:radial-gradient(circle at 35% 30%,#ffe98a,#d98400);border-radius:50%;padding:2px"><span class="tt-tk">Erdiye <b>BAS<i class="cur">👆</i><i class="pop">+1</i></b></span></button>
       <button class="card" id="playAY" onclick="location.href='uzay.html'"><img class="ic-img" src="erdivur_ikon.webp" alt="" style="image-rendering:auto;border-radius:50%"><span class="tt-ay">Erdiyi <b>VUR<i class="scope"></i></b></span></button>
     </div>
@@ -3367,7 +3362,7 @@ const SB_KEY = 'sb_publishable_LGSMfulqXck-aU3N37Fc0g_zeJQ239J';
 const TOK = 'ordekez_token', USR = 'ordekez_user';
 const ls = window.localStorage;
 const rawSet = Storage.prototype.setItem, rawRemove = Storage.prototype.removeItem;
-const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_') || k.startsWith('ni_') || k.startsWith('tk_') || k.startsWith('sv_') || k === 'bk_save');
+const synced = k => typeof k === 'string' && (k === 'ordekez_best' || k.startsWith('fw_') || k.startsWith('br_') || k.startsWith('ev_') || k.startsWith('dk_') || k.startsWith('ni_') || k.startsWith('tk_') || k.startsWith('sv_'));
 
 async function rpc(fn, args){
   const r = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { 'apikey': SB_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(args || {}) });
@@ -3392,7 +3387,6 @@ function better(k, a, b){              // a: sunucu, b: yerel
     base.cls = Object.assign({}, B.cls || {}, A.cls || {}); base.clsStart = Object.assign({}, B.clsStart || {}, A.clsStart || {});
     base.clsXp = {}; for (const k2 of new Set([...Object.keys(A.clsXp || {}), ...Object.keys(B.clsXp || {})])) base.clsXp[k2] = Math.max((A.clsXp || {})[k2] || 0, (B.clsXp || {})[k2] || 0);
     base.clsFix = A.clsFix || B.clsFix; return JSON.stringify(base); } catch(e){ return a; } }
-  if (k === 'bk_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); return (B.xp || 0) + (B.kazanc || 0) > (A.xp || 0) + (A.kazanc || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'sv_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); return (B.oyun || 0) > (A.oyun || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'tk_save'){ try { const A = JSON.parse(a), B = JSON.parse(b); if ((A.v === 2) !== (B.v === 2)) return A.v === 2 ? a : b; return (B.toplam || 0) > (A.toplam || 0) ? b : a; } catch(e){ return a; } }
   if (k === 'dk_save'){ try { return (JSON.parse(b).night || 0) > (JSON.parse(a).night || 0) ? b : a; } catch(e){ return a; } }
