@@ -578,11 +578,16 @@ if (TOUCH) {
 }
 
 /* ================= BAŞLAT ================= */
+function warmMirror() { // aynanın ilk görünüşte donmaması için shader + render target'ı önceden hazırla
+  if (!MIRROR || !SET.mir) return; const c = camera.clone(); c.layers.enableAll(); c.position.set(25.2, 1.6, -4); c.lookAt(EL.x1, 1.5, -4); c.updateMatrixWorld();
+  ME.root.position.set(25.2, 0, -4); const v = MIRROR.visible, vo = MIRROR_OFF.visible; MIRROR.visible = true; MIRROR_OFF.visible = false;
+  renderer.compile(scene, c); renderer.render(scene, c); MIRROR.visible = v; MIRROR_OFF.visible = vo; }
 function start(code) {
   NAME = ($('nameIn').value.trim() || 'Ördek' + Math.floor(Math.random() * 90 + 10)).slice(0, 16); try { localStorage.setItem('as_name', NAME); } catch (e) {}
   $('menu').style.display = 'none'; $('backA').style.display = 'none'; $('hud').style.display = 'block'; playing = true; audio();
   if (code) { netStart(code); history.replaceState(null, '', '?oda=' + code); }
   ME = makeDuck(THREE, DUCK); ME.root.scale.setScalar(1.15); ME.root.traverse(o => o.layers.set(1)); scene.add(ME.root);
+  try { warmMirror(); } catch (e) {}
   updInfo(); showBig('ÖRDEKEZ LOBİSİ<br><small style="font:800 16px Nunito">Asansörler sağdaki koridorda →</small>');
   if (!TOUCH) renderer.domElement.requestPointerLock?.();
 }
