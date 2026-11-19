@@ -127,7 +127,7 @@ function tone(f, d, type = 'sine', v = .08, at = 0) { const a = audio(); if (!a)
 const ding = () => { tone(1318, 1.4, 'sine', .12); tone(1046, 1.8, 'sine', .1, .35); };
 const click = () => tone(1800, .05, 'square', .03);
 const MUS = { lobi: new Audio('as_lobi.mp3'), asansor: new Audio('as_asansor.mp3') }; for (const k in MUS) { MUS[k].loop = true; MUS[k].volume = 0; MUS[k].preload = 'auto'; }
-const MUSV = { lobi: .35, asansor: .18 }; let musOn = false;
+const MUSV = { lobi: .14, asansor: .18 }; let musOn = false;
 function musicTick(dt) { if (!playing) return; if (!musOn) { musOn = true; for (const k in MUS) MUS[k].play().catch(() => { musOn = false; }); }
   const want = { asansor: inCab() ? 1 : 0, lobi: !inCab() && ES.floor === 0 ? 1 : 0 };
   for (const k in MUS) { const target = want[k] * MUSV[k] * SET.vol, a = MUS[k]; a.volume = Math.max(0, Math.min(1, a.volume + (target - a.volume) * Math.min(1, dt * 1.5))); } }
@@ -658,7 +658,7 @@ let AMB = null;
 function ambStart() { const a = audio(), b = noiseBuf(); if (!a || !b || AMB) return; const s = a.createBufferSource(); s.buffer = b; s.loop = true; const out = a.createGain(); out.gain.value = 0; const lp = a.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1400; out.connect(a.destination); lp.connect(out); const F = [];
   for (const fq of [450, 1050, 2300]) { const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = fq; f.Q.value = 5; const g = a.createGain(); g.gain.value = .3; s.connect(f).connect(g).connect(lp); F.push({ f, g, base: fq }); }
   s.start(); AMB = { out, F, t: 0, ev: 12 + Math.random() * 10 }; }
-function ambTick(dt) { if (!AMB) { if (playing && AC) ambStart(); return; } const a = AC, t = a.currentTime; const inLobby = playing && ES.floor === 0 && !inCab(); const want = inLobby ? (P.x > 14 ? .05 : .09) * SET.vol : 0; AMB.out.gain.setTargetAtTime(want, t, .5);
+function ambTick(dt) { if (!AMB) { if (playing && AC) ambStart(); return; } const a = AC, t = a.currentTime; const inLobby = playing && ES.floor === 0 && !inCab(); const want = 0; // uğultu kaldırıldı AMB.out.gain.setTargetAtTime(want, t, .5);
   AMB.t -= dt; if (AMB.t <= 0) { AMB.t = .12 + Math.random() * .2; for (const q of AMB.F) { q.f.frequency.setTargetAtTime(q.base * (.75 + Math.random() * .6), t, .06); q.g.gain.setTargetAtTime(.1 + Math.random() * .5, t, .08); } }
   if (!inLobby) return; AMB.ev -= dt; if (AMB.ev <= 0) { AMB.ev = 18 + Math.random() * 25; const r = Math.random(); if (r < .45) phoneRing(); else if (r < .75) { tone(1318, 1.2, 'sine', .018); tone(1046, 1.6, 'sine', .015, .35); } else { tone(523, .5, 'sine', .02); tone(659, .5, 'sine', .02, .3); tone(784, .9, 'sine', .02, .6); } } }
 function phoneRing() { const d = Math.hypot(P.x - 3, P.z + 8), v = Math.max(.15, 1 - d / 22) * .035; for (let k = 0; k < 2; k++) for (let i = 0; i < 10; i++) { tone(440, .045, 'sine', v, k * 1.1 + i * .05); tone(480, .045, 'sine', v, k * 1.1 + i * .05); } setTimeout(() => recepSay(TEL[Math.floor(Math.random() * TEL.length)], true), 2600); }
