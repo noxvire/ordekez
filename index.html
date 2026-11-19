@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ördekez</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Lilita+One&family=Fredoka:wght@600;700&family=Bungee&family=VT323&family=Creepster&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Lilita+One&family=Fredoka:wght@600;700&family=Bungee&family=VT323&family=Creepster&family=Cinzel:wght@900&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
@@ -552,6 +552,9 @@
   @keyframes brflick{0%,10%,12%,61%,63%,100%{filter:brightness(1)}11%,62%{filter:brightness(.35)}}
   #playDK::before{background:linear-gradient(180deg,rgba(255,79,163,.25),transparent 30%),repeating-linear-gradient(90deg,#2a1a33 0 42px,#3b2547 42px 46px),linear-gradient(180deg,#1d1027,#2c1838);box-shadow:inset 0 0 30px rgba(255,79,163,.5)}
   #playNI::before{background:radial-gradient(circle at 75% 50%,rgba(255,216,74,.25),transparent 40%),repeating-linear-gradient(90deg,#3a2a1a 0 30px,#33251a 30px 60px),linear-gradient(180deg,#2a1d12,#140d07)}
+  #playAS::before{background:repeating-linear-gradient(90deg,rgba(232,192,106,.18) 0 2px,transparent 2px 40px),linear-gradient(160deg,#2c3c8c,#1a2258 60%,#0e1238);opacity:1}
+  .tt-as{font-family:'Cinzel',serif;font-weight:900;color:#f4dfa8;letter-spacing:2px;text-shadow:0 0 10px rgba(244,223,168,.5);display:flex;align-items:center;gap:.4em;flex-wrap:wrap;line-height:1.05}
+  .tt-as small{font:800 .62rem 'Baloo 2',sans-serif;letter-spacing:0;color:#1a2258;background:#f4dfa8;border-radius:8px;padding:1px 7px;text-shadow:none}
   #playSV::before{background:radial-gradient(circle,rgba(255,255,255,.55) 2px,transparent 3px) 0 0/22px 22px,radial-gradient(circle at 80% 30%,#ffd0e6,transparent 50%),linear-gradient(135deg,#c2457f,#8a3a9e 55%,#5a2a8a);animation:svpaws 8s linear infinite}
   @keyframes svpaws{to{background-position:22px 44px,0 0,0 0}}
   #playTK::before{background:radial-gradient(circle,rgba(255,215,80,.55) 25%,rgba(190,120,0,.55) 27%,rgba(190,120,0,.55) 32%,transparent 34%) 0 0/46px 46px,radial-gradient(circle at 30% 30%,rgba(255,255,255,.45),transparent 50%),linear-gradient(135deg,#a3480a,#6b2a05);opacity:1;animation:coins 6s linear infinite}
@@ -642,6 +645,7 @@
       <button class="card" id="playBR"><img class="ic-img mon" src="zeynep_canavar.png" alt=""><span class="tt-br"><small>Backrooms:</small><b>Zeynep</b></span></button>
       <button class="card" id="playDK" onclick="location.href='dukkan.html'"><img class="ic-img" src="dk_zeynep.png" alt="" style="image-rendering:pixelated;border-radius:8px"><span class="tt-dk"><small>Zeynep'in</small><b>DÜKKÂNI</b><i class="dk-open">AÇIK</i></span></button>
       <button class="card" id="playNI" data-soon style="opacity:.55;cursor:not-allowed;position:relative"><span class="ic-img" style="display:flex;align-items:center;justify-content:center;font-size:34px;background:#16120e;border-radius:8px">🚪</span><span class="tt-ni"><small>No, I'm Not a</small><b>Ördekez<i>🦆</i></b><em>ÇOK YAKINDA</em></span></button>
+      <button class="card" id="playAS" onclick="location.href='asansor.html'"><span class="ic" style="font-size:2.3rem">🛗</span><span class="tt-as">ÖRDEKEZ ASANSÖR<small>YENİ · ONLINE · YAPIM AŞAMASINDA</small></span></button>
       <button class="card" id="playSV" onclick="location.href='survivor.html'"><img class="ic-img" src="zs_skin_0.webp" alt="" style="width:2.7rem;height:2.7rem;object-fit:cover;object-position:50% 12%;image-rendering:auto;background:radial-gradient(circle at 35% 30%,#ffd0e6,#ff6fae);border-radius:50%"><span class="tt-sv"><small>Zeynep</small><b><i class="ear l"></i><i class="ear r"></i>Survival</b><i class="paw">🐾</i></span></button>
       <button class="card" id="playTK" onclick="location.href='tikla.html'"><img class="ic-img" src="erdi_kafa.webp" alt="" style="width:2.7rem;height:2.7rem;object-fit:contain;image-rendering:auto;background:radial-gradient(circle at 35% 30%,#ffe98a,#d98400);border-radius:50%;padding:2px"><span class="tt-tk">Erdiye <b>BAS<i class="cur">👆</i><i class="pop">+1</i></b></span></button>
       <button class="card" id="playAY" onclick="location.href='uzay.html'"><img class="ic-img" src="erdivur_ikon.webp" alt="" style="image-rendering:auto;border-radius:50%"><span class="tt-ay">Erdiyi <b>VUR<i class="scope"></i></b></span></button>
