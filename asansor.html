@@ -468,7 +468,7 @@ function groundAt(x, z, y) { let gy = 0; for (const c of COLL) { if (!collActive
 const MOD0 = { ters: false, tavan: 4.2, sc: 1, spd: 1, inv: false, buz: false, yuz: false, kilit: false, grav: 1 }, MOD = Object.assign({}, MOD0);
 let curSc = 1, curRoll = 0, PSC = 0, SHAKE = 0, TAVUK = false, UIOPEN = false, HAYALET = false;
 function uiAc() { UIOPEN = true; clearKeys(); if (document.pointerLockElement) document.exitPointerLock(); }
-function uiKapa() { if (!UIOPEN) return; UIOPEN = false; if (!TOUCH && playing) { try { const q = renderer.domElement.requestPointerLock?.(); if (q && q.catch) q.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !PAUSED() && !UIOPEN && !INV) $('clickHint').style.display = 'block'; }, 250); } }
+function uiKapa() { if (!UIOPEN) return; UIOPEN = false; if (!TOUCH && playing) { try { const q = kilitIste(); if (q && q.catch) q.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !PAUSED() && !UIOPEN && !INV) $('clickHint').style.display = 'block'; }, 250); } }
 function gidak(v = .08, at = 0) { const a = audio(); if (!a) return; v *= SET.vol; if (v < .002) return; for (let i = 0; i < 3; i++) { const t = a.currentTime + at + i * .09, o = a.createOscillator(), g = a.createGain(), f = a.createBiquadFilter(); o.type = 'square'; o.frequency.setValueAtTime(700 + i * 60, t); o.frequency.linearRampToValueAtTime(950 + (i === 2 ? 300 : 0), t + .06); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 2; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01); g.gain.exponentialRampToValueAtTime(.001, t + .08); o.connect(f).connect(g).connect(a.destination); o.start(t); o.stop(t + .1); } }
 function modReset() { Object.assign(MOD, MOD0); }
 function movePlayer(dt) {
@@ -579,7 +579,7 @@ function updInfo() { const n = Object.keys(ROSTER).length + 1; $('info').innerHT
 function openChat() { if (!online && !(FLOOR && FLOOR.botMod && FLOOR.botMod())) { showBig('Sohbet için oda kur ya da katıl'); return; } chatOpen = true; $('chatIn').style.display = 'block'; $('chatIn').value = ''; setTimeout(() => $('chatIn').focus(), 10); if (document.pointerLockElement) document.exitPointerLock(); }
 addEventListener('keydown', e => { if (chatOpen && (e.key === 'Escape' || e.code === 'Escape')) { e.preventDefault(); e.stopPropagation(); closeChat(); } }, true);
 $('chatIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { const t = $('chatIn').value.trim().slice(0, 120); if (t && FLOOR && FLOOR.chatOk && !FLOOR.chatOk()) { toast('👻 Hayaletler konuşamaz', 1500); $('chatIn').value = ''; closeChat(); return; } if (t) { chatLine('', `<b>${esc(NAME)}:</b> ${esc(t)}`); netSend('c', { t }); if (FLOOR && FLOOR.chat) FLOOR.chat(t); } closeChat(); } if (e.key === 'Escape') closeChat(); });
-function closeChat() { if (!chatOpen) return; chatOpen = false; $('chatIn').style.display = 'none'; $('chatIn').blur(); if (!TOUCH && !UIOPEN) { try { const p = renderer.domElement.requestPointerLock?.(); if (p && p.catch) p.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !PAUSED()) $('clickHint').style.display = 'block'; }, 250); } }
+function closeChat() { if (!chatOpen) return; chatOpen = false; $('chatIn').style.display = 'none'; $('chatIn').blur(); if (!TOUCH && !UIOPEN) { try { const p = kilitIste(); if (p && p.catch) p.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !PAUSED()) $('clickHint').style.display = 'block'; }, 250); } }
 
 /* ================= GİRDİ ================= */
 const PAUSED = () => $('pause').style.display === 'flex';
@@ -599,9 +599,16 @@ function doEmote(k) { MYEMO = k; MYEMOT = k === 'otur' ? 999 : k === 'dans' ? 6 
 function emoPop(par, k) { if (!par) return; const ic = { kalp: '❤️', gul: '😂', selam: '👋', sevin: '🎉', ic: '💧', vak: '🦆' }[k]; const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.font = '96px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ic, 64, 70); const t = new THREE.CanvasTexture(c); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false })); sp.scale.set(.5, .5, 1); sp.position.y = 1.9; sp.layers.mask = par.layers ? par.layers.mask : 1; par.add(sp); POPS.push({ sp, par, t: 0 }); }
 const POPS = [];
 addEventListener('mousemove', e => { if (!WH.open || !locked) return; WH.x += e.movementX; WH.y += e.movementY; const L = Math.hypot(WH.x, WH.y); if (L > 160) { WH.x *= 160 / L; WH.y *= 160 / L; } if (L > 30) { let a = Math.atan2(WH.y, WH.x) + Math.PI / 2; a = (a + Math.PI * 2) % (Math.PI * 2); wheelSel(Math.round(a / (Math.PI * 2) * EMO.length) % EMO.length); } }, true);
-renderer.domElement.addEventListener('click', () => { if (playing && !TOUCH && !chatOpen) renderer.domElement.requestPointerLock?.(); audio(); });
-document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; if (locked) $('clickHint').style.display = 'none'; if (!locked) clearKeys(); if (!locked && PIANO) { stopPiano(); $('pause').style.display = 'none'; $('clickHint').style.display = 'block'; return; } if (!locked && playing && !chatOpen && !INV && !UIOPEN && !TOUCH) $('pause').style.display = 'flex'; else $('pause').style.display = 'none'; });
-addEventListener('mousemove', e => { if (!locked || WH.open) return; const k = .0022 * SET.sens; P.yaw -= e.movementX * k; P.pitch = clamp(P.pitch - e.movementY * k, -1.45, 1.45); });
+renderer.domElement.addEventListener('click', () => { if (playing && !TOUCH && !chatOpen) kilitIste(); audio(); });
+function kilitIste() { const el = renderer.domElement; if (!el.requestPointerLock) return; try { const q = el.requestPointerLock({ unadjustedMovement: true }); if (q && q.catch) return q.catch(() => { try { return el.requestPointerLock(); } catch (e) {} }); return q; } catch (e) { try { return el.requestPointerLock(); } catch (e2) {} } }
+let lockT = 0; // kilit alındıktan hemen sonraki ilk fare hareketleri bazen dev sıçrama yapar
+document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; if (locked) lockT = performance.now(); if (locked) $('clickHint').style.display = 'none'; if (!locked) clearKeys(); if (!locked && PIANO) { stopPiano(); $('pause').style.display = 'none'; $('clickHint').style.display = 'block'; return; } if (!locked && playing && !chatOpen && !INV && !UIOPEN && !TOUCH) $('pause').style.display = 'flex'; else $('pause').style.display = 'none'; });
+let lastMX = 0, lastMY = 0;
+addEventListener('mousemove', e => { if (!locked || WH.open) return; const mx = e.movementX, my = e.movementY;
+  // tarayıcı hatası: kilit alınınca ya da bazen tek karede çok büyük/ters sıçrama gelir → yok say
+  if (performance.now() - lockT < 120) return; const big = Math.abs(mx) > 400 || Math.abs(my) > 400, jump = (Math.abs(mx) > 120 && Math.abs(mx) > Math.abs(lastMX) * 6 + 80) || (Math.abs(my) > 120 && Math.abs(my) > Math.abs(lastMY) * 6 + 80);
+  if (big || jump) { lastMX = big ? 0 : mx; lastMY = big ? 0 : my; return; } lastMX = mx; lastMY = my;
+  const k = .0022 * SET.sens; P.yaw -= mx * k; P.pitch = clamp(P.pitch - my * k, -1.45, 1.45); });
 function interact() { if (PIANO) return; if (SIT) { standUp(); return; } const ab = lookAtButton(); if (ab || (TOUCH && inCab())) { pressButton(ab === 'L'); return; } const it = nearInter(); if (it) it.fn(); }
 function lookAtButton() { if (!BUTTON || !inCab()) return false; const f = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion), bp = new THREE.Vector3(); let best = false, bd = .82; for (const [b, k] of [[BUTTON, 'B'], [LBUTTON, 'L']]) { if (!b) continue; b.getWorldPosition(bp); const d = bp.sub(camera.position); if (d.length() > 2.3) continue; const dot = f.dot(d.normalize()); if (dot > bd) { bd = dot; best = k; } } return best; }
 // mobil kontroller
@@ -633,7 +640,7 @@ function start(code) {
   { const kn = parseInt(Q.get('kat')); if (kn > 0 && (KATLAR[kn] || kn < 50)) setTimeout(() => { ES.floor = kn; ES.target = kn; ES.done = Array.from({ length: kn - 1 }, (_, i) => i + 1); loadFloor(kn); P.x = EL.x0 + 1.4; P.z = -4; P.y = 0; P.yaw = Math.PI / 2; updInfo(); }, 300); }
   hotbarDraw();
   updInfo(); showBig('ÖRDEKEZ LOBİSİ<br><small style="font:800 16px Nunito">Asansörler sağdaki koridorda →</small>');
-  if (!TOUCH) renderer.domElement.requestPointerLock?.();
+  if (!TOUCH) kilitIste();
 }
 let HESAP = ''; const TOKEN = (() => { try { return localStorage.getItem('ordekez_token'); } catch (e) { return null; } })();
 function setAcct(n) { if (!n) return; $('nameIn').value = n; $('nameIn').style.display = 'none'; $('acct').style.display = 'block'; $('acct').textContent = '👤 ' + n + ' olarak giriyorsun'; }
@@ -678,7 +685,7 @@ $('bKur').onclick = () => start(newCode());
 $('bKatil').onclick = () => { const c = $('codeIn').value.trim().toUpperCase(); if (c.length !== 4) { $('msgM').textContent = '4 haneli oda kodunu yaz'; return; } start(c); };
 $('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') $('bKatil').click(); });
 $('bTek').onclick = () => start('');
-function resume() { $('pause').style.display = 'none'; try { const p = renderer.domElement.requestPointerLock?.(); if (p && p.catch) p.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !TOUCH && !PAUSED()) $('clickHint').style.display = 'block'; }, 250); }
+function resume() { $('pause').style.display = 'none'; try { const p = kilitIste(); if (p && p.catch) p.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !TOUCH && !PAUSED()) $('clickHint').style.display = 'block'; }, 250); }
 $('bDevam').onclick = resume;
 $('bCik').onclick = () => location.href = 'index.html';
 $('bLink').onclick = () => { const u = location.origin + location.pathname + '?oda=' + ROOM; navigator.clipboard?.writeText(u); $('bLink').textContent = ROOM ? '✅ Kopyalandı' : 'Tek başınasın'; };
@@ -796,7 +803,7 @@ function invDraw() { const e = $('inv'); if (!e || !INV) return; const s = slots
   e.querySelector('.ir').innerHTML = Object.keys(ROZETLER).map(k => { const v = ENV.rozet.includes(k), r = ROZETLER[k]; return `<div class="ei${v ? '' : ' kilit'}"><b>${v ? r.ic : '🔒'}</b><div>${!v && r.gizli ? '???' : r.ad}<small>${r.acik}</small></div></div>`; }).join('');
   e.querySelectorAll('.is[data-i]').forEach(d => { const i = +d.dataset.i; d.onclick = () => { if (invPick < 0) { invPick = i; SEL = i; hotbarDraw(); invDraw(); } else { const a = invPick; invPick = -1; if (a !== i) swapSlots(a, i); else invDraw(); } }; d.ondragstart = ev => { ev.dataTransfer.setData('text', i); }; d.ondragover = ev => ev.preventDefault(); d.ondrop = ev => { ev.preventDefault(); invPick = -1; swapSlots(+ev.dataTransfer.getData('text'), i); }; }); }
 function invOpen() { if (!playing || chatOpen || PAUSED() || PIANO) return; INV = true; invPick = -1; clearKeys(); $('inv').style.display = 'flex'; invDraw(); if (document.pointerLockElement) document.exitPointerLock(); }
-function invClose() { if (!INV) return; INV = false; $('inv').style.display = 'none'; if (!TOUCH) { try { const q = renderer.domElement.requestPointerLock?.(); if (q && q.catch) q.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !PAUSED() && !INV) $('clickHint').style.display = 'block'; }, 250); } }
+function invClose() { if (!INV) return; INV = false; $('inv').style.display = 'none'; if (!TOUCH) { try { const q = kilitIste(); if (q && q.catch) q.catch(() => {}); } catch (e) {} setTimeout(() => { if (!locked && playing && !PAUSED() && !INV) $('clickHint').style.display = 'block'; }, 250); } }
 addEventListener('keydown', e => { if (e.code === 'Tab' && playing && !chatOpen) { e.preventDefault(); e.stopPropagation(); if (INV) invClose(); else invOpen(); return; } if (INV && e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); invClose(); return; } if (INV) { e.stopPropagation(); } }, true);
 function envDraw() { const e = $('envList'); if (!e) return; e.innerHTML = (ENV.items.length ? ENV.items.map(k => `<div class="ei"><b>${ITEMS[k].ic}</b><div>${ITEMS[k].ad}<small>${ITEMS[k].acik}</small></div></div>`).join('') : '<small>Henüz eşyan yok.</small>') + '<div style="font:900 13px Cinzel,serif;color:#f4dfa8;margin:8px 0 4px">🏅 ROZETLER</div>' + Object.keys(ROZETLER).map(k => { const v = ENV.rozet.includes(k), r = ROZETLER[k]; return `<div class="ei${v ? '' : ' kilit'}"><b>${v ? r.ic : '🔒'}</b><div>${!v && r.gizli ? '???' : r.ad}<small>${r.acik}</small></div></div>`; }).join(''); }
 // elde tutulan eşya (birinci şahıs)
